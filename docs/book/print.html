@@ -1,0 +1,436 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>create-soroban-dapp Userguide</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Where to start</li><li class="chapter-item expanded "><a href="hello.html"><strong aria-hidden="true">1.</strong> A script and a boilerplate</a></li><li class="chapter-item expanded affix "><li class="part-title">Create Soroban Script</li><li class="chapter-item expanded "><a href="create-soroban-dapp/overview.html"><strong aria-hidden="true">2.</strong> Usage</a></li><li class="chapter-item expanded "><a href="create-soroban-dapp/manual_cloning.html"><strong aria-hidden="true">3.</strong> Manual cloning</a></li><li class="chapter-item expanded "><a href="create-soroban-dapp/troubleshooting.html"><strong aria-hidden="true">4.</strong> Troubleshooting</a></li><li class="chapter-item expanded "><a href="create-soroban-dapp/set_your_secrets.html"><strong aria-hidden="true">5.</strong> Set your Secrets in .env</a></li><li class="chapter-item expanded affix "><li class="part-title">Soroban Dapp Boilerplate</li><li class="chapter-item expanded "><a href="soroban-dapp/overview.html"><strong aria-hidden="true">6.</strong> Overview</a></li><li class="chapter-item expanded "><a href="soroban-dapp/getting_started.html"><strong aria-hidden="true">7.</strong> Getting started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="soroban-dapp/instructions/verify_installation.html"><strong aria-hidden="true">7.1.</strong> Verify installation</a></li><li class="chapter-item expanded "><a href="soroban-dapp/instructions/1.html"><strong aria-hidden="true">7.2.</strong> Customize app data</a></li></ol></li><li class="chapter-item expanded "><a href="soroban-dapp/contracts/manage_contracts.html"><strong aria-hidden="true">8.</strong> Manage contracts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="soroban-dapp/contracts/contract_folder_organization.html"><strong aria-hidden="true">8.1.</strong> Contract folder organization</a></li><li class="chapter-item expanded "><a href="soroban-dapp/contracts/create_and_build_contracts.html"><strong aria-hidden="true">8.2.</strong> Create and build your own contracts</a></li><li class="chapter-item expanded "><a href="soroban-dapp/contracts/deploy_contracts.html"><strong aria-hidden="true">8.3.</strong> Deploy your contracts using the provided script</a></li><li class="chapter-item expanded "><a href="soroban-dapp/contracts/frontend_contract_object.html"><strong aria-hidden="true">8.4.</strong> Retrieve the contract object in the frontend</a></li></ol></li><li class="chapter-item expanded "><a href="soroban-dapp/fly_alone.html"><strong aria-hidden="true">9.</strong> Fly with your own wings</a></li><li class="chapter-item expanded affix "><li class="part-title">Other Resources</li><li class="chapter-item expanded "><a href="other_resources/sorochat.html"><strong aria-hidden="true">10.</strong> SOROCHAT dapp tutorial</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">create-soroban-dapp Userguide</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="a-script-and-a-boilerplate"><a class="header" href="#a-script-and-a-boilerplate">A script and a boilerplate</a></h1>
+<p>@create-soroban-dapp is both a <a href="./create-soroban-dapp/overview.html">npx script</a> and a <a href="./soroban-dapp/overview.html">boilerplate dapp</a> for kickstarting any of your ideas for a Soroban-based Dapp.</p>
+<p>Largely inspired by the <a href="https://github.com/scio-labs/inkathon">ink!athon</a> project by <a href="https://github.com/scio-labs">Scio Labs</a> and by <a href="https://github.com/t3-oss/create-t3-app">@create-t3-app</a> by <a href="https://github.com/t3-oss">T3 Open Source</a> for the script mechanisms.</p>
+<p>Check the <a href="https://create-soroban-dapp.vercel.app/"><code>LIVE VERSION</code></a> of the dapp that is already utilizing a deployed testnet contract!</p>
+<h2 id="structure"><a class="header" href="#structure">Structure</a></h2>
+<p><code>@create-soroban-dapp</code> is composed of two things:</p>
+<ul>
+<li>
+<p>A boilerplate dapp utilizing the <a href="https://github.com/paltalabs/soroban-react">@soroban-react</a>.</p>
+</li>
+<li>
+<p>A npx script that allows developers to quickstart their project via the command line and <code>npx create-soroban-dapp</code>. Using the script will help them set up the boilerplate dapp.</p>
+</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="usage"><a class="header" href="#usage">Usage</a></h1>
+<p>Open a terminal in the folder of your choice and simply use:</p>
+<p><code>npx create-soroban-dapp@latest</code></p>
+<p>or</p>
+<p><code>npm create soroban-dapp@latest</code></p>
+<p>Then, navigate inside the new project directory:</p>
+<p><code>cd projectname</code></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="manual-cloning"><a class="header" href="#manual-cloning">Manual cloning</a></h1>
+<p>If you prefer to manually clone the repository instead of using the NPX script, follow these steps:</p>
+<h2 id="clone-the-repository"><a class="header" href="#clone-the-repository">Clone the Repository</a></h2>
+<p><strong>Clone the repository using the following command:</strong></p>
+<p><code>git clone git@github.com:paltalabs/create-soroban-dapp.git</code></p>
+<h2 id="navigate-to-the-project-folder"><a class="header" href="#navigate-to-the-project-folder">Navigate to the Project Folder</a></h2>
+<p>The main project (dapp) will be located in a subfolder named <code>soroban-react-dapp</code>, not in the root directory. The root directory is occupied by the NPX script.</p>
+<p><strong>Navigate to the subfolder:</strong></p>
+<p><code>cd soroban-react-dapp</code></p>
+<h2 id="install-dependencies"><a class="header" href="#install-dependencies">Install Dependencies</a></h2>
+<p>Inside the <code>soroban-react-dapp</code> folder, install the necessary dependencies. You can use Yarn, npm, or pnpm as per your preference:</p>
+<p><code>yarn install</code> or <code>npm install</code> or <code>pnpm install</code></p>
+<blockquote>
+<p>Important Note: When using this manual cloning technique, you will also clone the NPX script located in the root folder. This script will not be necessary for your manually cloned project. You can choose to keep only the <code>soroban-react-dapp</code> subfolder, which contains the actual Next.js project.</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h1>
+<p>This script is still in its early stages of development and might not function perfectly on every operating system and configuration. If you encounter any issues, please report to <strong>devs@paltalabs.io</strong></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="set-up-your-secrets"><a class="header" href="#set-up-your-secrets">Set up your secrets!</a></h1>
+<p>When deploying our contracts, you will need the secret key of the deployer account. This secret key will be stored in an ignored file located at <code>./contracts/.env</code>.</p>
+<p>To set up your secrets, first copy the example environment file:</p>
+<pre><code class="language-bash">cp contracts/.env.example contracts/.env
+</code></pre>
+<p>If you are already inside the contracts folder (such as when using a Docker container), simply use:</p>
+<p><code>cp .env.example .env</code></p>
+<p>Next, edit the <code>.env</code> file and add your secret keys. The file will look like this:</p>
+<pre><code class="language-bash"># Stellar accounts Secret Keys
+ADMIN_SECRET_KEY=
+
+# RPC Setup
+MAINNET_RPC_URL=
+</code></pre>
+<p>You can generate new Accounts and Private Keys from <a href="https://laboratory.stellar.org/#account-creator?network=test">Stellar Laboratory</a></p>
+<p>If you plan to deploy on the Mainnet, you will also need a Mainnet RPC Provider. Find one in <a href="https://app.validationcloud.io/">Validation Cloud</a> or <a href="https://nownodes.io/">Nownodes</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="welcome-to-your-soroban-react-dapp-boilerplate"><a class="header" href="#welcome-to-your-soroban-react-dapp-boilerplate">Welcome to your soroban react dapp boilerplate!</a></h1>
+<p>This dapp largely inspired by the <a href="https://github.com/scio-labs/inkathon">ink!athon</a> project will help you kickstart your soroban dapp creator journey.</p>
+<h1 id=""><a class="header" href="#"></a></h1>
+<p><img src="soroban-dapp/screenshot.png" alt="Dapp Screenshot" /></p>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="getting-started"><a class="header" href="#getting-started">Getting started</a></h2>
+<blockquote>
+<p>If it's not done already, you will need first to run the <a href="soroban-dapp/../create-soroban-dapp/getting_started.html">create-soroban-dapp script</a>.<br/><br/>
+If you prefer it is also possible to <a href="soroban-dapp/../create-soroban-dapp/manual_cloning.html">clone the boilerplate repo manually</a>.<br/><br/>
+We now suppose you ran the initialization script and that you have a folder containing the soroban-dapp next.js project.</p>
+</blockquote>
+<p>The customization of the dapp will be done following these steps:</p>
+<ul>
+<li><a href="soroban-dapp/./instructions/verify_installation.html">Verify Installation</a></li>
+<li><a href="soroban-dapp/./instructions/1.html">Customize app data</a></li>
+<li><a href="soroban-dapp/./contracts/create_and_build_contracts.html">Create and build your own contracts</a></li>
+<li><a href="soroban-dapp/./contracts/deploy_contracts.html">Deploy your contracts on tesnet</a></li>
+<li><a href="soroban-dapp/./contracts/frontend_contract_object.html">Retrieve contract object in the front-end</a></li>
+</ul>
+<p><em>Good luck building!</em></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="verify-installation"><a class="header" href="#verify-installation">Verify Installation</a></h1>
+<h2 id="run-the-app-on-a-local-server"><a class="header" href="#run-the-app-on-a-local-server">Run the app on a local server</a></h2>
+<p>To verify that everything is in order, open a shell in the nextjs soroban-dapp folder, and run</p>
+<pre><code class="language-bash"># If you use yarn
+yarn dev
+
+# If you use npm or pnpm
+npm run dev
+pnpm run dev
+</code></pre>
+<p>This will start the development server. The dapp will be available on localhost.</p>
+<p>The dapp should display the current greeting set in the testnet smart contract.</p>
+<blockquote>
+<p>If you encounter an error, make sure you have <a href="soroban-dapp/instructions/../../create-soroban-dapp/getting_started.html">installed the dependencies</a> of the project!</p>
+</blockquote>
+<h2 id="try-the-dapp"><a class="header" href="#try-the-dapp">Try the dapp</a></h2>
+<p><code>Connect your wallet and check if you can interact with the dapp by sending a new greeting!</code></p>
+<blockquote>
+<p>You may need some tokens from the faucet to interact with the testnet.<br/><br/>
+You can fund your wallet address with the testnet friendbot at<br/>
+<em>https://friendbot.stellar.org/?addr=YOUR_ADDRESS_HERE</em></p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h3 id="customize-app-data"><a class="header" href="#customize-app-data">Customize app data</a></h3>
+<p>You can start by modifying the TODOs with your own data (None of them is mandatory to change):</p>
+<ul>
+<li>Name of the package in <a href="https://github.com/paltalabs/create-soroban-dapp/edit/main/soroban-react-dapp/package.json">package.json</a>.</li>
+<li>All the dapp info in <a href="https://github.com/paltalabs/create-soroban-dapp/edit/main/soroban-react-dapp/src/pages/_app.tsx">_app.tsx</a>.</li>
+<li>Manifest and favicon in <a href="https://github.com/paltalabs/create-soroban-dapp/edit/main/soroban-react-dapp/src/pages/_document.tsx">_document.tsx</a>.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="manage-contracts"><a class="header" href="#manage-contracts">Manage contracts</a></h1>
+<p>The soroban dapp boilerplate comes with an carefully thought contracts organization and scripts which will allow you to manage your contracts compiling, deployment and integration in a simple way.</p>
+<p>To see the details and how to use it see</p>
+<ul>
+<li><a href="soroban-dapp/contracts/./contract_folder_organization.html">Contract folder organization</a></li>
+<li><a href="soroban-dapp/contracts/./create_and_build_contracts.html">Create and build contracts</a></li>
+<li><a href="soroban-dapp/contracts/./deploy_contracts.html">Deploy using the script</a></li>
+<li><a href="soroban-dapp/contracts/./frontend_contract_object.html">Retrive the contract object in frontend</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contract-folder-organization"><a class="header" href="#contract-folder-organization">Contract folder organization</a></h1>
+<p>In the contracts folder you will find all the Rust contracts you are using for your dapp as well as the deploy scripts and the registry of all deployed contract in <code>deployments.json</code>:</p>
+<pre><code>contracts/
+    contract1/
+        src/
+            lib.rs
+            test.rs
+        Cargo.toml
+        Makefile
+    contract2/
+    ...
+    scripts/
+        deploy.ts
+    utils/
+    Makefile
+</code></pre>
+<p>You will also find some makefiles which are used in the deploy scripts to automatically recompile the contracts if they have been updated.</p>
+<p>The contract folder is a typescript package in itself and its dependencies need to be installed in order to build the scripts.</p>
+<div style="break-before: page; page-break-before: always;"></div><h3 id="create-and-build-your-own-contracts"><a class="header" href="#create-and-build-your-own-contracts">Create and build your own contracts</a></h3>
+<p>The contracts workflow happens in the <code>contracts/</code> folder. Here you can see that the greeting contract is present already.</p>
+<p>Every new contract should be in its own folder, and the folder should be named the same name as the name of the contract in its <code>cargo.toml</code> file. You can check how the <code>tweaked_greeting</code> contract is changed from the <code>greeting</code> contract and you can also start from this to build your own contract.</p>
+<p>To build the contracts you can simply invoke the <code>make</code> command which will recursively build all contracts by propagating the <code>make</code> command to subfolders. Each contract needs to have its own <code>Makefile</code> for this to work. The <code>Makefile</code> from the greeting contract is a generic one and can be copied and paste to use with any of your new contract.</p>
+<p>If you are not familiar or comfortable with Makefiles you can simply go in the directory of the contract you want to compile and run</p>
+<pre><code class="language-bash"># This will create the target wasm blob under target/wasm32-unknown-unknown/release/contract_name.wasm
+cargo build --target wasm32-unknown-unknown --release
+</code></pre>
+<blockquote>
+<p>If it's your first time manipulating soroban contracts you might need to add the <code>wasm32-unknown-unknown</code> target to rust. For this run <code>rustup target add wasm32-unknown-unknown</code>. <br/>Follow instructions you find online if not working ( search for "add target wasm32-unknown-unknown to rust" ).</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="deploy-your-contracts-using-the-provided-script"><a class="header" href="#deploy-your-contracts-using-the-provided-script">Deploy your contracts using the provided script</a></h1>
+<p>Now that you have added your contract to the project, you can deploy the contract to any network of your choice.</p>
+<h2 id="add-a-deployer-secret-key-in-the-env-file"><a class="header" href="#add-a-deployer-secret-key-in-the-env-file">Add a deployer secret key in the .env file</a></h2>
+<p>First thing you need to do is to copy paste the <code>.env.example</code> file to create a <code>.env</code> file which will be used to retrieve the deployer secret key by the script. Just add any valid secret key to the <code>.env</code> file under the field <code>ADMIN_SECRET_KEY</code>.</p>
+<h2 id="run-the-contract"><a class="header" href="#run-the-contract">Run the contract</a></h2>
+<p>Then we can use the script provided in the <code>contracts</code> folder: <code>scripts/deploy.ts</code>. The script is using <a href="https://stellar.github.io/js-stellar-sdk/">stellar-js</a> under the hood.</p>
+<p>The contracts folder is a typescript package itself which needs to have its dependencies installed:</p>
+<pre><code class="language-bash"># From the contracts folder run
+yarn
+#
+npm -i
+#
+pnpm -i
+</code></pre>
+<p>The script can then be called using yarn (or any package manager)</p>
+<pre><code class="language-bash">yarn deploy network_name contract_name_1 contract_name_2 ...
+</code></pre>
+<p>Replacing <code>network_name</code> by one of <code>testnet|futurenet|standalone|mainnet</code> and adding all the contracts name you want to deploy as next arguments.</p>
+<p>For instance if I want to deploy the greeting contract on testnet I will run:</p>
+<pre><code class="language-bash">yarn deploy testnet greeting
+</code></pre>
+<blockquote>
+<p>Under the hood the script will</p>
+<ul>
+<li>Load the pair provided in the .env for the deployer identity</li>
+<li>Fund the deployer identity using Friendbot</li>
+<li>Deploy the contracts on testnet</li>
+<li>Add the contracts deployment infos in <code>deployments.json</code></li>
+</ul>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="retrieve-the-contract-object-in-the-frontend"><a class="header" href="#retrieve-the-contract-object-in-the-frontend">Retrieve the contract object in the frontend</a></h1>
+<h2 id="get-the-contract-wrapper-object-using-the-useregisteredcontract-hook"><a class="header" href="#get-the-contract-wrapper-object-using-the-useregisteredcontract-hook">Get the contract wrapper object using the useRegisteredContract hook:</a></h2>
+<p>In the file [GreeterContractInteraction.tsx], you can see an <a href="https://github.com/paltalabs/create-soroban-dapp/blob/4fe846b382b204e9f40d1fb276e3b9f48424e3d8/soroban-react-dapp/src/components/web3/GreeterContractInteractions.tsx#L44">example</a> of how to retreive the contract object in the front end:</p>
+<p>You first need to import the <code>useRegisteredContract</code> hook in your page <a href="https://github.com/paltalabs/create-soroban-dapp/blob/4fe846b382b204e9f40d1fb276e3b9f48424e3d8/soroban-react-dapp/src/components/web3/GreeterContractInteractions.tsx#L14">here</a>:</p>
+<p><code>import { useRegisteredContract } from '@soroban-react/contracts'</code></p>
+<p>Then you have to call the hook with the name of the contract you want to fetch as a parameter:</p>
+<p><code>const contract = useRegisteredContract("greeting")</code></p>
+<p>The hook will fetch the contract directly in the deployments object passed to the context <a href="https://github.com/paltalabs/create-soroban-dapp/blob/4fe846b382b204e9f40d1fb276e3b9f48424e3d8/soroban-react-dapp/src/components/web3/MySorobanReactProvider.tsx#L22">here</a> and the values will correspond to the values in the <code>deployments.json</code> file updated automatically when the deploy scripts are called.</p>
+<h2 id="contract-wrapper-object"><a class="header" href="#contract-wrapper-object">Contract wrapper object</a></h2>
+<p>The contract object has two fields, the deploymentInfo object and the invoke method:</p>
+<pre><code>contract
+    .deploymentInfo (Object)
+        .name
+        .networkPassphrase
+        .contractAddress
+    .invoke (Method)
+</code></pre>
+<h3 id="the-deploymentinfo-object"><a class="header" href="#the-deploymentinfo-object">The deploymentInfo object</a></h3>
+<p><code>deploymentInfo</code> is directly corresponding to the object you can see in the <code>deployments.json</code>, looking like the following:</p>
+<pre><code class="language-JSON">{
+    "contractId": "greeting",
+    "networkPassphrase": "Test SDF Network ; September 2015",
+    "contractAddress": "CDKU2ZVK2RV3JFPPNAVYHGHMSXD7RENEVMEPURNKEECM7FDVH7WHI7ZO"
+}
+</code></pre>
+<h3 id="the-invoke-method"><a class="header" href="#the-invoke-method">The invoke method</a></h3>
+<p>The <code>invoke</code> method is a wrapper around the <code>contractInvoke</code> method from @soroban-react. It basically use the latter with some parameters computed from the <code>deploymentInfo</code> of the contract and the current context to simplify its calling.</p>
+<p>The syntax to call a method of the contract object is as following:</p>
+<pre><code class="language-ts">const result = await contract?.invoke({
+    method: 'set_title',
+    args: [stringToScVal(newMessage)],
+})
+</code></pre>
+<p>Where <code>method</code> is the name of the smart contract method you want to call and <code>args</code> the arguments the method expects converted into ScVal.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="fly-with-your-own-wings"><a class="header" href="#fly-with-your-own-wings">Fly with your own wings</a></h1>
+<p>You are now normally all set! This is your time to shine and show your mastery of Rust and React to build the best dapp!</p>
+<p>The idea is for you to inspire yourself from the two methods implemented in the boilerplate (one getter, one setter) to now connect to your own smart contracts and craft the adequate frontend.</p>
+<p><em>Wishing you good luck</em></p>
+<iframe src="https://giphy.com/embed/l0HluhOSqdxpBO7v2" width="480" height="320" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/vintage-superman-super-hero-l0HluhOSqdxpBO7v2"></a></p><div style="break-before: page; page-break-before: always;"></div><h1 id="sorochat-dapp-tutorial"><a class="header" href="#sorochat-dapp-tutorial">SOROCHAT dapp tutorial</a></h1>
+<p><a href="https://github.com/benjaminsalon/sorochat">SOROCHAT</a> is a nice little messaging dapp built using create-soroban-dapp for demonstration purpose.</p>
+<p><img src="other_resources/sorochat.png" alt="SOROCHAT Preview" /></p>
+<p><a href="https://sorochat.vercel.app/">LIVE VERSION HERE 🕺</a></p>
+<p>Submitted and awarded for the <a href="https://github.com/stellar/sorobounties/discussions/8">Sorobounties 2024</a>.</p>
+<h2 id="tutorial-on-devto"><a class="header" href="#tutorial-on-devto">Tutorial on Dev.to</a></h2>
+<p>You can find a written <a href="https://dev.to/benjaminsalon/sorochat-how-to-build-a-simple-chat-dapp-using-create-soroban-dapp-295l">tutorial</a> explaining how to create the dapp on dev.to 🚀</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+    </div>
+    </body>
+</html>
