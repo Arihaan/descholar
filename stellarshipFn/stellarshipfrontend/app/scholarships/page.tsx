@@ -1,18 +1,37 @@
-import React from "react";
-
-export interface ScholarShip {
-  id: number;
-  name: string;
-  amount: number;
-  deadline: string;
-  description: string;
-  quantity: number;
-  isAvaliable?: boolean;
-}
+import React, { useEffect, useState } from "react";
+import { Client, networks, Scholarship } from "bindings";
+import { isConnected, getAddress } from "@stellar/freighter-api";
 
 const scholarships = () => {
-  const scholarships = [
-    {
+  //contract id is smart wallet address
+
+  let addressLookup = (async () => {
+    if (await isConnected()) return getAddress();
+  })();
+
+  const scholarshipContract = new Client({
+    contractId: networks.testnet.contractId,
+    networkPassphrase: networks.testnet.networkPassphrase,
+    rpcUrl: "https://rpc-testnet.stellar.org/",
+  });
+
+  const [scholarships, setScholarships] = useState<Scholarship[]>();
+
+  useEffect(() => {
+    const fetchScholarships = async () => {
+      try {
+        const transaction = await scholarshipContract.get_all_scholarships();
+        setScholarships(transaction.result);
+      } catch (error) {
+        console.error("Error fetching scholarships:", error);
+        throw error;
+      }
+    };
+
+    fetchScholarships();
+  }, []);
+
+  /*  {
       id: 1,
       name: "Academic Excellence Scholarship",
       amount: 20000,
@@ -37,8 +56,7 @@ const scholarships = () => {
       deadline: "2025-02-28",
       description: "A scholarship for graduate students in STEM fields.",
       quantity: 5,
-    },
-  ];
+    },*/
 
   return (
     <>
@@ -58,13 +76,13 @@ const scholarships = () => {
             </tr>
           </thead>
           <tbody>
-            {scholarships.map((_scholarship) => (
+            {scholarships?.map((_scholarship) => (
               <tr>
                 <>
                   <th></th>
                   <th>{_scholarship.name}</th>
-                  <td>{_scholarship.amount}$</td>
-                  <td>{_scholarship.deadline}</td>
+                  <td>{_scholarship.total_amount}$</td>
+                  <td>{_scholarship.end_date}</td>
                   <td>
                     <button className="btn btn-accent btn-sm">apply</button>
                   </td>

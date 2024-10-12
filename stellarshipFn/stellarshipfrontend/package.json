@@ -14,7 +14,8 @@
     "next": "14.2.15",
     "react": "^18",
     "react-dom": "^18",
-    "stellar-sdk": "^12.3.0"
+    "stellar-sdk": "^12.3.0",
+    "bindings": "file:../../bindings"
   },
   "devDependencies": {
     "@types/node": "^20",

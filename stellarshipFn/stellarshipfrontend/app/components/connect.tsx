@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { setAllowed } from "@stellar/freighter-api";
+import { Client, networks } from "bindings";
 
 export interface ConnectButtonProps {
   label: string;
