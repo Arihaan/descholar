@@ -8,7 +8,7 @@ const StyledIconLink = styled(Link)(() => [
 ])
 
 export const HomePageTitle: FC = () => {
-  const title = 'Soroban React Dapp'
+  const title = 'StellarShip'
   const desc = 'Full-Stack DApp Boilerplate for Soroban smart contracts'
   const githubHref = 'https://github.com/paltalabs/create-soroban-dapp/'
 
