@@ -19,9 +19,11 @@ const scholarships = () => {
   useEffect(() => {
     const fetchScholarships = async () => {
       try {
-        const transaction = await scholarshipContract.get_all_scholarships();
+        const transaction = await scholarshipContract.get_scholarships();
         console.log("transaction:", transaction);
         console.log(scValToNative(transaction.simulation.result.retval));
+        var result = scValToNative(transaction.simulation.result.retval);
+        setScholarships(result);
         //scValToNative(transaction.simulationResult.retval);
         //const { result } = await transaction.signAndSend({
         //   signTransaction: async (xdr) => {
@@ -48,7 +50,7 @@ const scholarships = () => {
       </div>
       <br />
 
-      <div className="overflow-x-auto flex justify-center items-start h-screen">
+      <div className="overflow-x-auto flex justify-center items h-screen">
         <table className="bg-primary-content table max-w-xl">
           <thead>
             <tr>
@@ -56,6 +58,7 @@ const scholarships = () => {
               <th>Name</th>
               <th>Amount</th>
               <th>DeadLine</th>
+              <th>Available</th>
             </tr>
           </thead>
           <tbody>
@@ -64,8 +67,17 @@ const scholarships = () => {
                 <>
                   <th></th>
                   <th>{_scholarship.name}</th>
-                  <td>{_scholarship.total_amount}$</td>
-                  <td>{_scholarship.end_date}</td>
+                  <td>
+                    {Number(_scholarship.total_grant_amount) / 10_000_000} XLM
+                  </td>
+                  <td>
+                    {
+                      new Date(Number(_scholarship.end_date) * 1000)
+                        .toLocaleString()
+                        .split(",")[0]
+                    }
+                  </td>
+                  <td> {_scholarship.available_grants}</td>
                   <td>
                     <button className="btn btn-accent btn-sm">apply</button>
                   </td>
