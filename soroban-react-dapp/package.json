@@ -27,7 +27,7 @@
     "@soroban-react/chains": "9.1.13",
     "@soroban-react/connect-button": "9.1.13",
     "@soroban-react/contracts": "9.2.2",
-    "@soroban-react/core": "9.1.13",
+    "@soroban-react/core": "^9.1.13",
     "@soroban-react/events": "9.1.13",
     "@soroban-react/freighter": "9.1.13",
     "@soroban-react/hana": "9.1.13",
@@ -47,6 +47,7 @@
     "react-hot-toast": "^2.4.1",
     "react-icons": "^4.11.0",
     "sharp": "^0.32.6",
+    "soroban-react": "^0.0.0",
     "spinners-react": "^1.0.7",
     "use-async-effect": "^2.2.7"
   },
