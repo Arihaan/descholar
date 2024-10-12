@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 export default function Home() {
   return (
     <div className="relative">
@@ -14,9 +12,11 @@ export default function Home() {
               View scholarships
             </button>
           </a>
-          <button className="btn btn-outline btn-accent m-2">
-            Create scholarship
-          </button>
+          <a href="addscholarship">
+            <button className="btn btn-outline btn-accent m-2">
+              Create scholarship
+            </button>
+          </a>
         </div>
       </div>
     </div>

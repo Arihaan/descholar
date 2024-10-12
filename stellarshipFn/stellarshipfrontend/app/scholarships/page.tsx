@@ -1,18 +1,17 @@
+"use client";
 import React, { useEffect, useState } from "react";
 import { Client, networks, Scholarship } from "bindings";
 import { isConnected, getAddress } from "@stellar/freighter-api";
+import { kit, loadedPublicKey } from "../stellar-wallets-kit";
+import { scValToNative } from "stellar-sdk";
 
 const scholarships = () => {
   //contract id is smart wallet address
 
-  let addressLookup = (async () => {
-    if (await isConnected()) return getAddress();
-  })();
-
   const scholarshipContract = new Client({
     contractId: networks.testnet.contractId,
     networkPassphrase: networks.testnet.networkPassphrase,
-    rpcUrl: "https://rpc-testnet.stellar.org/",
+    rpcUrl: "https://soroban-testnet.stellar.org/",
   });
 
   const [scholarships, setScholarships] = useState<Scholarship[]>();
@@ -21,7 +20,18 @@ const scholarships = () => {
     const fetchScholarships = async () => {
       try {
         const transaction = await scholarshipContract.get_all_scholarships();
-        setScholarships(transaction.result);
+        console.log("transaction:", transaction);
+        console.log(scValToNative(transaction.simulation.result.retval));
+        //scValToNative(transaction.simulationResult.retval);
+        //const { result } = await transaction.signAndSend({
+        //   signTransaction: async (xdr) => {
+        //     const { signedTxXdr } = await kit.signTransaction(xdr);
+        //     console.log("signedTxXdr:", signedTxXdr);
+        //     setScholarships(transaction.result);
+
+        //  return signedTxXdr;
+        //  },
+        //});
       } catch (error) {
         console.error("Error fetching scholarships:", error);
         throw error;
@@ -30,33 +40,6 @@ const scholarships = () => {
 
     fetchScholarships();
   }, []);
-
-  /*  {
-      id: 1,
-      name: "Academic Excellence Scholarship",
-      amount: 20000,
-      deadline: "2024-12-31",
-      description:
-        "A scholarship for high school seniors based on academic excellence, leadership, and service.",
-      quantity: 10,
-    },
-    {
-      id: 2,
-      name: "Low-Income Student Scholarship",
-      amount: 40000,
-      deadline: "2025-01-15",
-      description:
-        "A scholarship for low-income students pursuing undergraduate studies.",
-      quantity: 20,
-    },
-    {
-      id: 3,
-      name: "STEM Graduate Scholarship",
-      amount: 30000,
-      deadline: "2025-02-28",
-      description: "A scholarship for graduate students in STEM fields.",
-      quantity: 5,
-    },*/
 
   return (
     <>
