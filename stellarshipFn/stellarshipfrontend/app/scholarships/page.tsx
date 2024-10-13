@@ -1,13 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Client, networks, Scholarship } from "bindings";
-import { isConnected, getAddress } from "@stellar/freighter-api";
-import { kit, loadedPublicKey } from "../stellar-wallets-kit";
 import { scValToNative } from "stellar-sdk";
+import Navbar from '../components/Navbar';
 
-const scholarships = () => {
-  //contract id is smart wallet address
-
+const Scholarships = () => {
   const scholarshipContract = new Client({
     contractId: networks.testnet.contractId,
     networkPassphrase: networks.testnet.networkPassphrase,
@@ -21,22 +18,13 @@ const scholarships = () => {
       try {
         const transaction = await scholarshipContract.get_scholarships();
         console.log("transaction:", transaction);
-        console.log(scValToNative(transaction.simulation.result.retval));
-        var result = scValToNative(transaction.simulation.result.retval);
-        setScholarships(result);
-        //scValToNative(transaction.simulationResult.retval);
-        //const { result } = await transaction.signAndSend({
-        //   signTransaction: async (xdr) => {
-        //     const { signedTxXdr } = await kit.signTransaction(xdr);
-        //     console.log("signedTxXdr:", signedTxXdr);
-        //     setScholarships(transaction.result);
-
-        //  return signedTxXdr;
-        //  },
-        //});
+        if (transaction.simulation?.result?.retval) {
+          console.log(scValToNative(transaction.simulation.result.retval));
+          var result = scValToNative(transaction.simulation.result.retval);
+          setScholarships(result);
+        }
       } catch (error) {
         console.error("Error fetching scholarships:", error);
-        throw error;
       }
     };
 
@@ -44,51 +32,24 @@ const scholarships = () => {
   }, []);
 
   return (
-    <>
-      <div className="flex justify-center items-start">
-        <h1 className="m-12 font-extrabold text-5xl">Stellarships</h1>
-      </div>
-      <br />
-
-      <div className="overflow-x-auto flex justify-center items h-screen">
-        <table className="bg-primary-content table max-w-xl">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Name</th>
-              <th>Amount</th>
-              <th>DeadLine</th>
-              <th>Available</th>
-            </tr>
-          </thead>
-          <tbody>
-            {scholarships?.map((_scholarship) => (
-              <tr>
-                <>
-                  <th></th>
-                  <th>{_scholarship.name}</th>
-                  <td>
-                    {Number(_scholarship.total_grant_amount) / 10_000_000} XLM
-                  </td>
-                  <td>
-                    {
-                      new Date(Number(_scholarship.end_date) * 1000)
-                        .toLocaleString()
-                        .split(",")[0]
-                    }
-                  </td>
-                  <td> {_scholarship.available_grants}</td>
-                  <td>
-                    <button className="btn btn-accent btn-sm">apply</button>
-                  </td>
-                </>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-950 via-blue-950 to-indigo-950">
+      <Navbar />
+      <main className="flex-grow container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold mb-8 text-center text-blue-400">Available Scholarships</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {scholarships?.map((_scholarship, index) => (
+            <div key={index} className="bg-gray-800 bg-opacity-50 p-6 rounded-2xl shadow-lg">
+              <h2 className="text-xl font-semibold mb-4 text-blue-300">{_scholarship.name}</h2>
+              <p className="text-gray-300 mb-2">Amount: {Number(_scholarship.total_grant_amount) / 10_000_000} XLM</p>
+              <p className="text-gray-300 mb-2">Deadline: {new Date(Number(_scholarship.end_date) * 1000).toLocaleDateString()}</p>
+              <p className="text-gray-300 mb-4">Available Grants: {_scholarship.available_grants}</p>
+              <button className="btn btn-accent btn-sm rounded-xl w-full">Apply</button>
+            </div>
+          ))}
+        </div>
+      </main>
+    </div>
   );
 };
 
-export default scholarships;
+export default Scholarships;

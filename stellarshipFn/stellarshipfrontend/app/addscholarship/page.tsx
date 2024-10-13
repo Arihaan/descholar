@@ -3,6 +3,8 @@ import { Client, networks, Scholarship } from "bindings";
 import React from "react";
 import { kit } from "../stellar-wallets-kit";
 import { WalletNetwork } from "@creit.tech/stellar-wallets-kit";
+import Navbar from '../components/Navbar';
+
 
 const createScholarshipPage = () => {
   const scholarshipContract = new Client({
@@ -49,6 +51,7 @@ const createScholarshipPage = () => {
 
     return (
       <>
+      <Navbar />
         <div className="flex justify-center items-start mt-32">
           <h2 className="font-extrabold text-5xl">Create new Stellarship</h2>
         </div>
