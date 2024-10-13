@@ -2,6 +2,8 @@
 
 ### Empowering education through decentralized scholarships on Stellar.
 
+<img width="1055" alt="image" src="https://github.com/user-attachments/assets/add1813a-849e-4100-a7f0-eae9397a250c">
+
 ## Overview
 Stellarship is an innovative decentralized application (dApp) built on the Stellar Soroban blockchain, designed to transform the way scholarships are created, managed, and distributed globally. By leveraging blockchain technology, Stellarship offers a transparent, decentralized solution for scholarship distribution, particularly targeting students in underserved regions. The platform enables organizations to create scholarships, while students can apply seamlessly, ensuring equal access to educational funding on a global scale.
 
