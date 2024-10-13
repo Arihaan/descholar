@@ -108,3 +108,12 @@ Follow the steps below to set up and run Stellarship on your local machine:
 4. **Start the development server**
    ```bash
    npm run dev
+
+## Contract Information
+
+- **Contract ID**: `CA6YKTUFN2R6APIPTLCX2NRUNBZQWHRNMXW2UJXGPHDVKOGHVJKWNXS5`
+- **Contract URL**: [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CA6YKTUFN2R6APIPTLCX2NRUNBZQWHRNMXW2UJXGPHDVKOGHVJKWNXS5)
+
+You can view the contract details and interactions on Stellar Expert by clicking the link above.
+
+---
