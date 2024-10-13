@@ -1,4 +1,4 @@
-# Stellarship - Decentralized Scholarship dApp on Stellar Soroban
+# Stellarship - Decentralized Scholarships on Stellar Soroban
 
 ### Empowering education through decentralized scholarships on Stellar.
 
