@@ -1,317 +1,110 @@
-<!-- # @create-soroban-dapp.
+# Stellarship - Decentralized Scholarship dApp on Stellar Soroban
 
-@create-soroban-dapp is both a npx script and a boilerplate dapp for kickstarting any of your ideas for a Soroban-based Dapp.
+### Empowering education through decentralized scholarships on Stellar.
 
-Largely inspired by the [ink!athon](https://github.com/scio-labs/inkathon) project by [Scio Labs](https://github.com/scio-labs) and by [@create-t3-app](https://github.com/t3-oss/create-t3-app) by [T3 Open Source](https://github.com/t3-oss) for the script mechanisms.
+## Overview
+Stellarship is an innovative decentralized application (dApp) built on the Stellar Soroban blockchain, designed to transform the way scholarships are created, managed, and distributed globally. By leveraging blockchain technology, Stellarship offers a transparent, decentralized solution for scholarship distribution, particularly targeting students in underserved regions. The platform enables organizations to create scholarships, while students can apply seamlessly, ensuring equal access to educational funding on a global scale.
 
-Check the [`LIVE VERSION`](https://create-soroban-dapp.vercel.app/) of the dapp utilizing already deployed testnet contract!
+---
 
-***Read the docs [here](create-soroban-dapp.paltalabs.io)***  📚📚
+## Team
 
-# Introduction
+### Arihaan
+- **Role**: Full-stack Developer
+- **Achievements**: Winner at Chainlink and zkSync hackathons
+- **Experience**: Previously interned at IBM and Deloitte
+- **Education**: Student at University of Hertfordshire
 
-`@create-soroban-dapp` is composed of two things:
+### Filip
+- **Role**: Full-stack Developer
+- **Achievements**: Winner at ETHBratislava
+- **Education**: Student at Slovak Technical University
 
-- A boilerplate dapp utilizing the [@soroban-react](https://github.com/paltalabs/soroban-react).
 
-- A npx script allowing any developer to quickstart its project via the command line and `npx create-soroban-dapp`
+## Key Features
 
-# Usage:
+- **Decentralized Scholarship Creation**: Organizations can create scholarships by providing essential details like the scholarship name, description, total grant amount, number of grants, and application deadline.
+- **Student Application Process**: Students worldwide can apply for scholarships by submitting their personal details and application form through a simple and intuitive interface.
+- **Blockchain Transparency**: Funds for the scholarships are securely managed on the Stellar blockchain via smart contracts, ensuring that all transactions are verifiable and immutable.
+- **Automatic Grant Distribution**: Once the scholarship creator approves a student’s application, the smart contract automatically distributes the grant amount in XLM (Stellar’s native currency), calculated by dividing the total grant amount by the number of available grants.
+- **Global Reach via Stellar Anchors**: To ensure that students in disadvantaged regions can easily access their funds, Stellarship integrates with Stellar anchors, such as MoneyGram off-ramps, to allow recipients to withdraw their grants in local currencies.
+- **Low Barrier of Entry**: Stellarship utilizes Stellar’s innovative passkey authentication to lower the entry barriers, simplifying access for students in technologically underserved areas by providing secure, easy login options without complex wallet setups.
 
-Simply use
+---
 
-`npx create-soroban-dapp@latest`
+## How It Works
 
-or
+1. **Create a Scholarship**: 
+    - An organization or donor instantiates a new scholarship by entering key details, such as the scholarship name, a description of the program, the total grant amount in XLM, the number of available grants, and the scholarship's end date. 
+    - The organization must deposit the total grant amount into the smart contract. The smart contract then securely holds the funds until they are distributed.
+  
+2. **View Available Scholarships**: 
+    - Users can query the platform to view all available scholarships, which are fetched from the blockchain to display on the front end.
 
-`npm create soroban-dapp@latest`
+3. **Apply for a Scholarship**: 
+    - A student interested in applying for a scholarship submits an application form by providing their personal details. Each student can only apply for a scholarship once, ensuring fairness.
 
-Then, cd inside the new project repository.
+4. **Application Review**:
+    - The organization that created the scholarship can view all the applicants for that particular scholarship. The reviewing process allows the organization to evaluate applications and approve students who meet their criteria.
 
-# Troubleshooting
+5. **Grant Distribution**: 
+    - Once the organization approves a student, the smart contract automatically transfers the corresponding amount of XLM to the approved student’s wallet. The grant amount is calculated as the total grant amount divided by the number of grants. The number of available grants is reduced accordingly.
 
-## If npm create script malfunctions
+6. **Off-Ramp for Local Usage**: 
+    - Through Stellar anchors like MoneyGram, students who receive grants in XLM can convert their funds into local currencies, enabling them to use the scholarship for local educational expenses.
 
-The script in its early stage is likely to not function perfectly on every different os and configuration. If the script happens to not function properly 'please report to @benjaminsalon' on the stellar developer discord channel.
+---
 
-## Manual cloning
+## Problem Solved
 
-It is also possible to use the dapp boilerplate via manually cloning the repo:
+- According to UNESCO, **244 million children and youth** between the ages of 6 and 18 are still out of school globally. In addition, **$100 million in scholarship money** goes unclaimed every year due to inefficient or inaccessible scholarship distribution systems.
+- Stellarship aims to bridge this gap by providing a decentralized, transparent, and accessible platform that connects scholarship funds to students worldwide. By utilizing the power of blockchain, Stellarship ensures that the entire process, from scholarship creation to fund distribution, is trustless, efficient, and secure.
 
-`git clone git@github.com:paltalabs/create-soroban-dapp.git`
+---
 
-The dapp will then not be in the root folder, this folder is occupied by the npx script. You will find the dapp in the sub folder 'soroban-react-dapp':
+## Why Stellar Soroban?
 
-`cd soroban-react-dapp`
+Stellarship harnesses the unique capabilities of the Stellar blockchain and the Soroban smart contract platform to create a truly decentralized, global solution. Here's why Stellar is critical to Stellarship's success:
 
-From there, it is a normal nextjs app:
+1. **Global Financial Inclusion**: Stellar's mission of financial inclusion aligns perfectly with Stellarship's goal of democratizing access to scholarships. Stellar’s network and partnerships, like its integration with MoneyGram, allow students to convert XLM into local currencies, breaking down financial barriers.
+  
+2. **Fast and Low-Cost Transactions**: Stellar’s blockchain is designed for fast, low-cost transactions, making it an ideal platform for efficiently distributing scholarship funds across borders. Students in underserved regions can receive scholarships without the heavy transaction fees associated with traditional banking.
 
-`yarn` or `npm install` or `pnpm install`
+3. **Smart Contracts on Soroban**: Using Soroban smart contracts, Stellarship automates key processes like fund management, application review, and grant distribution. Soroban allows us to build secure, programmable contracts that ensure scholarship funds are held and distributed according to predefined conditions, without intermediaries.
 
+4. **Passkey Integration**: Stellar’s innovative passkey feature simplifies authentication, reducing friction for students from regions with low technological infrastructure. This improves user experience and ensures that the platform is accessible to a wider audience.
 
-# Set up your secrets!
-When deploying our contracts, we will need to the secret key of the deployer account. This secret key will be in a ignored file in `./contracts/.env`.
+---
 
-To set up your secrets do
-```bash
-cp contracts/.env.example contracts/.env
-```
-If you are already inside the contracts folder (due to being inside the Docker Container), just do `cp .env.example .env`
+## Tech Stack
 
-And then edit the `.env` file, that will look like this:
-```bash
-# Stellar accounts Secret Keys
-ADMIN_SECRET_KEY=
+Stellarship is built using a combination of cutting-edge blockchain and web technologies to provide a seamless, secure, and efficient user experience:
 
-# RPC Setup
-MAINNET_RPC_URL=
-```
-You can generate new Accounts and Private Keys from https://laboratory.stellar.org/#account-creator?network=test
+- **Stellar Soroban**: Soroban is Stellar's smart contract platform that powers the core functionality of Stellarship, including scholarship creation, applicant management, and automated fund distribution.
+  
+- **Stellar SDK**: The Stellar SDK is used for interacting with the Stellar blockchain, allowing the dApp to read and write data to the ledger, such as fetching available scholarships and submitting transactions for fund distribution.
 
-If you plan to deploy in Mainnet, you will also need a Mainnet RPC Provider. Find one in https://app.validationcloud.io/ or in https://nownodes.io/
+- **Stellar CLI**: Used for managing smart contract deployment and interacting with the blockchain network during the development process.
 
+- **Stellar Anchors**: Stellarship integrates with Stellar's anchor system, such as MoneyGram, to provide off-ramping capabilities for grant recipients, enabling them to withdraw their funds in local currencies.
 
-# Get those containers up!
+- **Next.js**: The front-end of the dApp is built using Next.js, a powerful React framework, to deliver a fast, responsive, and user-friendly interface for both organizations and students.
 
-We will use docker-compose to get the containers up and running. This will rise a container for a local Stellar blockchain and another container with soroban-preview, which has all the necessary dependancies to deploy and interact with the contracts. Along with the dapp container that will run the front-end of the dapp.
+---
 
-```bash
-# move to the right directory
-cd soroban-react-dapp/
+## Installation
 
-# Then, run the containers
-docker compose up -d
+Follow the steps below to set up and run Stellarship on your local machine:
 
-# To get inside the soroban-preview container
-bash run.sh
-# or
-# docker exec --tty --interactive soroban-contracts bash
-```
-Inside the container we can now compile the contracts, install the packages and deploy the contracts.
-
-```bash
-# move to the contracts folder
-cd contracts
-
-# build
-make build
-
-# Install dependencies and deploy the contract
-yarn install
-yarn deploy testnet greeting
-```
-Now we can run our frontend
-
-```bash
-# move to the parent folder
-cd ..
-# install the dependencies
-yarn
-# run the frontend in development mode
-yarn dev
- -->
-
-# @create-soroban-dapp
-
-`@create-soroban-dapp` is both an `npx` script and a boilerplate dApp for kickstarting any of your ideas for a Soroban-based DApp.
-
-Largely inspired by the [ink!athon](https://github.com/scio-labs/inkathon) project by [Scio Labs](https://github.com/scio-labs) and by [@create-t3-app](https://github.com/t3-oss/create-t3-app) by [T3 Open Source](https://github.com/t3-oss) for the script mechanisms.
-
-Check the [`LIVE VERSION`](https://create-soroban-dapp.vercel.app/) of the dApp utilizing already deployed testnet contracts!
-
-**_Read the docs [here](https://create-soroban-dapp.paltalabs.io)_** 📚📚
-
-## Introduction
-
-`@create-soroban-dapp` is composed of two key components:
-
-- A boilerplate dApp utilizing the [@soroban-react](https://github.com/paltalabs/soroban-react) library.
-- An `npx` script allowing any developer to quickly start their project via the command line using `npx create-soroban-dapp`.
-
-## Usage
-
-To create a new Soroban dApp project, simply use one of the following commands:
-
-```bash
-npx create-soroban-dapp@latest
-```
-
-or
-
-```bash
-npm create soroban-dapp@latest
-```
-
-After the script completes, navigate into your newly created project directory:
-
-```bash
-cd your-project-name
-```
-
-## Troubleshooting
-
-### If the `npm create` Script Malfunctions
-
-The script, in its early stage, might not function perfectly on every OS and configuration. If it fails to run properly, please report the issue to `@benjaminsalon` on the Stellar developer Discord channel.
-
-### Manual Cloning
-
-If the script fails or if you prefer manual setup, you can clone the repository directly:
-
-```bash
-git clone git@github.com:paltalabs/create-soroban-dapp.git
-```
-
-After cloning, the dApp will not be in the root folder. Instead, you'll find it in the `soroban-react-dapp` subfolder:
-
-```bash
-cd soroban-react-dapp
-```
-
-From there, it functions like a standard Next.js app:
-
-```bash
-yarn install
-# or npm install
-# or pnpm install
-```
-
-## Set Up Your Secrets!
-
-When deploying contracts, you'll need the secret key of the deployer account. This secret key will be stored in an ignored file located at `./contracts/.env`.
-
-To set up your secrets, run:
-
-```bash
-cp contracts/.env.example contracts/.env
-```
-
-If you're already inside the contracts folder (e.g., within the Docker Container), run:
-
-```bash
-cp .env.example .env
-```
-
-Then, edit the `.env` file lcoated in `soroban-react-dapp/contracts` to include your secret keys and RPC URLs. The `.env` file should look like this:
-
-```bash
-# Stellar accounts Secret Keys
-ADMIN_SECRET_KEY=
-
-# RPC Setup
-MAINNET_RPC_URL=
-```
-
-You can generate new accounts and private keys from [Stellar Laboratory](https://laboratory.stellar.org/#account-creator?network=test).
-
-If you plan to deploy on the mainnet, you'll also need a Mainnet RPC Provider. You can find one at [Validation Cloud](https://app.validationcloud.io/) or [NowNodes](https://nownodes.io/).
-
-## Get Those Containers Up!
-
-We will use Docker Compose to set up and run the necessary containers. This includes a container for a local Stellar blockchain and another container with Soroban Preview, which contains all the dependencies needed to deploy and interact with the contracts.
-
-### 1. Move to the Right Directory
-
-First, navigate to the `soroban-react-dapp/` directory where the `docker-compose.yml` file is located:
-
-```bash
-cd soroban-react-dapp/
-```
-
-### 2. Setting up the containers
-
-#### 2.1 Copy the .env File
-To give a custom name to the project, copy the `.env.example` file to `.env` using:
-
-````
-cp .env.example .env
-````
-
-#### 2.2 Naming the containers
-then, edit the `.env` file in your `soroban-react-dapp` folder to include your project ID:
-
-```bash
-PROJECT_ID=your-project-id
-```
-
-> [!NOTE]
-> By default the containers name will be something like `soroban-preview-${dirname-timestamp}` and `soroban-contracts-${dirname-timestamp}`.
-
-### 3 Run the Containers
-
-To bring up the necessary containers, run:
-
-```bash
-bash run.sh
-```
-
-This command will start the following services:
-
-- **soroban-preview**: Provides the Soroban environment required to compile, deploy, and interact with your contracts. This container will have the terminal attached to it, allowing for direct interaction with the Soroban environment.
-- **stellar**: Runs a local Stellar blockchain with Soroban support enabled. This service will run in the background, providing the necessary infrastructure for the Soroban environment.
-
-### 4. Compile and Deploy Contracts
-
-Once inside the `soroban-preview` container, navigate to the `contracts/` directory to compile and deploy your contracts:
-
-```bash
-# Move to the contracts folder
-cd contracts
-
-# Build the contracts
-make build
-
-# Install dependencies and deploy the contract
-yarn install
-yarn deploy testnet greeting
-```
-
-### 5. Run the Frontend
-
-After deploying the contracts, you can start the frontend of your dApp:
-
-```bash
-# Move to the parent folder
-cd ..
-
-# Install the dependencies
-yarn
-
-# Run the frontend in development mode
-yarn dev
-```
-
-### 6. Stopping the Containers
-
-To stop the containers when you're done, run:
-
-```bash
-docker compose down
-```
-
-### 7. Explanation of the `docker-compose.yml` Configuration
-
-Here’s a breakdown of the `docker-compose.yml` file:
-
-- **soroban-preview**:
-
-  - **image**: Uses the `esteblock/soroban-preview:21.0.1` image.
-  - **container_name**: The container name is dynamically set based on the `${PROJECT_ID}`.
-  - **volumes**: Maps the current directory to `/workspace` inside the container.
-  - **ipc: host**: Shares the IPC namespace with the host.
-  - **ports**: Exposes port `3000` on the host, which will be used for the frontend.
-  - **networks**: The container is connected to the `create-soroban-network`.
-  - **command**: Keeps the container running by executing `tail -f /dev/null`.
-
-- **stellar**:
-
-  - **image**: Uses the `stellar/quickstart` image with Soroban support.
-  - **container_name**: The container name is dynamically set based on the `${PROJECT_ID}`.
-  - **networks**: Connected to the `create-soroban-network`.
-  - **ports**: Exposes port `8000` on the host, used for interacting with the Stellar blockchain.
-  - **command**: Runs Stellar with Soroban RPC and diagnostic events enabled.
-
-- **networks**:
-  - **create-soroban-network**: A custom bridge network for container communication.
-
-This setup ensures a fully functional development environment for Soroban dApp development.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-repo/stellarship.git
+2. **Navigate to the project directory**
+   ```bash
+   cd stellarship/stellarshipFn/stellarshipfrontend
+3. **Install dependencies**
+   ```bash
+   npm install
+4. **Start the development server**
+   ```bash
+   npm run dev
