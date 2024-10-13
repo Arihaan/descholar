@@ -60,9 +60,11 @@ const CreateScholarshipPage = () => {
 
       console.log("Scholarship created:", result);
       alert("Scholarship created successfully!");
+      location.reload();
     } catch (error) {
       console.error("Error creating scholarship:", error);
       alert("Error creating scholarship. Please try again.");
+      location.reload();
     }
   }
 
