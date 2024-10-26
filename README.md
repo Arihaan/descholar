@@ -21,7 +21,7 @@ Stellarship is an innovative decentralized application (dApp) built on the Stell
 - **Role**: Full-stack Developer
 - **Achievements**: Winner at ETHBratislava
 - **Experience**: .Net FullStack dev
-- **Education**: Student at Slovak Technical University FIIT
+- **Education**: Student at Slovak University of Technology - FIIT
 
 ## Demo
 [![Demo Video](https://img.youtube.com/vi/6J0ascDc5dc/0.jpg)](https://www.youtube.com/watch?v=6J0ascDc5dc)
