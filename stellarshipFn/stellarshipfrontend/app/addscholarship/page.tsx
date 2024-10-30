@@ -1,16 +1,16 @@
 "use client";
-import { Client, networks, Scholarship } from "bindings";
+//import { Client, networks, Scholarship } from "bindings";
 import React, { useState } from "react";
 import { kit } from "../stellar-wallets-kit";
-import { WalletNetwork } from "@creit.tech/stellar-wallets-kit";
+//import { WalletNetwork } from "@creit.tech/stellar-wallets-kit";
 import Navbar from "../components/Navbar";
 
 const CreateScholarshipPage = () => {
-  const scholarshipContract = new Client({
-    contractId: networks.testnet.contractId,
-    networkPassphrase: networks.testnet.networkPassphrase,
-    rpcUrl: "https://soroban-testnet.stellar.org/",
-  });
+  // const scholarshipContract = new Client({
+  //   contractId: networks.testnet.contractId,
+  //   networkPassphrase: networks.testnet.networkPassphrase,
+  //   rpcUrl: "https://soroban-testnet.stellar.org/",
+  // });
 
   const [scholarship, setScholarship] = useState({
     name: "",
@@ -42,33 +42,33 @@ const CreateScholarshipPage = () => {
       }
 
       // Convert end_date to Unix timestamp
-      const endDate = Math.floor(
-        new Date(scholarship.end_date).getTime() / 1000
-      );
+      // const endDate = Math.floor(
+      //   new Date(scholarship.end_date).getTime() / 1000
+      // );
 
-      const scholarshipToSubmit: Scholarship = {
-        name: scholarship.name,
-        details: scholarship.details,
-        available_grants: scholarship.available_grants,
-        total_grant_amount: BigInt(
-          Math.round(scholarship.total_grant_amount * 10_000_000)
-        ),
-        end_date: BigInt(endDate),
-      };
+      // const scholarshipToSubmit: Scholarship = {
+      //   name: scholarship.name,
+      //   details: scholarship.details,
+      //   available_grants: scholarship.available_grants,
+      //   total_grant_amount: BigInt(
+      //     Math.round(scholarship.total_grant_amount * 10_000_000)
+      //   ),
+      //   end_date: BigInt(endDate),
+      // };
 
-      const transaction = await scholarshipContract.post_scholarship({
-        scholarship: scholarshipToSubmit,
-      });
-      const { signedTxXdr } = await kit.signTransaction(transaction.toXDR(), {
-        networkPassphrase: WalletNetwork.TESTNET,
-      });
+      // const transaction = await scholarshipContract.post_scholarship({
+      //   scholarship: scholarshipToSubmit,
+      // });
+      // const { signedTxXdr } = await kit.signTransaction(transaction.toXDR(), {
+      //   networkPassphrase: WalletNetwork.TESTNET,
+      // });
 
-      const result = await scholarshipContract.post_scholarship({
-        scholarship: scholarshipToSubmit,
-        signedTxXdr: signedTxXdr,
-      });
+      // const result = await scholarshipContract.post_scholarship({
+      //   scholarship: scholarshipToSubmit,
+      //   signedTxXdr: signedTxXdr,
+      // });
 
-      console.log("Scholarship created:", result);
+      //console.log("Scholarship created:", result);
       alert("Scholarship created successfully!");
       location.reload();
     } catch (error) {
