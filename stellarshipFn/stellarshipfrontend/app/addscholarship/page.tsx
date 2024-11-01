@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { kit } from "../stellar-wallets-kit";
 //import { WalletNetwork } from "@creit.tech/stellar-wallets-kit";
-import Navbar from "../components/Navbar";
 
 const CreateScholarshipPage = () => {
   // const scholarshipContract = new Client({

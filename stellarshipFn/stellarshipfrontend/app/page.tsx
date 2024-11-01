@@ -1,11 +1,8 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
 import TypewriterEffect from "./components/TypewriterEffect";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("You");
-
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-950 via-blue-950 to-indigo-950">
       <main className="flex-grow flex flex-col items-center justify-center py-24">
@@ -65,25 +62,13 @@ export default function Home() {
       </main>
 
       <section className="mt-12">
-        <h2 className="text-3xl font-bold text-center mb-8">
-          About Us //not finished yet
-        </h2>
+        <h2 className="text-2xl font-bold text-center mb-6">About Us</h2>
         <div className="flex flex-wrap justify-center gap-6">
           <div className="bg-gray-800 bg-opacity-50 p-6 rounded-2xl w-full md:w-5/12">
-            <img
-              src="/path/to/your-image.jpg"
-              alt="Your Name"
-              className="w-full h-auto mb-4 rounded-xl"
-            />
-            <p className="text-gray-300">Your text here.</p>
+            <p className="text-gray-300">text here.</p>
           </div>
           <div className="bg-gray-800 bg-opacity-50 p-6 rounded-2xl w-full md:w-5/12">
-            <img
-              src="/path/to/arihaan-image.jpg"
-              alt="Arihaan"
-              className="w-full h-auto mb-4 rounded-xl"
-            />
-            <p className="text-gray-300">Arihaan's text here.</p>
+            <p className="text-gray-300">text here.</p>
           </div>
         </div>
       </section>

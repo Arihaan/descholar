@@ -2,7 +2,6 @@
 //import React, { useEffect, useState } from "react";
 //import { Client, networks, Scholarship } from "bindings";
 //import { scValToNative } from "stellar-sdk";
-import Navbar from "../components/Navbar";
 
 const Scholarships = () => {
   // const scholarshipContract = new Client({
