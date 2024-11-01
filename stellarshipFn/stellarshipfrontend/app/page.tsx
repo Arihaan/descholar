@@ -11,7 +11,7 @@ export default function Home() {
             Welcome to DeScholar
           </h1>
           <TypewriterEffect className="mb-12 font-semibold text-blue-300" />
-          <div className="space-x-4">
+          <div className="flex flex-col md:flex-row justify-center md:space-x-4 space-y-4 md:space-y-0">
             <Link href="/scholarships">
               <button className="btn btn-primary btn-lg rounded-xl">
                 View Scholarships
@@ -61,14 +61,33 @@ export default function Home() {
         </section>
       </main>
 
-      <section className="mt-12">
+      <section className="mt-12 text-center mb-8">
         <h2 className="text-2xl font-bold text-center mb-6">About Us</h2>
         <div className="flex flex-wrap justify-center gap-6">
-          <div className="bg-gray-800 bg-opacity-50 p-6 rounded-2xl w-full md:w-5/12">
-            <p className="text-gray-300">text here.</p>
+          <div className="bg-gray-900 bg-opacity-50 p-6 rounded-2xl w-full md:w-5/12">
+            <h2 className="text-xl font-bold mb-3 text-white">Filip Masarik</h2>
+            <div>
+              Student at:{" "}
+              <Link href="https://www.fiit.stuba.sk/en.html?page_id=749">
+                <span className="link link-secondary">FIIT STU</span>
+              </Link>
+            </div>
+            <p className="text-gray-300">Currently a .Net Developer</p>
+            <p className="text-gray-300">Winner of Ethereum Bratislava</p>
           </div>
-          <div className="bg-gray-800 bg-opacity-50 p-6 rounded-2xl w-full md:w-5/12">
-            <p className="text-gray-300">text here.</p>
+          <div className="bg-gray-900 bg-opacity-50 p-6 rounded-2xl w-full md:w-5/12">
+            <h2 className="text-xl font-bold mb-3 text-white">
+              BSc. Arihaan Negi
+            </h2>
+            <div>
+              Student at:{" "}
+              <Link href="">
+                <span className="link link-secondary">
+                  Univeristy of Hertfortshire
+                </span>
+              </Link>
+            </div>
+            <p className="text-gray-300">Ex-IBM & Deloitte</p>
           </div>
         </div>
       </section>
