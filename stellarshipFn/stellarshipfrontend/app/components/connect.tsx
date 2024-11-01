@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import { kit, setPublicKey } from "../stellar-wallets-kit";
 
@@ -10,20 +10,6 @@ export interface ConnectButtonProps {
 
 export function ConnectButton({ label }: ConnectButtonProps) {
   const [publicKey, setPublicKeyState] = useState("");
-
-  // Call checkAddress on component mount using useEffect
-  useEffect(() => {
-    const checkAddressAndSetState = async () => {
-      try {
-        const { address } = await kit.getAddress();
-        setPublicKey(address);
-        setPublicKeyState(address);
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    checkAddressAndSetState();
-  }, []);
 
   const handleClick = async () => {
     try {
