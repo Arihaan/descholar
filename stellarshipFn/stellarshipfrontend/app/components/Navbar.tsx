@@ -4,35 +4,35 @@ import Image from "next/image";
 
 const Navbar: React.FC = () => {
   return (
-    <nav className="bg-gray-900 bg-opacity-50 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="bg-transparent backdrop-blur-none border-none absolute w-full z-50 mt-6">
+      <div className="max-w-[95%] mx-auto px-2">
         <div className="flex items-center justify-between h-16">
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 ml-2">
             <Link href="/">
               <Image
-                src="/resources/DescholarLogo-wide-nobg.png"
+                src="/resources/newlogo.png"
                 alt="DeScholar Logo"
-                width={300}
-                height={300}
+                width={175}
+                height={175}
               />
             </Link>
           </div>
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-8 mr-2">
             <Link
               href="/scholarships"
-              className="text-gray-300 hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
+              className="text-gray-300 hover:text-blue-400 px-3 py-2 rounded-md text-base font-medium"
             >
               Scholarships
             </Link>
             <Link
               href="/addscholarship"
-              className="text-gray-300 hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
+              className="text-gray-300 hover:text-blue-400 px-3 py-2 rounded-md text-base font-medium"
             >
               Create Scholarship
             </Link>
             <Link
               href="/addscholarship"
-              className="text-gray-300 hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium"
+              className="text-gray-300 hover:text-blue-400 px-3 py-2 rounded-md text-base font-medium"
             >
               My Applications
             </Link>

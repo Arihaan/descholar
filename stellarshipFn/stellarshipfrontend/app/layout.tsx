@@ -9,9 +9,9 @@ import Footer from "./components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Stellarship",
+  title: "descholar",
   description:
-    "Stellarship is a platform for students to apply for scholarships",
+    "Descholar is a platform for students to apply for scholarships",
 };
 
 export default function RootLayout({

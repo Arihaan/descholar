@@ -1,17 +1,36 @@
 "use client";
 import Link from "next/link";
-import TypewriterEffect from "./components/TypewriterEffect";
+import RotatingTypewriter from "./components/RotatingTypewriter";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-950 via-blue-950 to-indigo-950">
-      <main className="flex-grow flex flex-col items-center justify-center py-24">
-        <div className="text-center mb-16">
-          <h1 className="text-6xl font-extrabold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 tracking-tight">
-            Welcome to DeScholar
+    <div className="min-h-screen flex flex-col relative">
+      {/* Background image with overlay */}
+      <div 
+        className="absolute inset-0 z-0 bg-no-repeat"
+        style={{
+          backgroundImage: 'url("/resources/webpagebg.png")',
+          backgroundSize: 'contain',
+          backgroundColor: '#000',
+          backgroundPosition: '0 0',
+        }}
+      >
+      </div>
+
+      {/* Main content - note the added z-10 to place it above the background */}
+      <main className="flex-grow flex flex-col items-center justify-center py-24 relative z-10">
+        <div className="text-center mb-16 mt-24">
+          <h1 className="text-9xl font-['TT_Barrels'] mb-8 tracking-tight leading-tight"
+              style={{
+                color: '#20eab0',
+                textShadow: '6px 6px 0px #301366'
+              }}>
+            Fund your
+            <br className="mb-2" />
+            <RotatingTypewriter />
           </h1>
-          <TypewriterEffect className="mb-12 font-semibold text-blue-300" />
-          <div className="flex flex-col md:flex-row justify-center md:space-x-4 space-y-4 md:space-y-0">
+          
+          <div className="flex flex-col md:flex-row justify-center md:space-x-4 space-y-4 md:space-y-0 mt-16">
             <Link href="/scholarships">
               <button className="btn btn-primary btn-lg rounded-xl">
                 View Scholarships
@@ -61,7 +80,8 @@ export default function Home() {
         </section>
       </main>
 
-      <section className="mt-12 text-center mb-8">
+      {/* About section - note the added z-10 */}
+      <section className="mt-12 text-center mb-8 relative z-10">
         <h2 className="text-2xl font-bold text-center mb-6">About Us</h2>
         <div className="flex flex-wrap justify-center gap-6">
           <div className="bg-gray-900 bg-opacity-50 p-6 rounded-2xl w-full md:w-5/12">
