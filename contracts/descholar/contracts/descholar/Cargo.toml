@@ -1,15 +1,16 @@
 [package]
 name = "descholar"
-version = "0.0.0"
-edition = "2024"
-publish = false
+version = "0.1.0"
+edition = "2021"
 
 [lib]
 crate-type = ["cdylib"]
-doctest = false
 
 [dependencies]
-soroban-sdk = { workspace = true }
+soroban-sdk = { version = "20.0.0" }
 
-[dev-dependencies]
-soroban-sdk = { workspace = true, features = ["testutils"] }
+[dev_dependencies]
+soroban-sdk = { version = "20.0.0", features = ["testutils"] }
+
+[features]
+testutils = ["soroban-sdk/testutils"]
