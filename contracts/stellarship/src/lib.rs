@@ -1,3 +1,5 @@
+#![no_std]
+
 /**
  * ! @file lib.rs
  * ? @brief Stellarship Contract for managing scholarships and applications.
@@ -52,13 +54,7 @@
  * @param transfer_amount The amount of tokens to transfer.
  * * This function is used internally by the contract.
  */
-
-
-#![no_std]
-
-use soroban_sdk::{
-    contract, contractimpl, contracttype, token, Address, Env, String, Symbol, Vec,
-};
+use soroban_sdk::{contract, contractimpl, contracttype, token, Address, Env, String, Symbol, Vec};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -111,7 +107,7 @@ impl StellarshipContract {
         }
 
         //check if scholarship name already exists
-        let scholarships = Self::get_scholarships(env);
+        let mut scholarships = Self::get_scholarships(env);
         for existing_scholarship in scholarships.iter() {
             if existing_scholarship.name == scholarship.name {
                 panic!("Scholarship name already exists");
@@ -159,7 +155,7 @@ impl StellarshipContract {
         let scholarships = Self::get_scholarships(env);
         let mut my_scholarships = Vec::new(env);
         for scholarship in scholarships.iter() {
-            if scholarship.admin == *address {
+            if scholarship.admin == address {
                 my_scholarships.push_back(scholarship.clone());
             }
         }
@@ -178,11 +174,22 @@ impl StellarshipContract {
         let applications = Self::get_applications(env);
         let mut my_applications = Vec::new(env);
         for application in applications.iter() {
-            if application.applicant == *address {
+            if application.applicant == address {
                 my_applications.push_back(application.clone());
             }
         }
         return my_applications;
+    }
+
+    pub fn get_applications_frm_schlrship(env: &Env, scholarship_name: String) -> Vec<Application> {
+        let applications = Self::get_applications(env);
+        let mut scholarship_applications = Vec::new(env);
+        for application in applications.iter() {
+            if application.scholarship_name == scholarship_name {
+                scholarship_applications.push_back(application.clone());
+            }
+        }
+        return scholarship_applications;
     }
 
     fn move_token(env: &Env, token: &Address, from: &Address, to: &Address, transfer_amount: i128) {
