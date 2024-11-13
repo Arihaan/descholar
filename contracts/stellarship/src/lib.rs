@@ -54,7 +54,9 @@
  * @param transfer_amount The amount of tokens to transfer.
  * * This function is used internally by the contract.
  */
-use soroban_sdk::{contract, contractimpl, contracttype, token, Address, Env, String, Symbol, Vec};
+use soroban_sdk::{
+    contract, contractimpl, contracttype, log, token, Address, Env, String, Symbol, Vec,
+};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -100,6 +102,15 @@ impl StellarshipContract {
         // );
         //TODO make better auth
         scholarship.admin.require_auth();
+
+        //if call doesn't send enough tokens, it will fail
+        let token_client = token::Client::new(&env, &token_address);
+        let balance = token_client.balance(&scholarship.admin);
+        log!(env, "The value is: {}", balance);
+        if balance != 0 {
+            log!(env, "The value is: {}", balance);
+            panic!("hello {}", balance);
+        }
 
         //check grant amount/validate inputs
         if scholarship.total_grant_amount <= 0 || scholarship.available_grants <= 0 {
@@ -151,6 +162,31 @@ impl StellarshipContract {
             .unwrap_or_else(|| Vec::new(env));
     }
 
+    pub fn pick_granted_students(env: &Env, scholarship_name: String, students: Vec<Address>) {
+        let caller = env.invoker();
+        let mut is_creator = false;
+
+        let scholarships = Self::get_scholarships(env);
+        let mut updated_scholarships = Vec::new(env);
+        for mut scholarship in scholarships.iter() {
+            if scholarship.name == scholarship_name {
+                if scholarship.available_grants < students.len() as u32 {
+                    panic!("Not enough grants available");
+                }
+                if &caller != &scholarship.admin {
+                    panic!("Only the scholarship admin can pick students");
+                }
+                scholarship.available_grants -= students.len() as u32;
+                updated_scholarships.push_back(scholarship.clone());
+            } else {
+                updated_scholarships.push_back(scholarship.clone());
+            }
+        }
+        env.storage()
+            .persistent()
+            .set(&Symbol::new(&env, "scholarships"), &updated_scholarships);
+    }
+
     pub fn get_my_scholarships(env: &Env, address: Address) -> Vec<Scholarship> {
         let scholarships = Self::get_scholarships(env);
         let mut my_scholarships = Vec::new(env);
@@ -200,3 +236,5 @@ impl StellarshipContract {
         token.transfer(from, to, &transfer_amount);
     }
 }
+
+mod test;
