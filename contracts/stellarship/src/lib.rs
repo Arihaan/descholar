@@ -162,10 +162,12 @@ impl StellarshipContract {
             .unwrap_or_else(|| Vec::new(env));
     }
 
-    pub fn pick_granted_students(env: &Env, scholarship_name: String, students: Vec<Address>) {
-        let caller = env.invoker();
-        let mut is_creator = false;
-
+    pub fn pick_granted_students(
+        env: &Env,
+        scholarship_name: String,
+        students: Vec<Address>,
+        caller: Address,
+    ) {
         let scholarships = Self::get_scholarships(env);
         let mut updated_scholarships = Vec::new(env);
         for mut scholarship in scholarships.iter() {
