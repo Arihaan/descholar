@@ -9,7 +9,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto w-full flex justify-between items-center px-8">
         <aside>
           <p>
-            Descholar.com
+            © Descholar.com
             <br />
             Revolutionizing education funding since 2024
           </p>

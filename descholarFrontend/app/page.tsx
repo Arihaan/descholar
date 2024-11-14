@@ -3,7 +3,7 @@ import Link from "next/link";
 import RotatingTypewriter from "./components/RotatingTypewriter";
 import { motion } from "framer-motion";
 import { FiGlobe, FiLock, FiDollarSign } from "react-icons/fi";
-import { HiOutlineLightBulb } from "react-icons/hi";
+import { HiOutlineLightBulb, HiCheck } from "react-icons/hi";
 import CountUp from 'react-countup';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -59,7 +59,19 @@ export default function Home() {
               <p className="text-xl md:text-1xl text-gray-200 leading-relaxed mb-12">
                 Empowering education globally with secure, decentralized scholarships and student loans (coming soon)
                 <span className="block mt-4">
-                  Learn more about Descholar's mission and how it can help you.
+                  <a 
+                    href="#mission" 
+                    className="text-orange-500 hover:text-orange-400 transition-colors cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('mission')?.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'start'
+                      });
+                    }}
+                  >
+                    Learn more about Descholar's mission and how it can help you.
+                  </a>
                 </span>
               </p>
 
@@ -100,7 +112,7 @@ export default function Home() {
           >
             <h2 className="text-5xl font-bold mb-6 text-white">The Problem</h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              The global education financing gap continues to grow, leaving millions of students without access to quality education.
+              The global education financing market continues to grow but severe inefficiencies leave millions of students without access to quality education.
             </p>
           </motion.div>
 
@@ -183,8 +195,8 @@ export default function Home() {
           </motion.div>
         </section>
 
-        {/* The Mission section */}
-        <section className="w-full max-w-6xl mx-auto px-8 pt-16 pb-24 bg-gray-900 bg-opacity-40 backdrop-blur-sm rounded-3xl shadow-xl">
+        {/* The Mission section - add id here */}
+        <section id="mission" className="w-full max-w-6xl mx-auto px-8 pt-16 pb-24 bg-gray-900 bg-opacity-40 backdrop-blur-sm rounded-3xl shadow-xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -193,7 +205,7 @@ export default function Home() {
           >
             <h2 className="text-5xl font-bold mb-6 text-white">The Mission</h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Transforming global education funding through blockchain technology. We're building a future where every student has equal access to educational opportunities.
+              By transforming global education funding through blockchain technology, we are building a future where every student has equal access to educational opportunities.
             </p>
           </motion.div>
 
@@ -280,7 +292,94 @@ export default function Home() {
           </motion.div>
         </section>
 
-        
+        {/* Add this new section after The Mission section */}
+        <section className="w-full max-w-6xl mx-auto px-8 pt-16 pb-24 mt-16 bg-gray-900 bg-opacity-40 backdrop-blur-sm rounded-3xl shadow-xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-5xl font-bold mb-6 text-white">What's In It For You</h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            {/* Students Column */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl border border-gray-700"
+            >
+              <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
+                <span className="p-2 bg-orange-600 rounded-lg">
+                  <FiGlobe className="w-5 h-5" />
+                </span>
+                For Students
+              </h3>
+              
+              <ul className="space-y-4 mb-8">
+                {[
+                  "Easy application for international scholarships",
+                  "Receive funds directly in local currency",
+                  "No complex wallet setup required",
+                  "Track your applications in real-time",
+                  "Secure and transparent process",
+                  "Access global opportunities",
+                ].map((benefit, index) => (
+                  <li key={index} className="flex items-start gap-3 text-gray-300">
+                    <HiCheck className="w-5 h-5 text-orange-500 flex-shrink-0 mt-1" />
+                    <span>{benefit}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link href="/scholarships">
+                <button className="w-full px-8 py-4 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                  View Scholarships
+                </button>
+              </Link>
+            </motion.div>
+
+            {/* Donors Column */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl border border-gray-700"
+            >
+              <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
+                <span className="p-2 bg-orange-600 rounded-lg">
+                  <FiDollarSign className="w-5 h-5" />
+                </span>
+                For Donors & Investors
+              </h3>
+              
+              <ul className="space-y-4 mb-8">
+                {[
+                  "Make a direct impact on students' lives",
+                  "Full transparency through blockchain",
+                  "Efficient fund distribution",
+                  "Track your impact in real-time",
+                  "Low transaction costs",
+                  "Global reach with local impact",
+                ].map((benefit, index) => (
+                  <li key={index} className="flex items-start gap-3 text-gray-300">
+                    <HiCheck className="w-5 h-5 text-orange-500 flex-shrink-0 mt-1" />
+                    <span>{benefit}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link href="/addscholarship">
+                <button className="w-full px-8 py-4 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                  Create Scholarship
+                </button>
+              </Link>
+            </motion.div>
+          </div>
+        </section>
+
       </main>
 
       
