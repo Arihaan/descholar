@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "descholar",
   description:
-    "Descholar is a platform for students to apply for scholarships",
+    "Descholar is a decentralized education funding platform",
 };
 
 export default function RootLayout({
