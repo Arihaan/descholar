@@ -41,7 +41,7 @@ export default function Home() {
         <div className="w-full max-w-7xl mx-auto px-6 mb-24 mt-32">
           {/* Centered heading section */}
           <div className="text-center mb-16">
-            <h1 className="text-7xl md:text-9xl font-['TT_Barrels'] tracking-tight"
+            <h1 className="text-6xl md:text-8xl font-['TT_Barrels'] tracking-tight"
                 style={{
                   color: '#f2f2f2',
                   textShadow: '6px 6px 0px #733932'
@@ -56,7 +56,7 @@ export default function Home() {
 
             {/* Description below heading */}
             <div className="max-w-3xl mx-auto mt-12">
-              <p className="text-xl md:text-1xl text-gray-200 leading-relaxed mb-12">
+              <p className="text-lg md:text-xl text-gray-200 leading-relaxed mb-12">
                 Empowering education globally with secure, decentralized scholarships and student loans (coming soon)
                 <span className="block mt-4">
                   <a 
@@ -92,11 +92,18 @@ export default function Home() {
               {/* Stellar powered badge */}
               <div className="flex items-center justify-center space-x-2 mt-12">
                 <span className="text-gray-300">Powered by</span>
-                <img 
-                  src="/resources/stellar-logo.svg" 
-                  alt="Stellar Logo" 
-                  className="h-12 w-auto"
-                />
+                <a 
+                  href="https://stellar.org" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity"
+                >
+                  <img 
+                    src="/resources/stellar-logo.svg" 
+                    alt="Stellar Logo" 
+                    className="h-12 w-auto"
+                  />
+                </a>
               </div>
             </div>
           </div>
@@ -124,8 +131,8 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="bg-gray-800 bg-opacity-50 p-8 rounded-2xl"
             >
-              <h3 className="text-2xl font-semibold mb-4 text-white">Global Student Loan Market</h3>
-              <div className="text-4xl font-bold text-orange-500 mb-4">
+              <h3 className="text-xl font-semibold mb-3 text-white">Global Student Loan Market</h3>
+              <div className="text-3xl font-bold text-orange-500 mb-4">
                 $<CountUp end={3.8} decimals={1} duration={2.5} /> Trillion
               </div>
               <div className="h-64 w-full">
@@ -162,11 +169,11 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="bg-gray-800 bg-opacity-50 p-8 rounded-2xl"
             >
-              <h3 className="text-2xl font-semibold mb-4 text-white">Annual Scholarship Distribution</h3>
-              <div className="text-4xl font-bold text-orange-500 mb-4">
+              <h3 className="text-xl font-semibold mb-3 text-white">Annual Scholarship Distribution</h3>
+              <div className="text-3xl font-bold text-orange-500 mb-4">
                 $<CountUp end={100} duration={2.5} /> Million
               </div>
-              <p className="text-gray-300 mb-6">in scholarships go unclaimed every year</p>
+              <p className="text-sm text-gray-300 mb-6">in scholarships go unclaimed every year</p>
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={scholarshipData}>
@@ -221,7 +228,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold mb-3 text-white">Global Reach</h3>
-                  <p className="text-gray-300">
+                  <p className="text-md text-gray-300">
                     Connect with educational opportunities worldwide through our decentralized platform, powered by Stellar's global network.
                   </p>
                 </div>
@@ -238,7 +245,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold mb-3 text-white">Transparent & Secure</h3>
-                  <p className="text-gray-300">
+                  <p className="text-sm text-gray-300">
                     Smart contracts ensure transparent fund management and automatic distribution, building trust through blockchain technology.
                   </p>
                 </div>
@@ -255,7 +262,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold mb-3 text-white">Easy Access</h3>
-                  <p className="text-gray-300">
+                  <p className="text-sm text-gray-300">
                     Simple passkey authentication and integration with local currency off-ramps make funding accessible to everyone.
                   </p>
                 </div>
@@ -272,7 +279,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold mb-3 text-white">Innovation</h3>
-                  <p className="text-gray-300">
+                  <p className="text-sm text-gray-300">
                     Built on Stellar Soroban, offering fast, low-cost transactions and automated smart contract functionality.
                   </p>
                 </div>
@@ -286,7 +293,7 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mt-16 text-center"
           >
-            <p className="text-gray-400 text-lg">
+            <p className="text-base text-gray-400">
               Join us in revolutionizing educational funding and creating equal opportunities for students worldwide.
             </p>
           </motion.div>
@@ -311,7 +318,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl border border-gray-700"
             >
-              <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
+              <h3 className="text-xl font-semibold mb-3 text-white flex items-center gap-3">
                 <span className="p-2 bg-orange-600 rounded-lg">
                   <FiGlobe className="w-5 h-5" />
                 </span>
@@ -329,7 +336,7 @@ export default function Home() {
                 ].map((benefit, index) => (
                   <li key={index} className="flex items-start gap-3 text-gray-300">
                     <HiCheck className="w-5 h-5 text-orange-500 flex-shrink-0 mt-1" />
-                    <span>{benefit}</span>
+                    <span className="text-sm">{benefit}</span>
                   </li>
                 ))}
               </ul>
@@ -348,7 +355,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl border border-gray-700"
             >
-              <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
+              <h3 className="text-xl font-semibold mb-3 text-white flex items-center gap-3">
                 <span className="p-2 bg-orange-600 rounded-lg">
                   <FiDollarSign className="w-5 h-5" />
                 </span>
@@ -358,7 +365,7 @@ export default function Home() {
               <ul className="space-y-4 mb-8">
                 {[
                   "Make a direct impact on students' lives",
-                  "Full transparency through blockchain",
+                  "Full transparency through student ID verification",
                   "Efficient fund distribution",
                   "Track your impact in real-time",
                   "Low transaction costs",
@@ -366,7 +373,7 @@ export default function Home() {
                 ].map((benefit, index) => (
                   <li key={index} className="flex items-start gap-3 text-gray-300">
                     <HiCheck className="w-5 h-5 text-orange-500 flex-shrink-0 mt-1" />
-                    <span>{benefit}</span>
+                    <span className="text-sm">{benefit}</span>
                   </li>
                 ))}
               </ul>

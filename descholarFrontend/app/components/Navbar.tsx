@@ -14,7 +14,7 @@ const MenuItem = ({ href, children }: { href: string; children: React.ReactNode 
       {({ active }) => (
         <Link
           href={href}
-          className={`block px-6 py-3 text-base ${
+          className={`block px-6 py-3 text-sm ${
             active ? 'text-orange-400 bg-gray-800' : 'text-gray-300'
           } hover:text-orange-400 hover:bg-gray-800 transition-colors`}
         >
@@ -35,8 +35,8 @@ const Navbar = () => {
               <Image
                 src="/resources/newlogo.png"
                 alt="DeScholar Logo"
-                width={175}
-                height={175}
+                width={150}
+                height={150}
               />
             </Link>
           </div>
@@ -45,9 +45,9 @@ const Navbar = () => {
             <MissionLink />
 
             <Menu as="div" className="relative inline-block text-left">
-              <Menu.Button className="text-gray-300 hover:text-orange-400 px-3 py-2 rounded-md text-base font-medium inline-flex items-center">
+              <Menu.Button className="text-gray-300 hover:text-orange-400 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center">
                 Scholarships
-                <FiChevronDown className="ml-2 -mr-1 h-4 w-4" aria-hidden="true" />
+                <FiChevronDown className="ml-2 -mr-1 h-3 w-3" aria-hidden="true" />
               </Menu.Button>
 
               <Transition
@@ -75,17 +75,17 @@ const Navbar = () => {
             </Menu>
 
             <div className="relative group">
-              <button className="text-gray-300 hover:text-orange-400 px-3 py-2 rounded-md text-base font-medium cursor-default">
+              <button className="text-gray-300 hover:text-orange-400 px-3 py-2 rounded-md text-sm font-medium cursor-default">
                 Student Loans
               </button>
               <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 px-4 py-2 bg-gray-900 bg-opacity-90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-700 invisible group-hover:visible transition-all duration-200 whitespace-nowrap">
-                <p className="text-sm text-gray-300">Coming Soon</p>
+                <p className="text-xs text-gray-300">Coming Soon</p>
               </div>
             </div>
 
             <Link
               href="/activity"
-              className="text-gray-300 hover:text-orange-400 px-3 py-2 rounded-md text-base font-medium"
+              className="text-gray-300 hover:text-orange-400 px-3 py-2 rounded-md text-sm font-medium"
             >
               My Activity
             </Link>
