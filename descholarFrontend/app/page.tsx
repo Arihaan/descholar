@@ -38,10 +38,10 @@ export default function Home() {
 
       {/* Main content */}
       <main className="flex-grow flex flex-col items-center justify-center py-12 relative z-10">
-        <div className="w-full max-w-7xl mx-auto px-6 mb-24 mt-32">
+        <div className="w-full max-w-7xl mx-auto px-6 mb-24 mt-24">
           {/* Centered heading section */}
           <div className="text-center mb-16">
-            <h1 className="text-6xl md:text-8xl font-['TT_Barrels'] tracking-tight"
+            <h1 className="text-6xl md:text-[120px] font-['TT_Barrels'] tracking-tight"
                 style={{
                   color: '#f2f2f2',
                   textShadow: '6px 6px 0px #733932'

@@ -35,8 +35,8 @@ const Navbar = () => {
               <Image
                 src="/resources/newlogo.png"
                 alt="DeScholar Logo"
-                width={150}
-                height={150}
+                width={130}
+                height={130}
               />
             </Link>
           </div>
