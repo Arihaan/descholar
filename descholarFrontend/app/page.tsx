@@ -76,7 +76,7 @@ export default function Home() {
               </p>
 
               {/* Buttons */}
-              <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+              <div className="flex flex-col sm:flex-row justify-center gap-2 mt-8">
                 <Link href="/scholarships">
                   <button className="px-8 py-4 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                     View Scholarships
