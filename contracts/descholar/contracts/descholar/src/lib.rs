@@ -123,16 +123,24 @@ impl StellarshipContract {
     ) -> Vec<Scholarship> {
         //CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC // *xlm testnet
 
-        // scholarship.admin.require_auth_for_args(
-        //     (token_address.clone(), scholarship.available_grants).into_val(&env),
-        // );
-        //TODO make better auth
         // ! Test if this is working
         scholarship.admin.require_auth();
 
         //if call doesn't send enough tokens, it will fail
         let token_client = token::Client::new(&env, &token_address);
         let balance = token_client.balance(&scholarship.admin);
+
+        token_client.transfer(
+            &scholarship.admin,
+            &env.current_contract_address(),
+            &scholarship.total_grant_amount,
+        );
+
+        let new_balance = token_client.balance(&env.current_contract_address());
+        assert!(
+            new_balance == balance + &scholarship.total_grant_amount,
+            "Transfer amount not received"
+        );
         log!(env, "The value is: {}", balance);
         if balance <= 0 {
             log!(env, "The value is: {}", balance);
