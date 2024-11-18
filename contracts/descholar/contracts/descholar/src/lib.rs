@@ -4,26 +4,12 @@
 // TODO actualy fix it and make it work
 /*
 10000000000 - 1000 xlm
-1000000000 - 100 xlm
-100000000 - 10 xlm
-10000000 - 1 xlm
+1000000000  - 100 xlm
+100000000   - 10 xlm
+10000000    - 1 xlm
 
-new contract id = CA6BL4PGEW6Q4B3US5CRN2QKVQFHGUZSJ72SZ56HFPKRZKJER4CR2NKL
-soroban contract invoke \
-    --network testnet \
-    --source alice \
-    --id CA6BL4PGEW6Q4B3US5CRN2QKVQFHGUZSJ72SZ56HFPKRZKJER4CR2NKL \
-    -- \
-    post_scholarship \
-    --scholarship '{"name":"test","details":"test details","available_grants":10,"total_grant_amount":"1000","end_date":1000000,"admin":"GBXGQJWVLWOYHFLVTKWV5FGHA3LNYY2JQKM7OAJAUEQFU6LPCSEFVXON"}' \
-    --token_address "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
-
-soroban contract invoke \
-  --source alice \
-  --id CA6BL4PGEW6Q4B3US5CRN2QKVQFHGUZSJ72SZ56HFPKRZKJER4CR2NKL \
-  --network testnet \
-  --fn get_scholarships
-
+new contract id = CBNGGO732NLBKRKTBHJTWL6TI2CHSM74COJG3X635X3ZKSFKLEQFOVN7
+Cli just doesn't work so I use Okashi instead
 */
 /**
  * ! @file lib.rs
