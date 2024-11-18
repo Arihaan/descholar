@@ -1,5 +1,22 @@
 #![no_std]
 
+// ! To deploy the contract, run the following command:
+// TODO actualy fix it and make it work
+// soroban contract invoke \
+//     --id CC3S33I4T7CNK7DUPLQAKTBFK4OIBB6MBCSLLXY57JK2WWCC4VKRZS75
+//     --source alice \
+//     --network testnet \
+//     -- \
+//     post_scholarship \
+//         --admin alice \
+//         --available_grants 10 \
+//         --details "test details" \
+//         --total_grant_amount 1000 \
+//         --end_date 1000000 \
+//         --name "test" \
+//         --token_address CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC \
+//     --amount 1000
+
 /**
  * ! @file lib.rs
  * ? @brief Stellarship Contract for managing scholarships and applications.
@@ -22,6 +39,14 @@
  * @param env A reference to the environment.
  * @param application An Application struct containing application details.
  * @return A list of Application structs representing all applications.
+ *
+ * ! @fn pick_granted_students
+ * ? @brief Picks students to be granted a scholarship.
+ * @param env A reference to the environment.
+ * @param scholarship_name The name of the scholarship to pick students for.
+ * @param students A list of student addresses to be granted the scholarship.
+ * @param caller The address of the caller picking the students.
+ *
  *
  * ! @fn get_scholarships
  * ? @brief Retrieves all posted scholarships.
@@ -101,13 +126,14 @@ impl StellarshipContract {
         //     (token_address.clone(), scholarship.available_grants).into_val(&env),
         // );
         //TODO make better auth
+        // ! Test if this is working
         scholarship.admin.require_auth();
 
         //if call doesn't send enough tokens, it will fail
         let token_client = token::Client::new(&env, &token_address);
         let balance = token_client.balance(&scholarship.admin);
         log!(env, "The value is: {}", balance);
-        if balance != 0 {
+        if balance <= 0 {
             log!(env, "The value is: {}", balance);
             panic!("hello {}", balance);
         }

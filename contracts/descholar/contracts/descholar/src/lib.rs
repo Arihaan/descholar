@@ -1,285 +1,269 @@
 #![no_std]
+
+// ! To deploy the contract, run the following command:
+// TODO actualy fix it and make it work
+/*
+soroban contract invoke \
+    --id CC3S33I4T7CNK7DUPLQAKTBFK4OIBB6MBCSLLXY57JK2WWCC4VKRZS75
+    --source alice \
+    --network testnet \
+    -- \
+    post_scholarship \
+        --admin alice \
+        --available_grants 10 \
+        --details "test details" \
+        --total_grant_amount 1000 \
+        --end_date 1000000 \
+        --name "test" \
+        --token_address CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC \
+    --amount 1000
+*/
+/**
+ * ! @file lib.rs
+ * ? @brief Stellarship Contract for managing scholarships and applications.
+ *
+ * This contract provides functionalities to post scholarships, apply for scholarships,
+ * and retrieve scholarships and applications.
+ *
+ * * Functions
+ *
+ * ! @fn post_scholarship
+ * ? @brief Posts a new scholarship.
+ * @param env A reference to the environment.
+ * @param scholarship A Scholarship struct containing scholarship details.
+ * @param token_address The address of the token for scholarship funding.
+ * @return A vector of Scholarship structs representing posted scholarships.
+ * * Transfers the total grant amount to the contract.
+ *
+ * ! @fn apply
+ * ? @brief Submits an application for a scholarship.
+ * @param env A reference to the environment.
+ * @param application An Application struct containing application details.
+ * @return A list of Application structs representing all applications.
+ *
+ * ! @fn pick_granted_students
+ * ? @brief Picks students to be granted a scholarship.
+ * @param env A reference to the environment.
+ * @param scholarship_name The name of the scholarship to pick students for.
+ * @param students A list of student addresses to be granted the scholarship.
+ * @param caller The address of the caller picking the students.
+ *
+ *
+ * ! @fn get_scholarships
+ * ? @brief Retrieves all posted scholarships.
+ * @param env A reference to the environment.
+ * @return A vector of Scholarship structs representing all scholarships.
+ *
+ * ! @fn get_my_scholarships
+ * ? @brief Retrieves scholarships posted by the specified admin address.
+ * @param env A reference to the environment.
+ * @param address The admin address whose scholarships are to be retrieved.
+ * @return A list of Scholarship structs associated with the specified admin.
+ *
+ * ! @fn get_applications
+ * ? @brief Retrieves all submitted applications.
+ * @param env A reference to the environment.
+ * @return A list of Application structs representing all applications.
+ *
+ * ! @fn get_my_applications
+ * ? @brief Retrieves applications submitted by the specified applicant address.
+ * @param env A reference to the environment.
+ * @param address The applicant address whose applications are to be retrieved.
+ * @return A list of Application structs associated with the specified applicant.
+ *
+ * ! @fn move_token
+ * ? @brief Transfers tokens from one address to another.
+ * @param env A reference to the environment.
+ * @param token The address of the token to transfer.
+ * @param from The address from which tokens are to be transferred.
+ * @param to The address to which tokens are to be transferred.
+ * @param transfer_amount The amount of tokens to transfer.
+ * * This function is used internally by the contract.
+ */
 use soroban_sdk::{
-    contract, contractimpl, vec, Address, Env, String, Symbol, Vec,
-    map::Map, contracterror, token::{TokenClient, StellarAssetClient},
+    contract, contractimpl, contracttype, log, token, Address, Env, String, Symbol, Vec,
 };
 
-// Error definitions
-#[contracterror]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-#[repr(u32)]
-pub enum Error {
-    InvalidAmount = 1,
-    Unauthorized = 2,
-    ApplicationNotFound = 3,
-    ScholarshipNotFound = 4,
-    ScholarshipExpired = 5,
-    AlreadyApplied = 6,
-    InsufficientFunds = 7,
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Scholarship {
+    name: String, //* name is also an id
+    details: String,
+    available_grants: u32,
+    total_grant_amount: i128,
+    end_date: u64,
+    admin: Address,
 }
 
-// Status enum for applications
-#[derive(Clone)]
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Application {
+    applicant: Address,
+    scholarship_name: String,
+    details: String,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ApplicationStatus {
-    Applied,
+    Pending,
     Approved,
     Rejected,
 }
 
-// Structs
-#[derive(Clone)]
-pub struct Scholarship {
-    id: u32,
-    name: String,
-    details: String,
-    grant_amount: i128,
-    number_of_grants: u32,
-    grants_remaining: u32,
-    end_date: u64,
-    applications: Vec<Application>,
-    creator_address: Address,
-}
-
-#[derive(Clone)]
-pub struct Application {
-    scholarship_id: u32,
-    name: String,
-    details: String,
-    status: ApplicationStatus,
-    applicant_address: Address,
-}
-
 #[contract]
-pub struct DescholarContract;
+pub struct StellarshipContract;
 
 #[contractimpl]
-impl DescholarContract {
-    const NATIVE_ASSET_CONTRACT_ID: &'static str = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
-
-    // Initialize contract data
-    pub fn initialize(env: Env) {
-        let scholarships: Map<u32, Scholarship> = Map::new(&env);
-        env.storage().instance().set(&Symbol::short("scholarships"), &scholarships);
-        env.storage().instance().set(&Symbol::short("scholarship_counter"), &0u32);
-    }
-
-    // Post a new scholarship
+impl StellarshipContract {
     pub fn post_scholarship(
-        env: Env,
-        name: String,
-        details: String,
-        grant_amount: i128,
-        number_of_grants: u32,
-        end_date: u64,
-    ) -> u32 {
-        // Validate inputs
-        if grant_amount <= 0 || number_of_grants == 0 {
-            panic!("Invalid grant amount or number of grants");
+        env: &Env,
+        scholarship: Scholarship,
+        token_address: Address,
+    ) -> Vec<Scholarship> {
+        //CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC // *xlm testnet
+
+        // scholarship.admin.require_auth_for_args(
+        //     (token_address.clone(), scholarship.available_grants).into_val(&env),
+        // );
+        //TODO make better auth
+        // ! Test if this is working
+        scholarship.admin.require_auth();
+
+        //if call doesn't send enough tokens, it will fail
+        let token_client = token::Client::new(&env, &token_address);
+        let balance = token_client.balance(&scholarship.admin);
+        log!(env, "The value is: {}", balance);
+        if balance <= 0 {
+            log!(env, "The value is: {}", balance);
+            panic!("hello {}", balance);
         }
 
-        let creator = env.invoker();
-        let total_amount = grant_amount * (number_of_grants as i128);
+        //check grant amount/validate inputs
+        if scholarship.total_grant_amount <= 0 || scholarship.available_grants <= 0 {
+            panic!("Total grant amount cannot be negative");
+        }
 
-        // Use the testnet native asset contract
-        let token = TokenClient::new(
+        //check if scholarship name already exists
+        let mut scholarships = Self::get_scholarships(env);
+        for existing_scholarship in scholarships.iter() {
+            if existing_scholarship.name == scholarship.name {
+                panic!("Scholarship name already exists");
+            }
+        }
+
+        //transfer tokens to contract
+        let contract_address = env.current_contract_address();
+        Self::move_token(
             &env,
-            &Address::from_string(Self::NATIVE_ASSET_CONTRACT_ID)
+            &token_address,
+            &scholarship.admin, //from
+            &contract_address,  //to
+            scholarship.total_grant_amount,
         );
 
-        // Transfer XLM from creator to contract
-        token.transfer(
-            &creator,
-            &env.current_contract_address(),
-            &total_amount
-        );
+        //create scholarship
+        scholarships.push_back(scholarship);
 
-        // Create new scholarship
-        let mut counter: u32 = env.storage().instance().get(&Symbol::short("scholarship_counter")).unwrap();
-        counter += 1;
-
-        let scholarship = Scholarship {
-            id: counter,
-            name,
-            details,
-            grant_amount,
-            number_of_grants,
-            grants_remaining: number_of_grants,
-            end_date,
-            applications: Vec::new(&env),
-            creator_address: creator,
-        };
-
-        // Store scholarship
-        let mut scholarships: Map<u32, Scholarship> = env.storage().instance().get(&Symbol::short("scholarships")).unwrap();
-        scholarships.set(counter, scholarship);
-        env.storage().instance().set(&Symbol::short("scholarships"), &scholarships);
-        env.storage().instance().set(&Symbol::short("scholarship_counter"), &counter);
-
-        counter
+        //store scholarship
+        env.storage()
+            .persistent()
+            .set(&Symbol::new(&env, "scholarships"), &scholarships);
+        return scholarships;
     }
 
-    // Get all scholarships
-    pub fn get_scholarships(env: Env) -> Vec<Scholarship> {
-        let scholarships: Map<u32, Scholarship> = env.storage().instance().get(&Symbol::short("scholarships")).unwrap();
-        let mut result = Vec::new(&env);
-        for (_, scholarship) in scholarships.iter() {
-            result.push_back(scholarship);
-        }
-        result
+    pub fn apply(env: &Env, application: Application) -> Vec<Application> {
+        let mut applications = Self::get_applications(env);
+        applications.push_back(application);
+        env.storage()
+            .persistent()
+            .set(&Symbol::new(&env, "applications"), &applications);
+        applications
     }
 
-    // Apply for scholarship
-    pub fn apply_for_scholarship(
-        env: Env,
-        scholarship_id: u32,
-        name: String,
-        details: String,
+    pub fn get_scholarships(env: &Env) -> Vec<Scholarship> {
+        return env
+            .storage()
+            .persistent()
+            .get(&Symbol::new(&env, "scholarships"))
+            .unwrap_or_else(|| Vec::new(env));
+    }
+
+    pub fn pick_granted_students(
+        env: &Env,
+        scholarship_name: String,
+        students: Vec<Address>,
+        caller: Address,
     ) {
-        let applicant = env.invoker();
-        let mut scholarships: Map<u32, Scholarship> = env.storage().instance().get(&Symbol::short("scholarships")).unwrap();
-        
-        let mut scholarship = scholarships.get(scholarship_id)
-            .unwrap_or_else(|| panic!("Scholarship not found"));
-
-        // Validate application
-        if env.ledger().timestamp() > scholarship.end_date {
-            panic!("Scholarship has expired");
-        }
-
-        // Check if user has already applied
-        for app in scholarship.applications.iter() {
-            if app.applicant_address == applicant {
-                panic!("Already applied to this scholarship");
-            }
-        }
-
-        let application = Application {
-            scholarship_id,
-            name,
-            details,
-            status: ApplicationStatus::Applied,
-            applicant_address: applicant,
-        };
-
-        scholarship.applications.push_back(application);
-        scholarships.set(scholarship_id, scholarship);
-        env.storage().instance().set(&Symbol::short("scholarships"), &scholarships);
-    }
-
-    // Approve applicant
-    pub fn approve_applicant(
-        env: Env,
-        scholarship_id: u32,
-        applicant_address: Address,
-    ) {
-        let caller = env.invoker();
-        let mut scholarships: Map<u32, Scholarship> = env.storage().instance().get(&Symbol::short("scholarships")).unwrap();
-        
-        let mut scholarship = scholarships.get(scholarship_id)
-            .unwrap_or_else(|| panic!("Scholarship not found"));
-
-        // Verify caller is scholarship creator
-        if scholarship.creator_address != caller {
-            panic!("Unauthorized");
-        }
-
-        // Find and update application
-        let mut found = false;
-        for i in 0..scholarship.applications.len() {
-            let mut app = scholarship.applications.get(i).unwrap();
-            if app.applicant_address == applicant_address && matches!(app.status, ApplicationStatus::Applied) {
-                app.status = ApplicationStatus::Approved;
-                scholarship.applications.set(i, app);
-                found = true;
-
-                // Use the testnet native asset contract
-                let token = TokenClient::new(
-                    &env,
-                    &Address::from_string(Self::NATIVE_ASSET_CONTRACT_ID)
-                );
-
-                // Transfer grant amount to applicant
-                token.transfer(
-                    &env.current_contract_address(),
-                    &applicant_address,
-                    &scholarship.grant_amount
-                );
-
-                scholarship.grants_remaining -= 1;
-                break;
-            }
-        }
-
-        if !found {
-            panic!("Application not found or already processed");
-        }
-
-        scholarships.set(scholarship_id, scholarship);
-        env.storage().instance().set(&Symbol::short("scholarships"), &scholarships);
-    }
-
-    // Reject applicant
-    pub fn reject_applicant(
-        env: Env,
-        scholarship_id: u32,
-        applicant_address: Address,
-    ) {
-        let caller = env.invoker();
-        let mut scholarships: Map<u32, Scholarship> = env.storage().instance().get(&Symbol::short("scholarships")).unwrap();
-        
-        let mut scholarship = scholarships.get(scholarship_id)
-            .unwrap_or_else(|| panic!("Scholarship not found"));
-
-        if scholarship.creator_address != caller {
-            panic!("Unauthorized");
-        }
-
-        let mut found = false;
-        for i in 0..scholarship.applications.len() {
-            let mut app = scholarship.applications.get(i).unwrap();
-            if app.applicant_address == applicant_address && matches!(app.status, ApplicationStatus::Applied) {
-                app.status = ApplicationStatus::Rejected;
-                scholarship.applications.set(i, app);
-                found = true;
-                break;
-            }
-        }
-
-        if !found {
-            panic!("Application not found or already processed");
-        }
-
-        scholarships.set(scholarship_id, scholarship);
-        env.storage().instance().set(&Symbol::short("scholarships"), &scholarships);
-    }
-
-    // Get scholarships posted by user
-    pub fn get_posted_scholarships(env: Env, user_address: Address) -> Vec<Scholarship> {
-        let scholarships: Map<u32, Scholarship> = env.storage().instance().get(&Symbol::short("scholarships")).unwrap();
-        let mut result = Vec::new(&env);
-        
-        for (_, scholarship) in scholarships.iter() {
-            if scholarship.creator_address == user_address {
-                result.push_back(scholarship);
-            }
-        }
-        result
-    }
-
-    // Get scholarships applied to by user
-    pub fn get_applied_scholarships(env: Env, user_address: Address) -> Vec<Scholarship> {
-        let scholarships: Map<u32, Scholarship> = env.storage().instance().get(&Symbol::short("scholarships")).unwrap();
-        let mut result = Vec::new(&env);
-        
-        for (_, scholarship) in scholarships.iter() {
-            for app in scholarship.applications.iter() {
-                if app.applicant_address == user_address {
-                    result.push_back(scholarship.clone());
-                    break;
+        let scholarships = Self::get_scholarships(env);
+        let mut updated_scholarships = Vec::new(env);
+        for mut scholarship in scholarships.iter() {
+            if scholarship.name == scholarship_name {
+                if scholarship.available_grants < students.len() as u32 {
+                    panic!("Not enough grants available");
                 }
+                if &caller != &scholarship.admin {
+                    panic!("Only the scholarship admin can pick students");
+                }
+                scholarship.available_grants -= students.len() as u32;
+                updated_scholarships.push_back(scholarship.clone());
+            } else {
+                updated_scholarships.push_back(scholarship.clone());
             }
         }
-        result
+        env.storage()
+            .persistent()
+            .set(&Symbol::new(&env, "scholarships"), &updated_scholarships);
+    }
+
+    pub fn get_my_scholarships(env: &Env, address: Address) -> Vec<Scholarship> {
+        let scholarships = Self::get_scholarships(env);
+        let mut my_scholarships = Vec::new(env);
+        for scholarship in scholarships.iter() {
+            if scholarship.admin == address {
+                my_scholarships.push_back(scholarship.clone());
+            }
+        }
+        return my_scholarships;
+    }
+
+    pub fn get_applications(env: &Env) -> Vec<Application> {
+        return env
+            .storage()
+            .persistent()
+            .get(&Symbol::new(&env, "applications"))
+            .unwrap_or_else(|| Vec::new(env));
+    }
+
+    pub fn get_my_applications(env: &Env, address: Address) -> Vec<Application> {
+        let applications = Self::get_applications(env);
+        let mut my_applications = Vec::new(env);
+        for application in applications.iter() {
+            if application.applicant == address {
+                my_applications.push_back(application.clone());
+            }
+        }
+        return my_applications;
+    }
+
+    pub fn get_applications_frm_schlrship(env: &Env, scholarship_name: String) -> Vec<Application> {
+        let applications = Self::get_applications(env);
+        let mut scholarship_applications = Vec::new(env);
+        for application in applications.iter() {
+            if application.scholarship_name == scholarship_name {
+                scholarship_applications.push_back(application.clone());
+            }
+        }
+        return scholarship_applications;
+    }
+
+    fn move_token(env: &Env, token: &Address, from: &Address, to: &Address, transfer_amount: i128) {
+        let token = token::Client::new(env, token);
+
+        // This call needs to be authorized by `from` address. It directly transfers
+        // the specified `transfer_amount` from `from` to `to`.
+        token.transfer(from, to, &transfer_amount);
     }
 }
 
+mod test;
