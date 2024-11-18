@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { FiGlobe, FiLock, FiDollarSign } from "react-icons/fi";
 import { HiOutlineLightBulb, HiCheck } from "react-icons/hi";
 import CountUp from 'react-countup';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const marketData = [
   { year: '2020', value: 3.2 },
@@ -19,6 +19,18 @@ const scholarshipData = [
   { category: 'Unclaimed', value: 100 },
   { category: 'Claimed', value: 900 },
 ];
+
+const outOfSchoolData = [
+  { name: 'Out of School', value: 244 },
+  { name: 'In School', value: 1156 }, // Approximate total school-age population
+];
+
+const defiAdoptionData = [
+  { name: 'Brand Awareness', value: 85 },
+  { name: 'Active Usage', value: 15 },
+];
+
+const COLORS = ['#f97316', '#1f2937'];
 
 export default function Home() {
   return (
@@ -119,73 +131,82 @@ export default function Home() {
           >
             <h2 className="text-5xl font-bold mb-6 text-white">The Problem</h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              The global education financing market continues to grow but severe inefficiencies leave millions of students without access to quality education.
+              The global education financing gap continues to grow, leaving millions of students without access to quality education.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-12">
-            {/* Market Size Visualization */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+            {/* Market Size */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-gray-800 bg-opacity-50 p-8 rounded-2xl"
+              className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700"
             >
-              <h3 className="text-xl font-semibold mb-3 text-white">Global Student Loan Market</h3>
-              <div className="text-3xl font-bold text-orange-500 mb-4">
-                $<CountUp end={3.8} decimals={1} duration={2.5} /> Trillion
-              </div>
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={marketData}>
-                    <defs>
-                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="year" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#1f2937', border: 'none' }}
-                      labelStyle={{ color: '#f3f4f6' }}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke="#f97316" 
-                      fillOpacity={1} 
-                      fill="url(#colorValue)" 
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <div className="flex flex-col items-start h-full">
+                <h3 className="text-lg font-medium text-gray-400 mb-4">Global Student Loan Market</h3>
+                <div className="flex items-baseline gap-2 mb-3">
+                  <span className="text-5xl font-bold text-orange-500">$3.8T</span>
+                </div>
+                <div className="mt-auto">
+                  <span className="text-sm text-gray-400">Growing yearly with increasing education costs</span>
+                </div>
               </div>
             </motion.div>
 
-            {/* Scholarship Stats */}
+            {/* Unclaimed Scholarships */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="bg-gray-800 bg-opacity-50 p-8 rounded-2xl"
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700"
             >
-              <h3 className="text-xl font-semibold mb-3 text-white">Annual Scholarship Distribution</h3>
-              <div className="text-3xl font-bold text-orange-500 mb-4">
-                $<CountUp end={100} duration={2.5} /> Million
+              <div className="flex flex-col items-start h-full">
+                <h3 className="text-lg font-medium text-gray-400 mb-4">Unclaimed Scholarships Annually</h3>
+                <div className="flex items-baseline gap-2 mb-3">
+                  <span className="text-5xl font-bold text-orange-500">$100M</span>
+                </div>
+                <div className="mt-auto">
+                  <span className="text-sm text-gray-400">Due to inefficient distribution systems</span>
+                </div>
               </div>
-              <p className="text-sm text-gray-300 mb-6">in scholarships go unclaimed every year</p>
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={scholarshipData}>
-                    <XAxis dataKey="category" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#1f2937', border: 'none' }}
-                      labelStyle={{ color: '#f3f4f6' }}
-                    />
-                    <Bar dataKey="value" fill="#f97316" />
-                  </BarChart>
-                </ResponsiveContainer>
+            </motion.div>
+
+            {/* Out of School Children */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700"
+            >
+              <div className="flex flex-col items-start h-full">
+                <h3 className="text-lg font-medium text-gray-400 mb-4">Children Out of School</h3>
+                <div className="flex items-baseline gap-2 mb-3">
+                  <span className="text-5xl font-bold text-orange-500">244M</span>
+                </div>
+                <div className="mt-auto">
+                  <span className="text-sm text-gray-400">Source: UNESCO Education Data</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* DeFi Adoption Challenge - Updated to match other cards */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700"
+            >
+              <div className="flex flex-col items-start h-full">
+                <h3 className="text-lg font-medium text-gray-400 mb-4">DeFi Adoption Challenge</h3>
+                <div className="flex items-baseline gap-2 mb-3">
+                  <span className="text-5xl font-bold text-orange-500">Low Usage</span>
+                </div>
+                <div className="mt-auto">
+                  <span className="text-sm text-gray-400">
+                    High brand recognition but limited active users in DeFi protocols
+                  </span>
+                </div>
               </div>
             </motion.div>
           </div>
@@ -197,7 +218,7 @@ export default function Home() {
             className="text-center mt-12"
           >
             <p className="text-xl text-gray-300">
-              Descholar aims to bring a piece of this massive market onchain.
+              Descholar bridges these gaps by making educational funding accessible and transparent through blockchain technology.
             </p>
           </motion.div>
         </section>
