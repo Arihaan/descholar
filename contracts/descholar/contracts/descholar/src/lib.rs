@@ -3,20 +3,27 @@
 // ! To deploy the contract, run the following command:
 // TODO actualy fix it and make it work
 /*
+10000000000 - 1000 xlm
+1000000000 - 100 xlm
+100000000 - 10 xlm
+10000000 - 1 xlm
+
+new contract id = CA6BL4PGEW6Q4B3US5CRN2QKVQFHGUZSJ72SZ56HFPKRZKJER4CR2NKL
 soroban contract invoke \
-    --id CC3S33I4T7CNK7DUPLQAKTBFK4OIBB6MBCSLLXY57JK2WWCC4VKRZS75
-    --source alice \
     --network testnet \
+    --source alice \
+    --id CA6BL4PGEW6Q4B3US5CRN2QKVQFHGUZSJ72SZ56HFPKRZKJER4CR2NKL \
     -- \
     post_scholarship \
-        --admin alice \
-        --available_grants 10 \
-        --details "test details" \
-        --total_grant_amount 1000 \
-        --end_date 1000000 \
-        --name "test" \
-        --token_address CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC \
-    --amount 1000
+    --scholarship '{"name":"test","details":"test details","available_grants":10,"total_grant_amount":"1000","end_date":1000000,"admin":"GBXGQJWVLWOYHFLVTKWV5FGHA3LNYY2JQKM7OAJAUEQFU6LPCSEFVXON"}' \
+    --token_address "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+
+soroban contract invoke \
+  --source alice \
+  --id CA6BL4PGEW6Q4B3US5CRN2QKVQFHGUZSJ72SZ56HFPKRZKJER4CR2NKL \
+  --network testnet \
+  --fn get_scholarships
+
 */
 /**
  * ! @file lib.rs
@@ -80,9 +87,7 @@ soroban contract invoke \
  * @param transfer_amount The amount of tokens to transfer.
  * * This function is used internally by the contract.
  */
-use soroban_sdk::{
-    contract, contractimpl, contracttype, log, token, Address, Env, String, Symbol, Vec,
-};
+use soroban_sdk::{contract, contractimpl, contracttype, token, Address, Env, String, Symbol, Vec};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -123,28 +128,27 @@ impl StellarshipContract {
     ) -> Vec<Scholarship> {
         //CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC // *xlm testnet
 
-        // ! Test if this is working
         scholarship.admin.require_auth();
 
-        //if call doesn't send enough tokens, it will fail
         let token_client = token::Client::new(&env, &token_address);
-        let balance = token_client.balance(&scholarship.admin);
+        // if !token_client.has_balance(&env.current_contract_address()) {
+        //     token_client.create_balance(&env.current_contract_address());
+        // }
+        let old_balance = token_client.balance(&env.current_contract_address());
 
         token_client.transfer(
-            &scholarship.admin,
-            &env.current_contract_address(),
-            &scholarship.total_grant_amount,
+            &scholarship.admin,              // * from
+            &env.current_contract_address(), // * to
+            &scholarship.total_grant_amount, // * amount
         );
 
         let new_balance = token_client.balance(&env.current_contract_address());
         assert!(
-            new_balance == balance + &scholarship.total_grant_amount,
+            new_balance == old_balance + &scholarship.total_grant_amount,
             "Transfer amount not received"
         );
-        log!(env, "The value is: {}", balance);
-        if balance <= 0 {
-            log!(env, "The value is: {}", balance);
-            panic!("hello {}", balance);
+        if new_balance != old_balance + &scholarship.total_grant_amount {
+            panic!("Transfer amount not received");
         }
 
         //check grant amount/validate inputs
@@ -159,16 +163,6 @@ impl StellarshipContract {
                 panic!("Scholarship name already exists");
             }
         }
-
-        //transfer tokens to contract
-        let contract_address = env.current_contract_address();
-        Self::move_token(
-            &env,
-            &token_address,
-            &scholarship.admin, //from
-            &contract_address,  //to
-            scholarship.total_grant_amount,
-        );
 
         //create scholarship
         scholarships.push_back(scholarship);
@@ -263,14 +257,6 @@ impl StellarshipContract {
             }
         }
         return scholarship_applications;
-    }
-
-    fn move_token(env: &Env, token: &Address, from: &Address, to: &Address, transfer_amount: i128) {
-        let token = token::Client::new(env, token);
-
-        // This call needs to be authorized by `from` address. It directly transfers
-        // the specified `transfer_amount` from `from` to `to`.
-        token.transfer(from, to, &transfer_amount);
     }
 }
 
