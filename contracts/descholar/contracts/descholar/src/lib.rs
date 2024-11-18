@@ -7,7 +7,7 @@
 10000000    - 1 xlm
 CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC // *xlm token address testnet
 
-?  new contract id = CBNGGO732NLBKRKTBHJTWL6TI2CHSM74COJG3X635X3ZKSFKLEQFOVN7
+?  latest contract id = CASRFLDQJVNP5XXYMZE6WVWOLYEV6AWF2LJOT3V64EJ22PEJKVEVILYP
 * Cli just doesn't work so I use Okashi instead
 */
 /**
@@ -148,9 +148,9 @@ impl StellarshipContract {
 
     pub fn apply(env: &Env, application: Application) -> Vec<Application> {
         let mut applications = Self::get_applications(env);
-        let mut newApplication = application.clone();
-        newApplication.status = ApplicationStatus::Pending;
-        applications.push_back(application);
+        let mut new_application = application.clone();
+        new_application.status = ApplicationStatus::Pending;
+        applications.push_back(new_application);
         env.storage()
             .persistent()
             .set(&Symbol::new(&env, "applications"), &applications);
@@ -176,19 +176,18 @@ impl StellarshipContract {
         let applications = Self::get_applications(env);
         let mut updated_applications = Vec::new(env);
         for mut scholarship in scholarships.iter() {
-            if scholarship.name == scholarship_name {
-                if scholarship.available_grants < students.len() as u32 {
+            if scholarship.name == scholarship_name.clone() {
+                if scholarship.available_grants < students.clone().len() as u32 {
                     panic!("Not enough grants available");
                 }
                 if &caller != &scholarship.admin {
                     panic!("Only the scholarship admin can pick students");
                 }
 
-                Self::approve_students(
-                    students,
-                    scholarship_name,
-                    applications,
-                    updated_applications,
+                updated_applications = Self::approve_students(
+                    students.clone(),
+                    scholarship_name.clone(),
+                    applications.clone(),
                 );
 
                 scholarship.available_grants -= students.len() as u32; //TODO actualy check this later
@@ -267,8 +266,8 @@ impl StellarshipContract {
         students: Vec<Address>,
         scholarship_name: String,
         applications: Vec<Application>,
-        updated_applications: Vec<Application>,
-    ) {
+    ) -> Vec<Application> {
+        let mut updated_applications = Vec::new(applications.env());
         for student in students.iter() {
             for mut application in applications.iter() {
                 if application.applicant == student
@@ -276,9 +275,10 @@ impl StellarshipContract {
                 {
                     application.status = ApplicationStatus::Approved;
                 }
-                updated_applications.push_back(application.clone());
+                updated_applications.push_back(application);
             }
         }
+        updated_applications
     }
 }
 
