@@ -1,15 +1,14 @@
 #![no_std]
 
-// ! To deploy the contract, run the following command:
-// TODO actualy fix it and make it work
 /*
 10000000000 - 1000 xlm
 1000000000  - 100 xlm
 100000000   - 10 xlm
 10000000    - 1 xlm
+CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC // *xlm token address testnet
 
-new contract id = CBNGGO732NLBKRKTBHJTWL6TI2CHSM74COJG3X635X3ZKSFKLEQFOVN7
-Cli just doesn't work so I use Okashi instead
+?  new contract id = CBNGGO732NLBKRKTBHJTWL6TI2CHSM74COJG3X635X3ZKSFKLEQFOVN7
+* Cli just doesn't work so I use Okashi instead
 */
 /**
  * ! @file lib.rs
@@ -40,7 +39,6 @@ Cli just doesn't work so I use Okashi instead
  * @param scholarship_name The name of the scholarship to pick students for.
  * @param students A list of student addresses to be granted the scholarship.
  * @param caller The address of the caller picking the students.
- *
  *
  * ! @fn get_scholarships
  * ? @brief Retrieves all posted scholarships.
@@ -92,6 +90,7 @@ pub struct Application {
     applicant: Address,
     scholarship_name: String,
     details: String,
+    status: ApplicationStatus,
 }
 
 #[contracttype]
@@ -115,11 +114,10 @@ impl StellarshipContract {
         //CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC // *xlm testnet
 
         scholarship.admin.require_auth();
+        let mut scholarships = Self::get_scholarships(env);
+        Self::validate_application(scholarship.clone(), scholarships.clone());
 
         let token_client = token::Client::new(&env, &token_address);
-        // if !token_client.has_balance(&env.current_contract_address()) {
-        //     token_client.create_balance(&env.current_contract_address());
-        // }
         let old_balance = token_client.balance(&env.current_contract_address());
 
         token_client.transfer(
@@ -128,6 +126,7 @@ impl StellarshipContract {
             &scholarship.total_grant_amount, // * amount
         );
 
+        //* check if transfer amount received
         let new_balance = token_client.balance(&env.current_contract_address());
         assert!(
             new_balance == old_balance + &scholarship.total_grant_amount,
@@ -135,19 +134,6 @@ impl StellarshipContract {
         );
         if new_balance != old_balance + &scholarship.total_grant_amount {
             panic!("Transfer amount not received");
-        }
-
-        //check grant amount/validate inputs
-        if scholarship.total_grant_amount <= 0 || scholarship.available_grants <= 0 {
-            panic!("Total grant amount cannot be negative");
-        }
-
-        //check if scholarship name already exists
-        let mut scholarships = Self::get_scholarships(env);
-        for existing_scholarship in scholarships.iter() {
-            if existing_scholarship.name == scholarship.name {
-                panic!("Scholarship name already exists");
-            }
         }
 
         //create scholarship
@@ -162,6 +148,8 @@ impl StellarshipContract {
 
     pub fn apply(env: &Env, application: Application) -> Vec<Application> {
         let mut applications = Self::get_applications(env);
+        let mut newApplication = application.clone();
+        newApplication.status = ApplicationStatus::Pending;
         applications.push_back(application);
         env.storage()
             .persistent()
@@ -185,6 +173,8 @@ impl StellarshipContract {
     ) {
         let scholarships = Self::get_scholarships(env);
         let mut updated_scholarships = Vec::new(env);
+        let applications = Self::get_applications(env);
+        let mut updated_applications = Vec::new(env);
         for mut scholarship in scholarships.iter() {
             if scholarship.name == scholarship_name {
                 if scholarship.available_grants < students.len() as u32 {
@@ -193,7 +183,15 @@ impl StellarshipContract {
                 if &caller != &scholarship.admin {
                     panic!("Only the scholarship admin can pick students");
                 }
-                scholarship.available_grants -= students.len() as u32;
+
+                Self::approve_students(
+                    students,
+                    scholarship_name,
+                    applications,
+                    updated_applications,
+                );
+
+                scholarship.available_grants -= students.len() as u32; //TODO actualy check this later
                 updated_scholarships.push_back(scholarship.clone());
             } else {
                 updated_scholarships.push_back(scholarship.clone());
@@ -202,9 +200,14 @@ impl StellarshipContract {
         env.storage()
             .persistent()
             .set(&Symbol::new(&env, "scholarships"), &updated_scholarships);
+
+        env.storage()
+            .persistent()
+            .set(&Symbol::new(&env, "applications"), &updated_applications);
     }
 
     pub fn get_my_scholarships(env: &Env, address: Address) -> Vec<Scholarship> {
+        // * as Admin of scholarship
         let scholarships = Self::get_scholarships(env);
         let mut my_scholarships = Vec::new(env);
         for scholarship in scholarships.iter() {
@@ -224,6 +227,7 @@ impl StellarshipContract {
     }
 
     pub fn get_my_applications(env: &Env, address: Address) -> Vec<Application> {
+        // * as student
         let applications = Self::get_applications(env);
         let mut my_applications = Vec::new(env);
         for application in applications.iter() {
@@ -243,6 +247,38 @@ impl StellarshipContract {
             }
         }
         return scholarship_applications;
+    }
+
+    fn validate_application(scholarship: Scholarship, scholarships: Vec<Scholarship>) {
+        //check grant amount/validate inputs
+        if scholarship.total_grant_amount <= 0 || scholarship.available_grants <= 0 {
+            panic!("Total grant amount cannot be negative");
+        }
+
+        //check if scholarship name already exists
+        for existing_scholarship in scholarships.iter() {
+            if existing_scholarship.name == scholarship.name {
+                panic!("Scholarship name already exists");
+            }
+        }
+    }
+
+    fn approve_students(
+        students: Vec<Address>,
+        scholarship_name: String,
+        applications: Vec<Application>,
+        updated_applications: Vec<Application>,
+    ) {
+        for student in students.iter() {
+            for mut application in applications.iter() {
+                if application.applicant == student
+                    && application.scholarship_name == scholarship_name
+                {
+                    application.status = ApplicationStatus::Approved;
+                }
+                updated_applications.push_back(application.clone());
+            }
+        }
     }
 }
 
