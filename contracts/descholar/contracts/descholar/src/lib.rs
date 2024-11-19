@@ -12,7 +12,7 @@ CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC // *xlm token address t
 */
 /**
  * ! @file lib.rs
- * ? @brief Stellarship Contract for managing scholarships and applications.
+ * ? @brief Descholar Contract for managing scholarships and applications.
  *
  * This contract provides functionalities to post scholarships, apply for scholarships,
  * and retrieve scholarships and applications.
@@ -102,10 +102,10 @@ pub enum ApplicationStatus {
 }
 
 #[contract]
-pub struct StellarshipContract;
+pub struct DescholarContract;
 
 #[contractimpl]
-impl StellarshipContract {
+impl DescholarContract {
     pub fn post_scholarship(
         env: &Env,
         scholarship: Scholarship,
