@@ -7,13 +7,6 @@ import { HiOutlineLightBulb, HiCheck } from "react-icons/hi";
 import CountUp from 'react-countup';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-const marketData = [
-  { year: '2020', value: 3.2 },
-  { year: '2021', value: 3.4 },
-  { year: '2022', value: 3.6 },
-  { year: '2023', value: 3.8 },
-  { year: '2024', value: 4.0 },
-];
 
 const scholarshipData = [
   { category: 'Unclaimed', value: 100 },

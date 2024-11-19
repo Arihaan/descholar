@@ -1,7 +1,42 @@
 "use client";
 import { motion } from "framer-motion";
+import { Client, networks, Scholarship } from "bindings";
+import { useState, useEffect } from "react";
+import { scValToNative, Address } from 'stellar-sdk';
 
 const Scholarships = () => {
+  const [scholarships, setScholarships] = useState<Scholarship[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const scholarshipContract = new Client({
+    contractId: networks.testnet.contractId,
+    networkPassphrase: networks.testnet.networkPassphrase,
+    rpcUrl: "https://soroban-testnet.stellar.org/",
+  });
+
+  useEffect(() => {
+
+    const fetchScholarships = async () => {
+      try {
+        const transaction = await scholarshipContract.get_scholarships();
+        console.log("transaction:", transaction);
+        if (transaction.simulation?.result?.retval) {
+          console.log('Raw result:', transaction.result);
+          var result = transaction.result;
+          setScholarships(result);
+        }
+      } catch (error) {
+        console.error("Error fetching scholarships:", error);
+        setError("Failed to load scholarships. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchScholarships();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Background with overlay */}
@@ -31,45 +66,56 @@ const Scholarships = () => {
             Available Scholarships
           </h1>
           <p className="text-center text-gray-300 mb-12 max-w-2xl mx-auto">
-            Browse and apply for scholarships from organizations and donors worldwide.
+            Browse and apply for scholarships from organizations worldwide.
           </p>
         </motion.div>
 
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {/* Example scholarship card - remove when implementing real data */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-8 rounded-2xl border border-gray-700 shadow-xl"
+        {loading ? (
+          <div className="text-center text-gray-300">Loading scholarships...</div>
+        ) : error ? (
+          <div className="text-center text-red-500">{error}</div>
+        ) : (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            <h2 className="text-xl font-semibold mb-4 text-white">
-              STEM Excellence Scholarship
-            </h2>
-            <div className="space-y-3">
-              <p className="text-gray-300 text-sm flex justify-between">
-                <span>Amount:</span>
-                <span className="text-orange-400 font-semibold">1000 XLM</span>
-              </p>
-              <p className="text-gray-300 text-sm flex justify-between">
-                <span>Deadline:</span>
-                <span>March 30, 2024</span>
-              </p>
-              <p className="text-gray-300 text-sm flex justify-between">
-                <span>Available Grants:</span>
-                <span>5</span>
-              </p>
-            </div>
-            <button className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-              Apply Now
-            </button>
+            {scholarships.map((scholarship, index) => (
+              <motion.div
+                key={index}
+                whileHover={{ scale: 1.02 }}
+                className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-8 rounded-2xl border border-gray-700 shadow-xl"
+              >
+                <h2 className="text-xl font-semibold mb-4 text-white">
+                  {scholarship.name}
+                </h2>
+                <div className="space-y-3">
+                  <p className="text-gray-300 text-sm flex justify-between">
+                    <span>Amount:</span>
+                    <span className="text-orange-400 font-semibold">
+                      {Number(scholarship.total_grant_amount) / 10000000} XLM
+                    </span>
+                  </p>
+                  <p className="text-gray-300 text-sm flex justify-between">
+                    <span>Available Grants:</span>
+                    <span>{scholarship.available_grants}</span>
+                  </p>
+                  <p className="text-gray-300 text-sm flex justify-between">
+                    <span>End Date:</span>
+                    <span>{new Date(Number(scholarship.end_date) * 1000).toLocaleDateString()}</span>
+                  </p>
+                  <p className="text-gray-300 text-sm mt-4">
+                    {scholarship.details}
+                  </p>
+                </div>
+                <button className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                  Apply Now
+                </button>
+              </motion.div>
+            ))}
           </motion.div>
-
-          {/* Add more example cards here */}
-        </motion.div>
+        )}
       </main>
     </div>
   );

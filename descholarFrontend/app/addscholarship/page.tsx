@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { kit } from "../stellar-wallets-kit";
 import { motion } from "framer-motion";
-import Client from "bindings";
 
 const CreateScholarshipPage = () => {
   const [scholarship, setScholarship] = useState({
