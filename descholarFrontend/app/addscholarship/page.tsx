@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { kit } from "../stellar-wallets-kit";
 import { motion } from "framer-motion";
+import Client from "bindings";
 
 const CreateScholarshipPage = () => {
   const [scholarship, setScholarship] = useState({
@@ -45,20 +46,24 @@ const CreateScholarshipPage = () => {
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Background with overlay */}
-      <div 
+      <div
         className="absolute inset-0 z-0 bg-no-repeat w-full"
         style={{
           backgroundImage: 'url("/resources/webpagebg.png")',
-          backgroundSize: '100% auto',
-          backgroundColor: '#10081e',
-          backgroundPosition: 'top center',
-          maxWidth: '100vw',
+          backgroundSize: "100% auto",
+          backgroundColor: "#10081e",
+          backgroundPosition: "top center",
+          maxWidth: "100vw",
         }}
       >
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(to bottom, rgba(16, 8, 30, 0) 0%, rgba(16, 8, 30, 0.8) 50%, rgba(16, 8, 30, 1) 100%)',
-          pointerEvents: 'none'
-        }}></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(16, 8, 30, 0) 0%, rgba(16, 8, 30, 0.8) 50%, rgba(16, 8, 30, 1) 100%)",
+            pointerEvents: "none",
+          }}
+        ></div>
       </div>
 
       <main className="flex-grow container mx-auto px-4 py-8 relative z-10 mt-32">
@@ -71,7 +76,9 @@ const CreateScholarshipPage = () => {
             Create Scholarship
           </h1>
           <p className="text-center text-gray-300 mb-12 max-w-2xl mx-auto">
-            Create a new scholarship opportunity and make a difference in students' lives. All scholarships are secured by Soroban smart contracts on the Stellar blockchain.
+            Create a new scholarship opportunity and make a difference in
+            students' lives. All scholarships are secured by Soroban smart
+            contracts on the Stellar blockchain.
           </p>
         </motion.div>
 
@@ -98,7 +105,10 @@ const CreateScholarshipPage = () => {
             </div>
 
             <div>
-              <label htmlFor="details" className="block text-white mb-2 text-sm">
+              <label
+                htmlFor="details"
+                className="block text-white mb-2 text-sm"
+              >
                 Details
               </label>
               <input
@@ -113,7 +123,10 @@ const CreateScholarshipPage = () => {
             </div>
 
             <div>
-              <label htmlFor="available_grants" className="block text-white mb-2 text-sm">
+              <label
+                htmlFor="available_grants"
+                className="block text-white mb-2 text-sm"
+              >
                 Available Grants
               </label>
               <input
@@ -128,7 +141,10 @@ const CreateScholarshipPage = () => {
             </div>
 
             <div>
-              <label htmlFor="total_grant_amount" className="block text-white mb-2 text-sm">
+              <label
+                htmlFor="total_grant_amount"
+                className="block text-white mb-2 text-sm"
+              >
                 Total Grant Amount (XLM)
               </label>
               <input
@@ -143,7 +159,10 @@ const CreateScholarshipPage = () => {
             </div>
 
             <div>
-              <label htmlFor="end_date" className="block text-white mb-2 text-sm">
+              <label
+                htmlFor="end_date"
+                className="block text-white mb-2 text-sm"
+              >
                 End Date
               </label>
               <input
