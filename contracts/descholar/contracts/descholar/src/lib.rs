@@ -7,6 +7,8 @@
 10000000    - 1 xlm
 CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC // *xlm token address testnet
 
+cargo install --git https://github.com/stellar/stellar-cli soroban-cli //for updating or downloadingle cli
+
 ?  latest contract id = CASRFLDQJVNP5XXYMZE6WVWOLYEV6AWF2LJOT3V64EJ22PEJKVEVILYP
 * Cli just doesn't work so I use Okashi instead
 */
