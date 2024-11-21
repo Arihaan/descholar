@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "postinstall": "soroban contract bindings typescript --rpc-url https://soroban-testnet.stellar.org:443 --network-passphrase \"Test SDF Network ; September 2015\" --id CCB5ZRPHWGL3BF5G55POP6J72Y4GILT2OG27PHIEDNGFP7JQMDZ64KKH --output-dir  bindings --overwrite"
+    "lint": "next lint"
   },
   "dependencies": {
     "@creit.tech/stellar-wallets-kit": "^1.2.3",
