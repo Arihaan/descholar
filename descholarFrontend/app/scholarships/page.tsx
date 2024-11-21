@@ -71,7 +71,7 @@ const Scholarships = () => {
         </motion.div>
 
         {loading ? (
-          <div className="text-center text-gray-300">Loading scholarships...</div>
+          <div className="text-center text-gray-300">Fetching scholarships from the blockchain...</div>
         ) : error ? (
           <div className="text-center text-red-500">{error}</div>
         ) : (
