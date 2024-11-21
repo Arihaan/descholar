@@ -9,7 +9,7 @@ const nextConfig = {
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      bindings: path.resolve(__dirname, '../bindings/src/index.ts'),
+      bindings: path.resolve(__dirname, './bindings/src/index.ts'),
     };
     return config;
   },

@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { Client, networks, Scholarship } from "bindings";
 import { useState, useEffect } from "react";
-import { scValToNative, Address } from 'stellar-sdk';
+import { scValToNative, Address } from '@stellar/stellar-sdk';
 
 const Scholarships = () => {
   const [scholarships, setScholarships] = useState<Scholarship[]>([]);

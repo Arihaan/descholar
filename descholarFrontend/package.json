@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "soroban contract bindings typescript --rpc-url https://soroban-testnet.stellar.org:443 --network-passphrase \"Test SDF Network ; September 2015\" --id CCB5ZRPHWGL3BF5G55POP6J72Y4GILT2OG27PHIEDNGFP7JQMDZ64KKH --output-dir  bindings --overwrite"
   },
   "dependencies": {
     "@creit.tech/stellar-wallets-kit": "^1.2.3",
@@ -14,7 +15,6 @@
     "@stellar/freighter-api": "^3.0.0",
     "@stellar/stellar-sdk": "^13.0.0",
     "bignumber.js": "^9.1.2",
-    "bindings": "file:../bindings",
     "framer-motion": "^11.11.15",
     "next": "14.2.15",
     "react": "^18",
@@ -22,7 +22,8 @@
     "react-dom": "^18",
     "react-hook-form": "^7.53.0",
     "react-icons": "^5.3.0",
-    "recharts": "^2.13.3"
+    "recharts": "^2.13.3",
+    "buffer": "6.0.3"
   },
   "devDependencies": {
     "@types/node": "^20",
