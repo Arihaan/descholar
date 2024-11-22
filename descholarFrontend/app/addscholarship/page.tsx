@@ -2,49 +2,97 @@
 import React, { useState } from "react";
 import { kit } from "../stellar-wallets-kit";
 import { motion } from "framer-motion";
+import ScholarshipConfirmation from "../components/ScholarshipConfirmation";
 
 const CreateScholarshipPage = () => {
   const [scholarship, setScholarship] = useState({
     name: "",
     details: "",
     available_grants: 0,
-    total_grant_amount: 0,
+    grant_amount: 0,
     end_date: "",
   });
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [walletAddress, setWalletAddress] = useState("");
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
     setScholarship((prev) => ({
       ...prev,
       [name]:
-        name === "available_grants" || name === "total_grant_amount"
-          ? parseInt(value)
+        name === "available_grants" || name === "grant_amount"
+          ? value === "" ? 0 : Math.max(1, parseInt(value.replace(/^0+/, '')))
           : value,
     }));
   }
 
-  async function submitScholarship(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!scholarship.name.trim()) {
+      alert("Please enter a scholarship name");
+      return;
+    }
+
+    if (!scholarship.details.trim()) {
+      alert("Please enter scholarship details");
+      return;
+    }
+
+    if (scholarship.available_grants <= 0) {
+      alert("Number of available grants must be greater than 0");
+      return;
+    }
+
+    if (scholarship.grant_amount <= 0) {
+      alert("Grant amount must be greater than 0");
+      return;
+    }
+
+    const endDate = new Date(scholarship.end_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (endDate < today) {
+      alert("End date cannot be in the past");
+      return;
+    }
+
     try {
       const { address } = await kit.getAddress();
-
       if (!address) {
         alert("Please connect your wallet first");
         return;
       }
+      setWalletAddress(address);
+      setShowConfirmation(true);
+    } catch (error) {
+      console.error("Error getting wallet address:", error);
+      alert("Please connect your wallet first");
+    }
+  }
+
+  async function handleConfirmCreate() {
+    try {
+      const total_grant_amount = scholarship.grant_amount * scholarship.available_grants;
+      const scholarshipData = {
+        ...scholarship,
+        total_grant_amount,
+        admin: walletAddress,
+      };
+
+      // TODO: Implement contract interaction here
 
       alert("Scholarship created successfully!");
       location.reload();
     } catch (error) {
       console.error("Error creating scholarship:", error);
       alert("Error creating scholarship. Please try again.");
-      location.reload();
     }
   }
 
   return (
     <div className="min-h-screen flex flex-col relative">
-      {/* Background with overlay */}
       <div
         className="absolute inset-0 z-0 bg-no-repeat w-full"
         style={{
@@ -75,9 +123,7 @@ const CreateScholarshipPage = () => {
             Create Scholarship
           </h1>
           <p className="text-center text-gray-300 mb-12 max-w-2xl mx-auto">
-            Create a new scholarship opportunity and make a difference in
-            students' lives. All scholarships are secured by Soroban smart
-            contracts on the Stellar blockchain.
+            Create a new scholarship opportunity and make a difference in students' lives.
           </p>
         </motion.div>
 
@@ -87,10 +133,10 @@ const CreateScholarshipPage = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="max-w-2xl mx-auto bg-gray-900 bg-opacity-40 backdrop-blur-sm p-8 rounded-3xl shadow-xl border border-gray-700"
         >
-          <form onSubmit={submitScholarship} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="name" className="block text-white mb-2 text-sm">
-                Scholarship Name
+                Scholarship Name *
               </label>
               <input
                 type="text"
@@ -104,65 +150,57 @@ const CreateScholarshipPage = () => {
             </div>
 
             <div>
-              <label
-                htmlFor="details"
-                className="block text-white mb-2 text-sm"
-              >
-                Details
+              <label htmlFor="details" className="block text-white mb-2 text-sm">
+                Details *
               </label>
-              <input
-                type="text"
+              <textarea
                 id="details"
                 name="details"
                 value={scholarship.details}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
+                rows={4}
+                className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm resize-y"
                 required
               />
             </div>
 
             <div>
-              <label
-                htmlFor="available_grants"
-                className="block text-white mb-2 text-sm"
-              >
-                Available Grants
+              <label htmlFor="available_grants" className="block text-white mb-2 text-sm">
+                Available Grants *
               </label>
               <input
                 type="number"
                 id="available_grants"
                 name="available_grants"
-                value={scholarship.available_grants}
+                value={scholarship.available_grants || ''}
                 onChange={handleChange}
+                min="1"
+                step="1"
                 className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
                 required
               />
             </div>
 
             <div>
-              <label
-                htmlFor="total_grant_amount"
-                className="block text-white mb-2 text-sm"
-              >
-                Total Grant Amount (XLM)
+              <label htmlFor="grant_amount" className="block text-white mb-2 text-sm">
+                Grant Amount per Student (XLM) *
               </label>
               <input
                 type="number"
-                id="total_grant_amount"
-                name="total_grant_amount"
-                value={scholarship.total_grant_amount}
+                id="grant_amount"
+                name="grant_amount"
+                value={scholarship.grant_amount || ''}
                 onChange={handleChange}
+                min="1"
+                step="1"
                 className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
                 required
               />
             </div>
 
             <div>
-              <label
-                htmlFor="end_date"
-                className="block text-white mb-2 text-sm"
-              >
-                End Date
+              <label htmlFor="end_date" className="block text-white mb-2 text-sm">
+                End Date *
               </label>
               <input
                 type="date"
@@ -170,6 +208,7 @@ const CreateScholarshipPage = () => {
                 name="end_date"
                 value={scholarship.end_date}
                 onChange={handleChange}
+                min={new Date().toISOString().split('T')[0]}
                 className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
                 required
               />
@@ -184,6 +223,14 @@ const CreateScholarshipPage = () => {
           </form>
         </motion.div>
       </main>
+
+      <ScholarshipConfirmation
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={handleConfirmCreate}
+        scholarship={scholarship}
+        walletAddress={walletAddress}
+      />
     </div>
   );
 };
