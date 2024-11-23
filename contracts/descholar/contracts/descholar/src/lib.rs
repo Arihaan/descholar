@@ -62,21 +62,21 @@ impl DescholarContract {
         let token_client = token::Client::new(&env, &scholarship.token);
         let old_balance = token_client.balance(&env.current_contract_address());
 
-        let mut amount = scholarship.student_grant_amount * scholarship.available_grants as i128;
+        let total_amount = scholarship.student_grant_amount * (scholarship.available_grants as i128);
 
         token_client.transfer(
             &scholarship.admin,              // * from
             &env.current_contract_address(), // * to
-            &amount,                         // * amount
+            &total_amount,                  // * amount
         );
 
         //* check if transfer amount received
         let new_balance = token_client.balance(&env.current_contract_address());
         assert!(
-            new_balance == old_balance + &scholarship.student_grant_amount,
+            new_balance == old_balance + total_amount,
             "Transfer amount not received"
         );
-        if new_balance != old_balance + &scholarship.student_grant_amount {
+        if new_balance != old_balance + total_amount {
             panic!("Transfer amount not received");
         }
 
