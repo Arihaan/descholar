@@ -20,7 +20,7 @@ pub struct Scholarship {
     id: u64,
     name: String,
     details: String,
-    available_grants: u32,
+    available_grants: u64,
     student_grant_amount: i128,
     end_date: u64,
     admin: Address,
@@ -62,7 +62,7 @@ impl DescholarContract {
         let token_client = token::Client::new(&env, &scholarship.token);
         let old_balance = token_client.balance(&env.current_contract_address());
 
-        let amount = scholarship.student_grant_amount * scholarship.available_grants as i128;
+        let mut amount = scholarship.student_grant_amount * scholarship.available_grants as i128;
 
         token_client.transfer(
             &scholarship.admin,              // * from
@@ -135,7 +135,7 @@ impl DescholarContract {
 
         for mut scholarship in scholarships.iter() {
             if scholarship.id == scholarship_id.clone() {
-                if scholarship.available_grants < students.clone().len() {
+                if scholarship.available_grants < students.clone().len() as u64 {
                     panic!("Not enough grants available");
                 }
                 if &caller != &scholarship.admin {
@@ -149,7 +149,7 @@ impl DescholarContract {
                     applications.clone(),
                 );
 
-                scholarship.available_grants -= students.len() as u32; //TODO actually check this later
+                scholarship.available_grants -= students.len() as u64; //TODO actually check this later
                 updated_scholarships.push_back(scholarship.clone());
             } else {
                 updated_scholarships.push_back(scholarship.clone());
