@@ -1,8 +1,4 @@
 #![no_std]
-//! added this cause I got warning, check it later
-use quickcheck::Arbitrary;
-use quickcheck_derive::Arbitrary;
-
 /*
 10000000000 - 1000 xlm
 1000000000  - 100 xlm
@@ -55,31 +51,32 @@ pub struct DescholarContract;
 
 #[contractimpl]
 impl DescholarContract {
-    pub fn post_scholarship(
-        env: &Env,
-        scholarship: Scholarship,
-    ) -> Vec<Scholarship> {
+    pub fn post_scholarship(env: &Env, scholarship: Scholarship) -> Vec<Scholarship> {
         scholarship.admin.require_auth();
         let mut scholarships = Self::get_scholarships(env);
-        scholarship.id = scholarships.len();
+
+        let mut scholarship = scholarship.clone();
+        scholarship.id = scholarships.len() as u64;
         Self::validate_application(scholarship.clone(), scholarships.clone());
 
-        let token_client = token::Client::new(&env, &scholarship.token_address);
+        let token_client = token::Client::new(&env, &scholarship.token);
         let old_balance = token_client.balance(&env.current_contract_address());
 
+        let amount = scholarship.student_grant_amount * scholarship.available_grants as i128;
+
         token_client.transfer(
-            &scholarship.admin,                                                 // * from
-            &env.current_contract_address(),                                    // * to
-            &scholarship.total_grant_amount * &scholarship.available_grants,    // * amount
+            &scholarship.admin,              // * from
+            &env.current_contract_address(), // * to
+            &amount,                         // * amount
         );
 
         //* check if transfer amount received
         let new_balance = token_client.balance(&env.current_contract_address());
         assert!(
-            new_balance == old_balance + &scholarship.total_grant_amount,
+            new_balance == old_balance + &scholarship.student_grant_amount,
             "Transfer amount not received"
         );
-        if new_balance != old_balance + &scholarship.total_grant_amount {
+        if new_balance != old_balance + &scholarship.student_grant_amount {
             panic!("Transfer amount not received");
         }
 
@@ -138,7 +135,7 @@ impl DescholarContract {
 
         for mut scholarship in scholarships.iter() {
             if scholarship.id == scholarship_id.clone() {
-                if scholarship.available_grants < students.clone().len() as u64 {
+                if scholarship.available_grants < students.clone().len() {
                     panic!("Not enough grants available");
                 }
                 if &caller != &scholarship.admin {
@@ -146,6 +143,7 @@ impl DescholarContract {
                 }
 
                 updated_applications = Self::approve_students(
+                    env,
                     students.clone(),
                     scholarship_id.clone(),
                     applications.clone(),
@@ -212,7 +210,8 @@ impl DescholarContract {
     pub fn reject_application(env: &Env, application_id: u64) {
         let applications = Self::get_applications(env);
         let mut updated_applications = Vec::new(env);
-        for application in applications.iter() {
+
+        for mut application in applications.iter() {
             if application.id == application_id {
                 if application.status != ApplicationStatus::Pending {
                     panic!("Application has already been processed");
@@ -223,16 +222,16 @@ impl DescholarContract {
         }
         env.storage()
             .persistent()
-            .set(&Symbol::new(&env, "applications"), &updated_applications); 
+            .set(&Symbol::new(&env, "applications"), &updated_applications);
     }
 
     fn validate_application(scholarship: Scholarship, scholarships: Vec<Scholarship>) {
         //check grant amount/validate inputs
-        if scholarship.total_grant_amount <= 0 || scholarship.available_grants <= 0 {
+        if scholarship.student_grant_amount <= 0 || scholarship.available_grants <= 0 {
             panic!("Total grant amount cannot be negative");
         }
 
-        //! ask later
+        // ! ask later
         //check if scholarship name already exists
         // for existing_scholarship in scholarships.iter() {
         //     if existing_scholarship.name == scholarship.name {
@@ -242,6 +241,7 @@ impl DescholarContract {
     }
 
     fn approve_students(
+        env: &Env,
         students: Vec<Address>,
         scholarship_id: u64,
         applications: Vec<Application>,
@@ -250,12 +250,12 @@ impl DescholarContract {
         for student in students.iter() {
             for mut application in applications.iter() {
                 if application.applicant == student
-                    && application.scholarship_id == scholarship_id 
+                    && application.scholarship_id == scholarship_id
                     && application.status == ApplicationStatus::Pending
                 {
                     application.status = ApplicationStatus::Approved;
 
-                    transfer_grants_to_students(students.clone(), scholarship_id, scholarship);
+                    Self::transfer_grants_to_students(env, students.clone(), scholarship_id);
                     //TODO emit some event
                 }
                 updated_applications.push_back(application);
@@ -264,16 +264,21 @@ impl DescholarContract {
         updated_applications
     }
 
-    fn transfer_grants_to_students(
-        students: Vec<Address>,
-        scholarship: Scholarship,
-    ) {
-        let token_client = token::Client::new(&env, &scholarship.token_address);
+    fn transfer_grants_to_students(env: &Env, students: Vec<Address>, scholarship_id: u64) {
+        //get scholarships
+        //pick scholarship that matches scholarship_id
+        let scholarships = Self::get_scholarships(env);
+        let scholarship = scholarships
+            .iter()
+            .find(|scholarship| scholarship.id == scholarship_id)
+            .unwrap();
+
+        let token_client = token::Client::new(&env, &scholarship.token);
         for student in students.iter() {
             token_client.transfer(
-                &env.current_contract_address(), // * from
-                student,                         // * to
-                scholarship.student_grant_amount, // * amount
+                &env.current_contract_address(),   // * from
+                &student,                          // * to
+                &scholarship.student_grant_amount, // * amount
             );
         }
     }
