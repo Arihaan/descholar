@@ -8,6 +8,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = { version = "20.0.0" }
+#added these deps, not sure if we need them
+quickcheck = "1.0"
+quickcheck_derive = "0.5"
 
 [dev_dependencies]
 soroban-sdk = { version = "20.0.0", features = ["testutils"] }
