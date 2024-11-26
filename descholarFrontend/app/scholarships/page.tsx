@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { Client, networks, Scholarship } from "bindings";
 import { useState, useEffect } from "react";
-import { scValToNative, Address } from '@stellar/stellar-sdk';
+import { scValToNative, Address } from "@stellar/stellar-sdk";
 
 const Scholarships = () => {
   const [scholarships, setScholarships] = useState<Scholarship[]>([]);
@@ -16,13 +16,12 @@ const Scholarships = () => {
   });
 
   useEffect(() => {
-
     const fetchScholarships = async () => {
       try {
-        const transaction = await scholarshipContract.get_scholarships();
+        const transaction: any = await scholarshipContract.get_scholarships();
         console.log("transaction:", transaction);
         if (transaction.simulation?.result?.retval) {
-          console.log('Raw result:', transaction.result);
+          console.log("Raw result:", transaction.result);
           var result = transaction.result;
           setScholarships(result);
         }
@@ -40,20 +39,24 @@ const Scholarships = () => {
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Background with overlay */}
-      <div 
+      <div
         className="absolute inset-0 z-0 bg-no-repeat w-full"
         style={{
           backgroundImage: 'url("/resources/webpagebg.png")',
-          backgroundSize: '100% auto',
-          backgroundColor: '#10081e',
-          backgroundPosition: 'top center',
-          maxWidth: '100vw',
+          backgroundSize: "100% auto",
+          backgroundColor: "#10081e",
+          backgroundPosition: "top center",
+          maxWidth: "100vw",
         }}
       >
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(to bottom, rgba(16, 8, 30, 0) 0%, rgba(16, 8, 30, 0.8) 50%, rgba(16, 8, 30, 1) 100%)',
-          pointerEvents: 'none'
-        }}></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(16, 8, 30, 0) 0%, rgba(16, 8, 30, 0.8) 50%, rgba(16, 8, 30, 1) 100%)",
+            pointerEvents: "none",
+          }}
+        ></div>
       </div>
 
       <main className="flex-grow container mx-auto px-4 py-8 relative z-10 mt-32">
@@ -71,11 +74,13 @@ const Scholarships = () => {
         </motion.div>
 
         {loading ? (
-          <div className="text-center text-gray-300">Fetching scholarships from the blockchain...</div>
+          <div className="text-center text-gray-300">
+            Fetching scholarships from the blockchain...
+          </div>
         ) : error ? (
           <div className="text-center text-red-500">{error}</div>
         ) : (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -92,18 +97,22 @@ const Scholarships = () => {
                 </h2>
                 <div className="space-y-3">
                   <p className="text-gray-300 text-sm flex justify-between">
-                    <span>Amount:</span>
+                    <span>Amount per student:</span>
                     <span className="text-orange-400 font-semibold">
-                      {Number(scholarship.total_grant_amount) / 10000000} XLM
+                      {Number(scholarship.student_grant_amount) / 10000000} XLM
                     </span>
                   </p>
                   <p className="text-gray-300 text-sm flex justify-between">
                     <span>Available Grants:</span>
-                    <span>{scholarship.available_grants}</span>
+                    <span>{Number(scholarship.available_grants)}</span>
                   </p>
                   <p className="text-gray-300 text-sm flex justify-between">
                     <span>End Date:</span>
-                    <span>{new Date(Number(scholarship.end_date) * 1000).toLocaleDateString()}</span>
+                    <span>
+                      {new Date(
+                        Number(scholarship.end_date) * 1000
+                      ).toLocaleDateString()}
+                    </span>
                   </p>
                   <p className="text-gray-300 text-sm mt-4">
                     {scholarship.details}

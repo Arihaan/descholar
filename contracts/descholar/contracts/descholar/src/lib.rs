@@ -10,6 +10,15 @@ cargo install --git https://github.com/stellar/stellar-cli soroban-cli //for upd
 
 ?  latest contract id = CASRFLDQJVNP5XXYMZE6WVWOLYEV6AWF2LJOT3V64EJ22PEJKVEVILYP
 * Cli just doesn't work so I use Okashi instead
+
+CBPNR7NEAP322QVJ3MD3Q6WCLHPTREB2CCMF5U2SPVHILKAH42SFKMI5 -- Contract Id from okashi
+
+stellar contract bindings typescript \
+  --network testnet \
+  --contract-id CBPNR7NEAP322QVJ3MD3Q6WCLHPTREB2CCMF5U2SPVHILKAH42SFKMI5 \
+  --output-dir bindings --overwrite
+
+
 */
 
 use soroban_sdk::{contract, contractimpl, contracttype, token, Address, Env, String, Symbol, Vec};
@@ -62,12 +71,13 @@ impl DescholarContract {
         let token_client = token::Client::new(&env, &scholarship.token);
         let old_balance = token_client.balance(&env.current_contract_address());
 
-        let total_amount = scholarship.student_grant_amount * (scholarship.available_grants as i128);
+        let total_amount =
+            scholarship.student_grant_amount * (scholarship.available_grants as i128);
 
         token_client.transfer(
             &scholarship.admin,              // * from
             &env.current_contract_address(), // * to
-            &total_amount,                  // * amount
+            &total_amount,                   // * amount
         );
 
         //* check if transfer amount received
