@@ -1,3 +1,4 @@
+import { Scholarship } from "@/bindings/dist";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ScholarshipConfirmationProps {
@@ -46,24 +47,49 @@ const ScholarshipConfirmation = ({
 
             <div className="space-y-4 mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Scholarship Details</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Scholarship Details
+                </h3>
                 <div className="space-y-2 text-sm text-gray-300">
-                  <p><span className="text-gray-400">Name:</span> {scholarship.name}</p>
-                  <p><span className="text-gray-400">Description:</span> {scholarship.details}</p>
-                  <p><span className="text-gray-400">Available Grants:</span> {scholarship.available_grants}</p>
-                  <p><span className="text-gray-400">Amount per Grant:</span> {scholarship.grant_amount} XLM</p>
-                  <p><span className="text-gray-400">End Date:</span> {new Date(scholarship.end_date).toLocaleDateString()}</p>
+                  <p>
+                    <span className="text-gray-400">Name:</span>{" "}
+                    {scholarship.name}
+                  </p>
+                  <p>
+                    <span className="text-gray-400">Description:</span>{" "}
+                    {scholarship.details}
+                  </p>
+                  <p>
+                    <span className="text-gray-400">Available Grants:</span>{" "}
+                    {scholarship.available_grants}
+                  </p>
+                  <p>
+                    <span className="text-gray-400">Amount per Grant:</span>{" "}
+                    {scholarship.grant_amount} XLM
+                  </p>
+                  <p>
+                    <span className="text-gray-400">End Date:</span>{" "}
+                    {new Date(scholarship.end_date).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Your Wallet</h3>
-                <p className="text-sm text-gray-300 break-all">{walletAddress}</p>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Your Wallet
+                </h3>
+                <p className="text-sm text-gray-300 break-all">
+                  {walletAddress}
+                </p>
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Total Cost</h3>
-                <p className="text-2xl font-bold text-orange-500">{totalCost} XLM</p>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Total Cost
+                </h3>
+                <p className="text-2xl font-bold text-orange-500">
+                  {totalCost} XLM
+                </p>
               </div>
             </div>
 
@@ -88,4 +114,4 @@ const ScholarshipConfirmation = ({
   );
 };
 
-export default ScholarshipConfirmation; 
+export default ScholarshipConfirmation;
