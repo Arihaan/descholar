@@ -47,7 +47,7 @@ const CreateScholarshipPage = () => {
           id: BigInt(0),
           name: scholarship.name,
           student_grant_amount: BigInt(scholarship.grant_amount),
-          token: "CBPNR7NEAP322QVJ3MD3Q6WCLHPTREB2CCMF5U2SPVHILKAH42SFKMI5",
+          token: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
         };
         createScholarship(newScholarship);
       };
@@ -124,6 +124,7 @@ const CreateScholarshipPage = () => {
   }
 
   async function handleConfirmCreate() {
+    if (doEffect) return;
     try {
       const total_grant_amount =
         scholarship.grant_amount * scholarship.available_grants;

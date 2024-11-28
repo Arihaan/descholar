@@ -11,11 +11,11 @@ cargo install --git https://github.com/stellar/stellar-cli soroban-cli //for upd
 ?  latest contract id = CASRFLDQJVNP5XXYMZE6WVWOLYEV6AWF2LJOT3V64EJ22PEJKVEVILYP
 * Cli just doesn't work so I use Okashi instead
 
-CBPNR7NEAP322QVJ3MD3Q6WCLHPTREB2CCMF5U2SPVHILKAH42SFKMI5 -- Contract Id from okashi
+CDEWNEKSFT5ZU52CYRQKFJOENL4VQV3K7T5DRX5DD25HUMAELLTWP3DL -- Contract Id from okashi
 
 stellar contract bindings typescript \
   --network testnet \
-  --contract-id CBPNR7NEAP322QVJ3MD3Q6WCLHPTREB2CCMF5U2SPVHILKAH42SFKMI5 \
+  --contract-id CDEWNEKSFT5ZU52CYRQKFJOENL4VQV3K7T5DRX5DD25HUMAELLTWP3DL \
   --output-dir bindings --overwrite
 
 
