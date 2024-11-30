@@ -49,7 +49,7 @@ const CreateScholarshipPage = () => {
           student_grant_amount: BigInt(scholarship.grant_amount),
           token: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
         };
-        createScholarship(newScholarship);
+        // createScholarship(newScholarship);
       };
 
       await fetchWalletAddress();
@@ -135,12 +135,12 @@ const CreateScholarshipPage = () => {
       };
 
       // TODO: Implement contract interaction here
-      setDoEffect(true);
+      // setDoEffect(true);
       //close the popup
       // ! scholarship is being created here
 
       alert("Scholarship created successfully!");
-      //location.reload();
+      location.reload();
     } catch (error) {
       console.error("Error creating scholarship:", error);
       alert("Error creating scholarship. Please try again.");
