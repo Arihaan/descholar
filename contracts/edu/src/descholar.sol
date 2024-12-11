@@ -47,15 +47,15 @@ contract descholar {
         scholarships.push(scholarship);
         scholarship.admin = msg.sender;
 
-        IERC20 token = IERC20(scholarship.token);
-        uint256 total_amount = uint256(scholarship.student_grant_amount) *
-            scholarship.available_grants;
+        // IERC20 token = IERC20(scholarship.token);
+        // uint256 total_amount = uint256(scholarship.student_grant_amount) *
+        //     scholarship.available_grants;
 
-        require(msg.value == total_amount, "Incorrect Ether amount sent");
-        require(
-            token.transferFrom(scholarship.admin, address(this), total_amount),
-            "Transfer failed"
-        );
+        // require(msg.value == total_amount, "Incorrect Ether amount sent");
+        // require(
+        //     token.transferFrom(scholarship.admin, address(this), total_amount),
+        //     "Transfer failed"
+        // );
     }
 
     function apply_for_scholarship(Application memory application) public {

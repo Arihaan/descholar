@@ -1,0 +1,10 @@
+{
+  "transactions": [
+    {
+      "rpc": "https://open-campus-codex-sepolia.drpc.org"
+    },
+    {
+      "rpc": "https://open-campus-codex-sepolia.drpc.org"
+    }
+  ]
+}
