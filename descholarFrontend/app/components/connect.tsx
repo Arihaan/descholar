@@ -55,31 +55,7 @@ export function ConnectButton({ label = "Connect Wallet" }) {
   const [isOpen, setIsOpen] = useState(false);
   const { address, isConnected } = useAccount();
 
-  // Load Stellar wallet state on mount
-  useEffect(() => {
-    const loadStellarWallet = async () => {
-      const savedAddress = localStorage.getItem('stellarAddress');
-      if (savedAddress) {
-        try {
-          const { address } = await kit.getAddress();
-          if (address === savedAddress) {
-            setWalletState(prev => ({
-              ...prev,
-              stellar: true,
-              stellarAddress: address
-            }));
-          }
-        } catch (error) {
-          console.error("Error reconnecting Stellar wallet:", error);
-          localStorage.removeItem('stellarAddress');
-        }
-      }
-    };
-
-    loadStellarWallet();
-  }, []);
-
-  // Update EDU Chain state
+  // Only check EDU Chain connection status
   useEffect(() => {
     setWalletState(prev => ({
       ...prev,
@@ -92,6 +68,27 @@ export function ConnectButton({ label = "Connect Wallet" }) {
 
   const connectStellar = async () => {
     try {
+      // Check for saved address first
+      const savedAddress = localStorage.getItem('stellarAddress');
+      if (savedAddress) {
+        try {
+          const { address } = await kit.getAddress();
+          if (address === savedAddress) {
+            setWalletState(prev => ({
+              ...prev,
+              stellar: true,
+              stellarAddress: address
+            }));
+            setIsOpen(false);
+            return;
+          }
+        } catch (error) {
+          console.error("Error reconnecting Stellar wallet:", error);
+          localStorage.removeItem('stellarAddress');
+        }
+      }
+
+      // If no saved address or reconnection failed, open modal
       const { kit: stellarKit } = await import("../stellar-wallets-kit");
       await stellarKit.openModal({
         onWalletSelected: async () => {
