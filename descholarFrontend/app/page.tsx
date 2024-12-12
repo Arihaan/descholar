@@ -8,21 +8,6 @@ import CountUp from 'react-countup';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 
-const scholarshipData = [
-  { category: 'Unclaimed', value: 100 },
-  { category: 'Claimed', value: 900 },
-];
-
-const outOfSchoolData = [
-  { name: 'Out of School', value: 244 },
-  { name: 'In School', value: 1156 }, // Approximate total school-age population
-];
-
-const defiAdoptionData = [
-  { name: 'Brand Awareness', value: 85 },
-  { name: 'Active Usage', value: 15 },
-];
-
 const COLORS = ['#f97316', '#1f2937'];
 
 export default function Home() {
@@ -61,7 +46,7 @@ export default function Home() {
 
             {/* Description below heading */}
             <div className="max-w-3xl mx-auto mt-12">
-              <p className="text-lg md:text-xl text-gray-200 leading-relaxed mb-12">
+              <p className="text-lg md:text-xl text-gray-200 leading-relaxed mb-10">
                 Empowering education globally with secure, decentralized scholarships and student loans (coming soon)
                 <span className="block mt-4">
                   <a 
@@ -81,7 +66,7 @@ export default function Home() {
               </p>
 
               {/* Buttons */}
-              <div className="flex flex-col sm:flex-row justify-center gap-2 mt-8">
+              <div className="flex flex-col sm:flex-row justify-center gap-2">
                 <Link href="/scholarships">
                   <button className="px-8 py-4 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                     View Scholarships
@@ -96,7 +81,7 @@ export default function Home() {
 
               {/* Stellar powered badge */}
               <div className="flex items-center justify-center space-x-2 mt-12">
-                <span className="text-gray-300">Powered by</span>
+                <span className="text-gray-300 md:text-xl">Powered by:</span>
                 <a 
                   href="https://stellar.org" 
                   target="_blank" 
@@ -107,6 +92,18 @@ export default function Home() {
                     src="/resources/stellar-logo.svg" 
                     alt="Stellar Logo" 
                     className="h-12 w-auto"
+                  />
+                </a>
+                <a 
+                  href="https://educhain.xyz" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity"
+                >
+                  <img 
+                    src="/resources/EDUChainLogo.png" 
+                    alt="EDU Chain" 
+                    className="h-10 w-auto"
                   />
                 </a>
               </div>
@@ -259,7 +256,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold mb-3 text-white">Transparent & Secure</h3>
-                  <p className="text-sm text-gray-300">
+                  <p className="text-md text-gray-300">
                     Smart contracts ensure transparent fund management and automatic distribution, building trust through blockchain technology.
                   </p>
                 </div>
@@ -276,7 +273,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold mb-3 text-white">Easy Access</h3>
-                  <p className="text-sm text-gray-300">
+                  <p className="text-md text-gray-300">
                     Simple passkey authentication and integration with local currency off-ramps make funding accessible to everyone.
                   </p>
                 </div>
@@ -293,7 +290,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold mb-3 text-white">Innovation</h3>
-                  <p className="text-sm text-gray-300">
+                  <p className="text-md text-gray-300">
                     Built on Stellar Soroban, offering fast, low-cost transactions and automated smart contract functionality.
                   </p>
                 </div>
