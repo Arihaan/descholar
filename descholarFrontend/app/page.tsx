@@ -228,7 +228,7 @@ export default function Home() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-            {/* Key Feature Cards */}
+            
             <motion.div
               whileHover={{ scale: 1.02 }}
               className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl border border-gray-700"
