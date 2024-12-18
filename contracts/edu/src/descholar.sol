@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+// cast send 0x985Fe4138c1F522503C93b3Ea249C27AEc85cAB7 \
+//     "post_scholarship((uint256,string,string,uint256,int256,uint256,address,address))" \
+//     "(1,'Test Scholarship','This is a test scholarship',10,1000,1700000000,'0x54d66dfCeFe3f453fc990728DC06E0b05cB0b9ce','0x0000000000000000000000000000000000000000')" \
+//     --rpc-url https://open-campus-codex-sepolia.drpc.org \
+//     --private-key $PRIVATE_KEY
+// to invoke post_scholarship
+
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 enum ApplicationStatus {
