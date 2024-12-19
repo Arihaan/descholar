@@ -2,12 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'TT Barrels';
-  src: url('/resources/tt_barrels/TT Barrels Trial Bold.otf') format('opentype');
-  font-weight: bold;
-  font-style: normal;
-}
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 body {
   color: var(--foreground);
