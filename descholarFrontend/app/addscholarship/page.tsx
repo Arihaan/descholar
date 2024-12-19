@@ -245,11 +245,8 @@ const CreateScholarshipPage = () => {
             </div>
 
             <div>
-              <label
-                htmlFor="grant_amount"
-                className="block text-white mb-2 text-sm"
-              >
-                Grant Amount per Student (XLM) *
+              <label htmlFor="grant_amount" className="block text-white mb-2 text-sm">
+                Grant Amount per Student (EDU) *
               </label>
               <input
                 type="number"
