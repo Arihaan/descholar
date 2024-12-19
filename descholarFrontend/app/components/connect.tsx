@@ -55,7 +55,6 @@ export function ConnectButton({ label = "Connect Wallet" }) {
   const [isOpen, setIsOpen] = useState(false);
   const { address, isConnected } = useAccount();
 
-
   // Update EDU Chain state
   useEffect(() => {
     setWalletState(prev => ({
