@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { kit } from "../stellar-wallets-kit";
 import { motion } from "framer-motion";
 import ScholarshipConfirmation from "../components/ScholarshipConfirmation";
-import { Scholarship } from "../../bindings/dist";
+//import { Scholarship } from "../../bindings/dist";
 import { useCreateScholarship } from "../hooks/useCreateScholarshipHook";
 import { useEffect } from "react";
 
@@ -33,27 +33,27 @@ const CreateScholarshipPage = () => {
         }
       };
 
-      const createScholarshipAsync = async () => {
-        const { createScholarship } = await useCreateScholarship();
-        let newScholarship: Scholarship = {
-          admin: walletAddress.toString(),
-          available_grants: BigInt(scholarship.available_grants),
-          details: scholarship.details,
-          end_date: BigInt(
-            isNaN(new Date(scholarship.end_date).getTime())
-              ? 0
-              : new Date(scholarship.end_date).getTime()
-          ),
-          id: BigInt(0),
-          name: scholarship.name,
-          student_grant_amount: BigInt(scholarship.grant_amount),
-          token: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
-        };
-        // createScholarship(newScholarship);
-      };
+      // const createScholarshipAsync = async () => {
+      //   const { createScholarship } = await useCreateScholarship();
+      //   let newScholarship: Scholarship = {
+      //     admin: walletAddress.toString(),
+      //     available_grants: BigInt(scholarship.available_grants),
+      //     details: scholarship.details,
+      //     end_date: BigInt(
+      //       isNaN(new Date(scholarship.end_date).getTime())
+      //         ? 0
+      //         : new Date(scholarship.end_date).getTime()
+      //     ),
+      //     id: BigInt(0),
+      //     name: scholarship.name,
+      //     student_grant_amount: BigInt(scholarship.grant_amount),
+      //     token: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+      //   };
+      //   // createScholarship(newScholarship);
+      // };
 
       await fetchWalletAddress();
-      await createScholarshipAsync();
+      //await createScholarshipAsync();
     };
 
     fetchData();

@@ -1,5 +1,5 @@
 import { kit } from "../stellar-wallets-kit";
-import { Client, networks, rpc } from "../../bindings/dist";
+//import { Client, networks, rpc } from "../../bindings/dist";
 import { Networks, TransactionBuilder, Soroban } from "@stellar/stellar-sdk";
 import { u64, i128 } from "@stellar/stellar-sdk/contract";
 
@@ -17,11 +17,11 @@ interface Scholarship {
 export async function useCreateScholarship() {
   const SOROBAN_RPC_URL = "https://soroban-testnet.stellar.org";
 
-  const scholarshipContract = new Client({
-    contractId: networks.testnet.contractId,
-    networkPassphrase: networks.testnet.networkPassphrase,
-    rpcUrl: SOROBAN_RPC_URL,
-  });
+  // const scholarshipContract = new Client({
+  //   contractId: networks.testnet.contractId,
+  //   networkPassphrase: networks.testnet.networkPassphrase,
+  //   rpcUrl: SOROBAN_RPC_URL,
+  // });
 
   const createScholarship = async (scholarship: Scholarship) => {
     try {
@@ -36,44 +36,44 @@ export async function useCreateScholarship() {
       };
 
       // 1. Prepare transaction
-      const transaction = await scholarshipContract.post_scholarship({
-        scholarship: scholarshipData,
-      });
+      // const transaction = await scholarshipContract.post_scholarship({
+      //   scholarship: scholarshipData,
+      // });
 
       // 2. Convert to XDR
-      const xdr = transaction.toXDR();
+      //const xdr = transaction.toXDR();
 
       // 3. Sign transaction
-      const signedResult = await kit.signTransaction(xdr, {
-        address: address,
-        networkPassphrase: Networks.TESTNET,
-      });
+      // const signedResult = await kit.signTransaction(xdr, {
+      //   address: address,
+      //   networkPassphrase: Networks.TESTNET,
+      // });
 
       // 4. Convert signed XDR back to transaction
-      const signedTx = TransactionBuilder.fromXDR(
-        signedResult.signedTxXdr,
-        Networks.TESTNET
-      );
+      // const signedTx = TransactionBuilder.fromXDR(
+      //   signedResult.signedTxXdr,
+      //   Networks.TESTNET
+      // );
 
       // 5. Setup server and send transaction
-      const server = new rpc.Server(SOROBAN_RPC_URL);
+      //const server = new rpc.Server(SOROBAN_RPC_URL);
 
       // 6. First simulate the transaction
-      const simResult: any = await server.simulateTransaction(signedTx);
-      if (simResult.error) {
-        //it fails here
-        console.log(simResult);
-        return;
-        // throw new Error(`Simulation failed: ${simResult.error}`);
-      }
+      // const simResult: any = await server.simulateTransaction(signedTx);
+      // if (simResult.error) {
+      //   //it fails here
+      //   console.log(simResult);
+      //   return;
+      //   // throw new Error(`Simulation failed: ${simResult.error}`);
+      // }
 
       // 7. Send the transaction
-      const preparedTx = await server.prepareTransaction(signedTx);
-      console.log("Prepared transaction:", preparedTx);
+      // const preparedTx = await server.prepareTransaction(signedTx);
+      // console.log("Prepared transaction:", preparedTx);
 
-      const result = await server.sendTransaction(preparedTx);
-      console.log("Transaction successful:", result);
-      return result;
+      // const result = await server.sendTransaction(preparedTx);
+      // console.log("Transaction successful:", result);
+      // return result;
     } catch (error: any) {
       console.error("Transaction failed:", error);
       throw new Error(error?.message || "Transaction failed");
