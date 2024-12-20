@@ -1,4 +1,4 @@
-import { Scholarship } from "@/bindings/dist";
+//import { Scholarship } from "@/bindings/dist";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ScholarshipConfirmationProps {

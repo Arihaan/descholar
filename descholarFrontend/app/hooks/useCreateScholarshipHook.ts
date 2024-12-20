@@ -1,5 +1,5 @@
 import { kit } from "../stellar-wallets-kit";
-import { Client, networks, rpc } from "@/bindings/dist";
+import { Client, networks, rpc } from "../../bindings/dist";
 import { Networks, TransactionBuilder, Soroban } from "@stellar/stellar-sdk";
 import { u64, i128 } from "@stellar/stellar-sdk/contract";
 

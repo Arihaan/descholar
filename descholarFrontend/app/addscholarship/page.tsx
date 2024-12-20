@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { kit } from "../stellar-wallets-kit";
 import { motion } from "framer-motion";
 import ScholarshipConfirmation from "../components/ScholarshipConfirmation";
-import { Scholarship } from "@/bindings/dist";
+import { Scholarship } from "../../bindings/dist";
 import { useCreateScholarship } from "../hooks/useCreateScholarshipHook";
 import { useEffect } from "react";
 
