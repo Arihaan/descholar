@@ -1,39 +1,52 @@
 "use client";
 import { motion } from "framer-motion";
-import { Client, networks, Scholarship } from "bindings";
 import { useState, useEffect } from "react";
-import { scValToNative, Address } from "@stellar/stellar-sdk";
+import { eduViewScholarships } from "./useEduViewScholarshipsHook";
+// import { Client, networks, Scholarship } from "bindings";
 
 const Scholarships = () => {
-  const [scholarships, setScholarships] = useState<Scholarship[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // const [scholarships, setScholarships] = useState<Scholarship[]>([]);
+  const [scholarships, setScholarships] = useState<any[]>([]);
+  const [scholarshipsEdu, getScholarshipsEDU, loading, error] =
+    eduViewScholarships();
 
-  const scholarshipContract = new Client({
-    contractId: networks.testnet.contractId,
-    networkPassphrase: networks.testnet.networkPassphrase,
-    rpcUrl: "https://soroban-testnet.stellar.org/",
-  });
+  // const scholarshipContract = new Client({
+  //   contractId: networks.testnet.contractId,
+  //   networkPassphrase: networks.testnet.networkPassphrase,
+  //   rpcUrl: "https://soroban-testnet.stellar.org/",
+  // });
 
   useEffect(() => {
-    const fetchScholarships = async () => {
-      try {
-        const transaction: any = await scholarshipContract.get_scholarships();
-        console.log("transaction:", transaction);
-        if (transaction.simulation?.result?.retval) {
-          console.log("Raw result:", transaction.result);
-          var result = transaction.result;
-          setScholarships(result);
-        }
-      } catch (error) {
-        console.error("Error fetching scholarships:", error);
-        setError("Failed to load scholarships. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
+    getScholarshipsEDU();
+    if (scholarshipsEdu?.length) {
+      setScholarships(
+        scholarshipsEdu.map((item: any) => ({
+          name: item.name,
+          student_grant_amount: item.student_grant_amount,
+          available_grants: item.available_grants,
+          end_date: item.end_date,
+          details: item.details,
+        }))
+      );
+    }
 
-    fetchScholarships();
+    // const fetchScholarships = async () => {
+    //   try {
+    //     const transaction: any = await scholarshipContract.get_scholarships();
+    //     console.log("transaction:", transaction);
+    //     if (transaction.simulation?.result?.retval) {
+    //       console.log("Raw result:", transaction.result);
+    //       var result = transaction.result;
+    //       setScholarships(result);
+    //     }
+    //   } catch (error) {
+    //     console.error("Error fetching scholarships:", error);
+    //     setError("Failed to load scholarships. Please try again later.");
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+    // fetchScholarships();
   }, []);
 
   return (
