@@ -212,8 +212,8 @@ export const useContractInteraction = () => {
             console.log('Fetching applications for scholarship:', scholarshipId);
             const result = await contract.getApplicationsForScholarship(scholarshipId);
             
-            // Convert BigInt to Number/String before logging
-            console.log('Raw applications data:', result.map(app => ({
+            // Add type annotation for app parameter
+            console.log('Raw applications data:', result.map((app: any[]) => ({
                 id: Number(app[0]),
                 scholarshipId: Number(app[1]),
                 applicant: app[2],
