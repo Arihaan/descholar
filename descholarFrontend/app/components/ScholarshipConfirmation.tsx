@@ -88,7 +88,7 @@ const ScholarshipConfirmation = ({
                   Total Cost
                 </h3>
                 <p className="text-2xl font-bold text-orange-500">
-                  {totalCost} XLM
+                  {totalCost} EDU
                 </p>
               </div>
             </div>

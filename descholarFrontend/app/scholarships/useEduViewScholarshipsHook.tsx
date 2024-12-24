@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Web3 from "web3";
-import contractAbi from "../../../contracts/edu/out/descholar.sol/descholar.json";
+//import contractAbi from "../../../contracts/edu/out/descholar.sol/descholar.json";
 
 const web3 = new Web3("https://open-campus-codex-sepolia.drpc.org"); //*public free testnet endpoint
 

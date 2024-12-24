@@ -4,9 +4,6 @@ import RotatingTypewriter from "./components/RotatingTypewriter";
 import { motion } from "framer-motion";
 import { FiGlobe, FiLock, FiDollarSign } from "react-icons/fi";
 import { HiOutlineLightBulb, HiCheck } from "react-icons/hi";
-import CountUp from 'react-countup';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-
 
 const COLORS = ['#f97316', '#1f2937'];
 
@@ -35,7 +32,7 @@ export default function Home() {
                 style={{
                   color: '#f2f2f2',
                   textShadow: '6px 6px 0px #733932',
-                  fontFamily: 'Outfit, sans-serif'
+                  fontFamily: 'NewFont, sans-serif'
                 }}>
               <div className="flex flex-col items-center">
                 <span className="mb-8">Fund your</span>
