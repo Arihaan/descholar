@@ -1,6 +1,8 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
+const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -22,10 +24,24 @@ const nextConfig = {
         tls: false,
         encoding: false,
         "pino-pretty": false,
+        stream: false,
+        crypto: false,
+        http: false,
+        https: false,
+        os: false,
+        url: false,
+        assert: false,
+        util: false,
+        buffer: false
       };
     }
 
+    config.resolve.extensions = [...config.resolve.extensions, '.ts', '.tsx'];
+
     return config;
+  },
+  experimental: {
+    esmExternals: 'loose',
   },
 };
 
