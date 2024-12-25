@@ -29,41 +29,32 @@ export const useContractInteraction = () => {
         const initContract = async () => {
             try {
                 console.log('Initializing contract...');
-                if (typeof window.ethereum !== 'undefined') {
-                    const provider = new ethers.BrowserProvider(window.ethereum);
-                    console.log('Provider created');
-                    
-                    // Check network
-                    const network = await provider.getNetwork();
-                    console.log('Current network:', network);
-                    
-                    // Verify we're on EDU Chain Testnet
-                    if (network.chainId !== BigInt(656476)) {
-                        console.error('Wrong network. Please connect to EDU Chain Testnet');
-                        return;
-                    }
+                // Create a read-only provider without requiring wallet connection
+                const provider = new ethers.JsonRpcProvider("https://open-campus-codex-sepolia.drpc.org");
+                
+                // Create read-only contract instance
+                const readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+                setContract(readOnlyContract);
+                setIsInitialized(true);
 
-                    const signer = await provider.getSigner();
-                    console.log('Signer obtained:', signer.address);
-                    setSigner(signer);
+                // If wallet is connected, add signer
+                if (typeof window.ethereum !== 'undefined') {
+                    const walletProvider = new ethers.BrowserProvider(window.ethereum);
+                    const network = await walletProvider.getNetwork();
                     
-                    const contractInstance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-                    console.log('Contract instance created');
-                    
-                    // Verify contract exists
-                    const code = await provider.getCode(CONTRACT_ADDRESS);
-                    if (code === '0x') {
-                        console.error('No contract found at address:', CONTRACT_ADDRESS);
-                        return;
+                    if (network.chainId === BigInt(656476)) {
+                        const signer = await walletProvider.getSigner();
+                        setSigner(signer);
+                        
+                        // Create contract instance with signer for write operations
+                        const contractWithSigner = readOnlyContract.connect(signer);
+                        setContract(contractWithSigner);
                     }
-                    
-                    setContract(contractInstance);
-                    setIsInitialized(true);
-                } else {
-                    console.log('Ethereum object not found');
                 }
             } catch (error) {
                 console.error('Error initializing contract:', error);
+                // Still set initialized to true if we have read-only access
+                setIsInitialized(true);
             }
         };
 

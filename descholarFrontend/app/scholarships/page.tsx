@@ -28,13 +28,13 @@ const Scholarships = () => {
     details: ""
   });
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showConnectPrompt, setShowConnectPrompt] = useState(false);
 
   const { getScholarships, applyForScholarship, isInitialized } = useContractInteraction();
   const { address } = useAccount();
 
   useEffect(() => {
     if (isInitialized) {
-      console.log('Contract initialized, fetching scholarships...');
       fetchScholarships();
     }
   }, [isInitialized]);
@@ -83,6 +83,16 @@ const Scholarships = () => {
       applicationForm.name.trim().length >= 2 && // At least 2 characters for name
       applicationForm.details.trim().length >= 10 // At least 10 characters for details
     );
+  };
+
+  const handleApplyClick = (scholarship: Scholarship) => {
+    if (!address) {
+      setShowConnectPrompt(true);
+      setSelectedScholarship(scholarship);
+    } else {
+      setSelectedScholarship(scholarship);
+      setIsApplying(true);
+    }
   };
 
   return (
@@ -143,7 +153,7 @@ const Scholarships = () => {
               <motion.div
                 key={scholarship.id}
                 whileHover={{ scale: 1.02 }}
-                className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-8 rounded-2xl border border-gray-700 shadow-xl cursor-pointer"
+                className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl cursor-pointer"
                 onClick={() => setSelectedScholarship(scholarship)}
               >
                 <h2 className="text-xl font-semibold mb-4 text-white">
@@ -166,8 +176,41 @@ const Scholarships = () => {
           </motion.div>
         )}
 
-        {/* Scholarship Details Modal */}
+        {/* Connect Wallet Prompt Modal */}
         <AnimatePresence>
+          {showConnectPrompt && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
+              onClick={() => setShowConnectPrompt(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.95 }}
+                className="bg-gray-900 p-8 rounded-2xl max-w-md w-full mx-auto border border-gray-700"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 className="text-2xl font-bold mb-4 text-white">Connect Your Wallet</h2>
+                <p className="text-gray-300 mb-6">
+                  Please connect your wallet to apply for this scholarship.
+                </p>
+                <div className="flex justify-end gap-4">
+                  <button
+                    onClick={() => setShowConnectPrompt(false)}
+                    className="px-6 py-2 bg-gray-800 text-white rounded-xl hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <w3m-button />
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* Scholarship Details Modal */}
           {selectedScholarship && !isApplying && !showConfirmation && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -205,11 +248,10 @@ const Scholarships = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => setIsApplying(true)}
+                    onClick={() => handleApplyClick(selectedScholarship)}
                     className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold rounded-xl"
-                    disabled={!address}
                   >
-                    {address ? "Apply Now" : "Connect Wallet to Apply"}
+                    Apply Now
                   </button>
                 </div>
               </motion.div>
