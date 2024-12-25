@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers, Contract as EthersContract } from 'ethers';
 import { useEffect, useState } from 'react';
 
 const CONTRACT_ADDRESS = '0xca1A04b2Cd06936bcdE2972f040C240bA05D48ad';
@@ -20,8 +20,11 @@ const CONTRACT_ABI = [
     "function getApplicationsForScholarship(uint256 scholarshipId) external view returns (tuple(uint256 id, uint256 scholarshipId, address applicant, string name, string details, uint8 status, uint256 appliedAt)[] memory)"
 ];
 
+// Define a type that includes both read-only and connected contracts
+type Contract = EthersContract;
+
 export const useContractInteraction = () => {
-    const [contract, setContract] = useState<ethers.Contract | null>(null);
+    const [contract, setContract] = useState<Contract | null>(null);
     const [signer, setSigner] = useState<ethers.Signer | null>(null);
     const [isInitialized, setIsInitialized] = useState(false);
 
@@ -33,7 +36,7 @@ export const useContractInteraction = () => {
                 const provider = new ethers.JsonRpcProvider("https://open-campus-codex-sepolia.drpc.org");
                 
                 // Create read-only contract instance
-                const readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+                const readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider) as Contract;
                 setContract(readOnlyContract);
                 setIsInitialized(true);
 
@@ -47,7 +50,7 @@ export const useContractInteraction = () => {
                         setSigner(signer);
                         
                         // Create contract instance with signer for write operations
-                        const contractWithSigner = readOnlyContract.connect(signer);
+                        const contractWithSigner = readOnlyContract.connect(signer) as Contract;
                         setContract(contractWithSigner);
                     }
                 }
