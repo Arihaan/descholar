@@ -2,7 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@font-face {
+  font-family: 'NewFont';
+  src: url('/resources/newfontregular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
 
 body {
   color: var(--foreground);
