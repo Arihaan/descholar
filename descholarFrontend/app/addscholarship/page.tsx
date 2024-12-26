@@ -1,11 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import { kit } from "../stellar-wallets-kit";
 import { motion } from "framer-motion";
 import ScholarshipConfirmation from "../components/ScholarshipConfirmation";
-//import { Scholarship } from "../../bindings/dist";
-import { useCreateScholarship } from "../hooks/useCreateScholarshipHook";
-import { useEffect } from "react";
+import { eduScholarships } from "../hooks/useEduScholarshipHook";
 
 const CreateScholarshipPage = () => {
   const [scholarship, setScholarship] = useState({
@@ -15,52 +12,10 @@ const CreateScholarshipPage = () => {
     grant_amount: 0,
     end_date: "",
   });
-
-  const [doEffect, setDoEffect] = useState(false);
-  useEffect(() => {
-    if (!doEffect) return;
-    setDoEffect(false);
-
-    const fetchData = async () => {
-      const fetchWalletAddress = async () => {
-        try {
-          const { address } = await kit.getAddress();
-          if (address) {
-            setWalletAddress(address);
-          }
-        } catch (error) {
-          console.error("Error getting wallet address:", error);
-        }
-      };
-
-      // const createScholarshipAsync = async () => {
-      //   const { createScholarship } = await useCreateScholarship();
-      //   let newScholarship: Scholarship = {
-      //     admin: walletAddress.toString(),
-      //     available_grants: BigInt(scholarship.available_grants),
-      //     details: scholarship.details,
-      //     end_date: BigInt(
-      //       isNaN(new Date(scholarship.end_date).getTime())
-      //         ? 0
-      //         : new Date(scholarship.end_date).getTime()
-      //     ),
-      //     id: BigInt(0),
-      //     name: scholarship.name,
-      //     student_grant_amount: BigInt(scholarship.grant_amount),
-      //     token: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
-      //   };
-      //   // createScholarship(newScholarship);
-      // };
-
-      await fetchWalletAddress();
-      //await createScholarshipAsync();
-    };
-
-    fetchData();
-  }, [doEffect]);
+  const [walletAddress, setWalletAddress] = useState("");
+  const [, , postScholarship, loading, error] = eduScholarships();
 
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [walletAddress, setWalletAddress] = useState("");
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -110,12 +65,6 @@ const CreateScholarshipPage = () => {
     }
 
     try {
-      const { address } = await kit.getAddress();
-      if (!address) {
-        alert("Please connect your wallet first");
-        return;
-      }
-      setWalletAddress(address);
       setShowConfirmation(true);
     } catch (error) {
       console.error("Error getting wallet address:", error);
@@ -124,7 +73,6 @@ const CreateScholarshipPage = () => {
   }
 
   async function handleConfirmCreate() {
-    if (doEffect) return;
     try {
       const total_grant_amount =
         scholarship.grant_amount * scholarship.available_grants;
@@ -135,12 +83,11 @@ const CreateScholarshipPage = () => {
       };
 
       // TODO: Implement contract interaction here
-      // setDoEffect(true);
-      //close the popup
-      // ! scholarship is being created here
+      console.log("scholarshipData:", scholarshipData);
+      await postScholarship(scholarshipData);
 
       alert("Scholarship created successfully!");
-      location.reload();
+      // location.reload();
     } catch (error) {
       console.error("Error creating scholarship:", error);
       alert("Error creating scholarship. Please try again.");
@@ -245,7 +192,10 @@ const CreateScholarshipPage = () => {
             </div>
 
             <div>
-              <label htmlFor="grant_amount" className="block text-white mb-2 text-sm">
+              <label
+                htmlFor="grant_amount"
+                className="block text-white mb-2 text-sm"
+              >
                 Grant Amount per Student (EDU) *
               </label>
               <input

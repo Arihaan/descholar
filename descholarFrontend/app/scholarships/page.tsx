@@ -1,14 +1,19 @@
 "use client";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { eduViewScholarships } from "./useEduViewScholarshipsHook";
+import { eduScholarships } from "../hooks/useEduScholarshipHook";
 // import { Client, networks, Scholarship } from "bindings";
 
 const Scholarships = () => {
   // const [scholarships, setScholarships] = useState<Scholarship[]>([]);
   const [scholarships, setScholarships] = useState<any[]>([]);
-  const [scholarshipsEdu, getScholarshipsEDU, loading, error] =
-    eduViewScholarships();
+  const [
+    scholarshipsEdu,
+    getScholarshipsEDU,
+    postScholarhshipEDU,
+    loading,
+    error,
+  ] = eduScholarships();
 
   // const scholarshipContract = new Client({
   //   contractId: networks.testnet.contractId,
