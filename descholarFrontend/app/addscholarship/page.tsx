@@ -328,7 +328,7 @@ const CreateScholarshipPage = () => {
                   <div className="bg-gray-800 p-4 rounded-xl">
                     <h3 className="text-white font-semibold mb-2">Total Cost</h3>
                     <p className="text-orange-400 font-semibold">
-                      {parseFloat(scholarship.grantAmount) * scholarship.numberOfGrants} EDU
+                      {parseFloat(scholarship.grantAmount) * parseInt(scholarship.numberOfGrants)} EDU
                     </p>
                     <p className="text-sm text-gray-400 mt-1">
                       ({scholarship.grantAmount} EDU × {scholarship.numberOfGrants} grants)
