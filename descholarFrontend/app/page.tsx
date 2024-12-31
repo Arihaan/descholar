@@ -80,7 +80,7 @@ export default function Home() {
               {/* Stellar powered badge */}
               <div className="flex items-center justify-center space-x-2 mt-12">
                 <span className="text-gray-300 md:text-xl">Powered by:</span>
-                <a 
+                {/* <a 
                   href="https://stellar.org" 
                   target="_blank" 
                   rel="noopener noreferrer"
@@ -91,7 +91,7 @@ export default function Home() {
                     alt="Stellar Logo" 
                     className="h-12 w-auto"
                   />
-                </a>
+                </a> */}
                 <a 
                   href="https://educhain.xyz" 
                   target="_blank" 
@@ -136,8 +136,19 @@ export default function Home() {
                 <div className="flex items-baseline gap-2 mb-3">
                   <span className="text-5xl font-bold text-orange-500">$3.8T</span>
                 </div>
-                <div className="mt-auto">
+                <div className="mt-auto flex items-center justify-between w-full">
                   <span className="text-sm text-gray-400">Growing yearly with increasing education costs</span>
+                  <a 
+                    href="https://www.globenewswire.com/news-release/2024/06/17/2899473/28124/en/Global-Student-Loan-Market-Report-2024-Market-Value-to-Reach-3-800-Billion-by-2029-Student-Loans-Continue-to-Rise-Across-All-Demographics.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1 transition-colors"
+                  >
+                    Mordor Intelligence
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
                 </div>
               </div>
             </motion.div>
@@ -154,8 +165,19 @@ export default function Home() {
                 <div className="flex items-baseline gap-2 mb-3">
                   <span className="text-5xl font-bold text-orange-500">$100M</span>
                 </div>
-                <div className="mt-auto">
+                <div className="mt-auto flex items-center justify-between w-full">
                   <span className="text-sm text-gray-400">Due to inefficient distribution systems</span>
+                  <a 
+                    href="https://www.forbes.com/sites/markcperna/2021/11/01/100-million-in-scholarship-money-goes-unclaimed-every-year-does-it-have-to"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1 transition-colors"
+                  >
+                    Forbes
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
                 </div>
               </div>
             </motion.div>
@@ -172,13 +194,24 @@ export default function Home() {
                 <div className="flex items-baseline gap-2 mb-3">
                   <span className="text-5xl font-bold text-orange-500">244M</span>
                 </div>
-                <div className="mt-auto">
-                  <span className="text-sm text-gray-400">Source: UNESCO Education Data</span>
+                <div className="mt-auto flex items-center justify-between w-full">
+                  <span className="text-sm text-gray-400">Due to lack of access to educational funding</span>
+                  <a 
+                    href="https://www.unesco.org/gem-report/en/articles/244m-children-wont-start-new-school-year"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1 transition-colors"
+                  >
+                    UNESCO
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
                 </div>
               </div>
             </motion.div>
 
-            {/* DeFi Adoption Challenge - Updated to match other cards */}
+            {/* DeFi Adoption Challenge */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -190,10 +223,19 @@ export default function Home() {
                 <div className="flex items-baseline gap-2 mb-3">
                   <span className="text-5xl font-bold text-orange-500">Low Usage</span>
                 </div>
-                <div className="mt-auto">
-                  <span className="text-sm text-gray-400">
-                    High brand recognition but limited active users in DeFi protocols
-                  </span>
+                <div className="mt-auto flex items-center justify-between w-full">
+                  <span className="text-sm text-gray-400">High brand recognition but limited active users</span>
+                  <a 
+                    href="https://www.coingecko.com/learn/defi-survey"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1 transition-colors"
+                  >
+                    Coingecko
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
                 </div>
               </div>
             </motion.div>
@@ -238,7 +280,7 @@ export default function Home() {
                 <div>
                   <h3 className="text-xl font-semibold mb-3 text-white">Global Reach</h3>
                   <p className="text-md text-gray-300">
-                    Connect with educational opportunities worldwide through our decentralized platform, powered by Stellar's global network.
+                    Connect with educational opportunities worldwide through our decentralized platform, powered by Open Campus's global network.
                   </p>
                 </div>
               </div>
@@ -272,7 +314,7 @@ export default function Home() {
                 <div>
                   <h3 className="text-xl font-semibold mb-3 text-white">Easy Access</h3>
                   <p className="text-md text-gray-300">
-                    Simple passkey authentication and integration with local currency off-ramps make funding accessible to everyone.
+                    Integration with Open Campus ID makes verification and funding accessible to over 615,000 verified students and educators.
                   </p>
                 </div>
               </div>
@@ -289,7 +331,7 @@ export default function Home() {
                 <div>
                   <h3 className="text-xl font-semibold mb-3 text-white">Innovation</h3>
                   <p className="text-md text-gray-300">
-                    Built on Stellar Soroban, offering fast, low-cost transactions and automated smart contract functionality.
+                    Built on EDU Chain, the first Layer 3 blockchain specifically designed for education, offering specialized features for educational institutions.
                   </p>
                 </div>
               </div>

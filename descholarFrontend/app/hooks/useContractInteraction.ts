@@ -111,11 +111,21 @@ export const useContractInteraction = () => {
     ) => {
         if (!contract || !signer) throw new Error('Contract not initialized');
         
-        const grantAmountWei = ethers.parseEther(grantAmount);
-        const totalAmount = grantAmountWei * BigInt(numberOfGrants);
-        const unixEndDate = Math.floor(endDate.getTime() / 1000);
-
         try {
+            const grantAmountWei = ethers.parseEther(grantAmount);
+            const totalAmount = grantAmountWei * BigInt(numberOfGrants);
+            // Convert to Unix timestamp in seconds
+            const unixEndDate = Math.floor(endDate.getTime() / 1000);
+
+            console.log('Creating scholarship with params:', {
+                name,
+                details,
+                grantAmountWei: grantAmountWei.toString(),
+                numberOfGrants,
+                unixEndDate,
+                totalAmount: totalAmount.toString()
+            });
+
             const tx = await contract.postScholarship(
                 name,
                 details,

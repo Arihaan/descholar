@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useContractInteraction } from "../hooks/useContractInteraction";
 import { useAccount } from "wagmi";
+import Notification from '../components/Notification';
+import { getReadableErrorMessage } from '../utils/errorMessages';
 
 interface Scholarship {
   id: number;
@@ -30,6 +32,16 @@ const Scholarships = () => {
   });
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showConnectPrompt, setShowConnectPrompt] = useState(false);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+    isVisible: boolean;
+  }>({
+    message: '',
+    type: 'success',
+    isVisible: false,
+  });
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { getScholarships, applyForScholarship, isInitialized } =
     useContractInteraction();
@@ -47,7 +59,10 @@ const Scholarships = () => {
       setLoading(true);
       const data = await getScholarships();
       console.log("Fetched scholarships data:", data);
-      setScholarships(data);
+      const availableScholarships = data.filter(scholarship => 
+        scholarship.remainingGrants > 0 && scholarship.active
+      );
+      setScholarships(availableScholarships);
     } catch (err) {
       console.error("Error in fetchScholarships:", err);
       setError("Failed to load scholarships. Please try again later.");
@@ -68,13 +83,16 @@ const Scholarships = () => {
         applicationForm.name,
         applicationForm.details
       );
+      showNotification("Application submitted successfully!", "success");
       setShowConfirmation(false);
       setIsApplying(false);
       setSelectedScholarship(null);
       setApplicationForm({ name: "", details: "" });
-      alert("Application submitted successfully!");
     } catch (err: any) {
-      alert(err.message || "Failed to submit application");
+      showNotification(
+        getReadableErrorMessage(err),
+        'error'
+      );
     } finally {
       setLoading(false);
     }
@@ -97,8 +115,30 @@ const Scholarships = () => {
     }
   };
 
+  const showNotification = (message: string, type: 'success' | 'error') => {
+    setNotification({
+      message,
+      type,
+      isVisible: true,
+    });
+  };
+
+  const filteredScholarships = scholarships.filter((scholarship) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      scholarship.name.toLowerCase().includes(searchLower) ||
+      scholarship.id.toString().includes(searchLower)
+    );
+  });
+
   return (
     <div className="min-h-screen flex flex-col relative">
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        isVisible={notification.isVisible}
+        onClose={() => setNotification(prev => ({ ...prev, isVisible: false }))}
+      />
       {/* Background with overlay */}
       <div
         className="absolute inset-0 z-0 bg-no-repeat w-full"
@@ -129,9 +169,35 @@ const Scholarships = () => {
           <h1 className="text-5xl font-bold mb-8 text-center text-white">
             Available Scholarships
           </h1>
-          <p className="text-center text-gray-300 mb-12 max-w-2xl mx-auto">
+          <p className="text-center text-gray-300 mb-8 max-w-2xl mx-auto">
             Browse and apply for scholarships from organizations worldwide.
           </p>
+          
+          {/* Search Bar */}
+          <div className="max-w-xl mx-auto mb-12">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search by scholarship name or ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-5 py-3 bg-gray-900 bg-opacity-40 backdrop-blur-sm text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors pl-12"
+              />
+              <svg
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+          </div>
         </motion.div>
 
         {loading ? (
@@ -140,8 +206,10 @@ const Scholarships = () => {
           </div>
         ) : error ? (
           <div className="text-center text-red-500">{error}</div>
-        ) : scholarships.length === 0 ? (
-          <div className="text-center text-gray-300">No scholarships found</div>
+        ) : filteredScholarships.length === 0 ? (
+          <div className="text-center text-gray-300">
+            {searchTerm ? "No scholarships found matching your search" : "No scholarships found"}
+          </div>
         ) : (
           <motion.div
             initial={{ opacity: 0 }}
@@ -149,16 +217,22 @@ const Scholarships = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {scholarships.map((scholarship) => (
+            {filteredScholarships.map((scholarship) => (
               <motion.div
                 key={scholarship.id}
                 whileHover={{ scale: 1.02 }}
                 className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl cursor-pointer"
                 onClick={() => setSelectedScholarship(scholarship)}
               >
-                <h2 className="text-xl font-semibold mb-4 text-white">
-                  {scholarship.name}
-                </h2>
+                {/* Scholarship ID Badge */}
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-semibold text-white">
+                    {scholarship.name}
+                  </h2>
+                  <span className="px-2 py-1 bg-gray-800 rounded-lg text-xs text-gray-400">
+                    ID: {scholarship.id}
+                  </span>
+                </div>
                 <div className="space-y-3">
                   <p className="text-gray-300 text-sm flex justify-between">
                     <span>Grant Amount:</span>

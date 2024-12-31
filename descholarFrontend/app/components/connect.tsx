@@ -144,7 +144,7 @@ export function ConnectButton({ label = "Connect Wallet" }) {
                 Connect Wallet
               </h3>
               <div className="space-y-3">
-                <button
+                {/* <button
                   onClick={connectStellar}
                   className="w-full h-12 rounded-xl transition-colors flex items-center justify-between group relative overflow-hidden"
                   style={{
@@ -167,7 +167,7 @@ export function ConnectButton({ label = "Connect Wallet" }) {
                     <span className="text-green-500 z-10">✓</span>
                   )}
                   <div className="absolute inset-0 bg-gray-700 opacity-0 group-hover:opacity-20 transition-opacity duration-200" />
-                </button>
+                </button> */}
 
                 <EduChainButton />
               </div>
