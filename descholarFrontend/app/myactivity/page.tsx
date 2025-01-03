@@ -176,7 +176,7 @@ const MyActivity = () => {
       setReviewLoading(true);
       await cancelScholarship(selectedScholarshipForCancel.id, cancellationReason);
       showNotification('Scholarship cancelled successfully!', 'success');
-      await fetchUserActivity(); // Refresh the data
+      await fetchUserActivity();
       setShowCancellationModal(false);
       setSelectedScholarshipForCancel(null);
       setCancellationReason("");
