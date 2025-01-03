@@ -36,22 +36,16 @@ interface ScholarshipApplication {
 }
 
 const MyActivity = () => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
   const [createdScholarships, setCreatedScholarships] = useState<CreatedScholarship[]>([]);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [reviewingScholarship, setReviewingScholarship] = useState<CreatedScholarship | null>(null);
   const [scholarshipApplications, setScholarshipApplications] = useState<ScholarshipApplication[]>([]);
-  const [reviewLoading, setReviewLoading] = useState(false);
-  const { 
-    getUserActivity, 
-    getApplicationsForScholarship, 
-    approveApplication,
-    isInitialized,
-    cancelScholarship,
-    withdrawExpiredScholarship 
-  } = useContractInteraction();
-  const { address } = useAccount();
+  const [showCancellationModal, setShowCancellationModal] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [selectedScholarshipForCancel, setSelectedScholarshipForCancel] = useState<CreatedScholarship | null>(null);
   const [notification, setNotification] = useState<{
     message: string;
     type: 'success' | 'error';
@@ -61,9 +55,15 @@ const MyActivity = () => {
     type: 'success',
     isVisible: false,
   });
-  const [showCancellationModal, setShowCancellationModal] = useState(false);
-  const [cancellationReason, setCancellationReason] = useState("");
-  const [selectedScholarshipForCancel, setSelectedScholarshipForCancel] = useState<CreatedScholarship | null>(null);
+  const { 
+    getUserActivity, 
+    getApplicationsForScholarship, 
+    approveApplication,
+    isInitialized,
+    cancelScholarship,
+    withdrawExpiredScholarship 
+  } = useContractInteraction();
+  const { address } = useAccount();
 
   useEffect(() => {
     if (isInitialized && address) {
@@ -665,7 +665,7 @@ const MyActivity = () => {
         </AnimatePresence>
 
         {/* Add Cancellation Modal */}
-        {showCancellationModal && (
+        {showCancellationModal && selectedScholarshipForCancel && (
           <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-gray-900 p-8 rounded-2xl max-w-md w-full border border-gray-700">
               <h3 className="text-xl font-bold text-white mb-4">Cancel Scholarship</h3>
@@ -692,10 +692,10 @@ const MyActivity = () => {
                 </button>
                 <button
                   onClick={handleCancelScholarship}
-                  disabled={!cancellationReason.trim() || reviewLoading}
+                  disabled={!cancellationReason.trim() || loading}
                   className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl disabled:opacity-50"
                 >
-                  {reviewLoading ? "Processing..." : "Confirm Cancel"}
+                  {loading ? "Processing..." : "Confirm Cancel"}
                 </button>
               </div>
             </div>
