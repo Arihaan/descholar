@@ -211,7 +211,7 @@ const MyActivity = () => {
         {!scholarship.isCancelled && !isExpired && (
           <button
             onClick={() => {
-              setSelectedScholarship(scholarship);
+              setSelectedScholarshipForCancel(scholarship);
               setShowCancellationModal(true);
             }}
             className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
