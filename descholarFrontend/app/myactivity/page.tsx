@@ -15,6 +15,15 @@ interface Application {
   status: string;
   appliedAt: Date;
   grantAmount: string;
+  scholarship?: ScholarshipDetails;
+}
+
+interface ScholarshipDetails {
+  name: string;
+  grantAmount: string;
+  isCancelled: boolean;
+  cancellationReason: string;
+  cancelledAt: Date | null;
 }
 
 interface CreatedScholarship {
@@ -23,6 +32,10 @@ interface CreatedScholarship {
   grantAmount: string;
   remainingGrants: number;
   endDate: Date;
+  active: boolean;
+  isCancelled: boolean;
+  cancellationReason: string;
+  cancelledAt: Date | null;
 }
 
 interface ScholarshipApplication {
@@ -163,9 +176,18 @@ const MyActivity = () => {
   };
 
   const categorizeScholarships = (scholarships: CreatedScholarship[]) => {
+    const now = new Date();
     return {
-      live: scholarships.filter(s => s.remainingGrants > 0),
-      ended: scholarships.filter(s => s.remainingGrants === 0)
+      live: scholarships.filter(s => 
+        !s.isCancelled && 
+        s.remainingGrants > 0 && 
+        new Date(s.endDate) > now
+      ),
+      ended: scholarships.filter(s => 
+        s.isCancelled || 
+        s.remainingGrants === 0 || 
+        new Date(s.endDate) <= now
+      )
     };
   };
 
@@ -467,7 +489,7 @@ const MyActivity = () => {
                               <>
                                 <span>Cancelled</span>
                                 <span>
-                                  On: {scholarship.cancelledAt.toLocaleDateString()}
+                                  On: {scholarship.cancelledAt ? scholarship.cancelledAt.toLocaleDateString() : 'Unknown date'}
                                 </span>
                               </>
                             ) : (
@@ -551,11 +573,10 @@ const MyActivity = () => {
                           Reason: {selectedApplication.scholarship.cancellationReason}
                         </p>
                         <p className="text-red-400/60 text-xs mt-1">
-                          Cancelled on: {selectedApplication.scholarship.cancelledAt.toLocaleDateString(undefined, {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
+                          Cancelled on: {selectedApplication.scholarship.cancelledAt ? 
+                            selectedApplication.scholarship.cancelledAt.toLocaleDateString() : 
+                            'Unknown date'
+                          }
                         </p>
                       </div>
                     )}
@@ -606,7 +627,10 @@ const MyActivity = () => {
                       Reason: {reviewingScholarship.cancellationReason}
                     </p>
                     <p className="text-red-400/60 text-xs mt-1">
-                      Cancelled on: {reviewingScholarship.cancelledAt.toLocaleDateString()}
+                      Cancelled on: {reviewingScholarship.cancelledAt ? 
+                        reviewingScholarship.cancelledAt.toLocaleDateString() : 
+                        'Unknown date'
+                      }
                     </p>
                   </div>
                 )}
