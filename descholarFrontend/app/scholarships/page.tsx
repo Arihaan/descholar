@@ -42,10 +42,15 @@ const Scholarships = () => {
     isVisible: false,
   });
   const [searchTerm, setSearchTerm] = useState("");
-
-  const { getScholarships, applyForScholarship, isInitialized } =
-    useContractInteraction();
   const { address } = useAccount();
+  const [hasApplied, setHasApplied] = useState<boolean>(false);
+
+  const { 
+    getScholarships, 
+    applyForScholarship, 
+    isInitialized,
+    checkHasApplied
+  } = useContractInteraction();
 
   useEffect(() => {
     if (isInitialized) {
@@ -130,6 +135,23 @@ const Scholarships = () => {
       scholarship.id.toString().includes(searchLower)
     );
   });
+
+  const checkApplicationStatus = async (scholarshipId: number) => {
+    if (!address) return;
+    try {
+      const hasApplied = await checkHasApplied(scholarshipId, address);
+      setHasApplied(hasApplied);
+    } catch (error) {
+      console.error('Error checking application status:', error);
+    }
+  };
+
+  const handleScholarshipSelect = async (scholarship: any) => {
+    setSelectedScholarship(scholarship);
+    if (address) {
+      await checkApplicationStatus(scholarship.id);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -222,7 +244,7 @@ const Scholarships = () => {
                 key={scholarship.id}
                 whileHover={{ scale: 1.02 }}
                 className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl cursor-pointer"
-                onClick={() => setSelectedScholarship(scholarship)}
+                onClick={() => handleScholarshipSelect(scholarship)}
               >
                 {/* Scholarship ID Badge */}
                 <div className="flex justify-between items-start mb-4">
@@ -334,12 +356,18 @@ const Scholarships = () => {
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleApplyClick(selectedScholarship)}
-                    className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold rounded-xl"
-                  >
-                    Apply Now
-                  </button>
+                  {hasApplied ? (
+                    <div className="mt-6 p-4 bg-gray-800 rounded-xl text-center">
+                      <p className="text-gray-300">You have already applied for this scholarship</p>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleApplyClick(selectedScholarship)}
+                      className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold rounded-xl"
+                    >
+                      Apply Now
+                    </button>
+                  )}
                 </div>
               </motion.div>
             </motion.div>

@@ -14,6 +14,8 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
     event ApplicationSubmitted(uint256 indexed scholarshipId, uint256 indexed applicationId, address applicant);
     event ApplicationStatusChanged(uint256 indexed applicationId, ApplicationStatus status);
     event GrantAwarded(uint256 indexed scholarshipId, address indexed recipient, uint256 amount);
+    event ScholarshipCancelled(uint256 indexed scholarshipId, string reason, uint256 refundAmount);
+    event ScholarshipWithdrawn(uint256 indexed scholarshipId, uint256 refundAmount);
 
     enum ApplicationStatus {
         Applied,
@@ -42,6 +44,9 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
         address creator;
         bool active;
         uint256 createdAt;
+        bool isCancelled;
+        string cancellationReason;
+        uint256 cancelledAt;
     }
 
     // State variables
@@ -52,14 +57,11 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
     mapping(address => uint256[]) public userApplications;
     mapping(address => uint256[]) public userScholarships;
     mapping(uint256 => uint256[]) public scholarshipApplications;
+    mapping(uint256 => mapping(address => bool)) public hasApplied;
 
     // Constants
     uint256 public constant MIN_GRANT_AMOUNT = 0.01 ether;  // 10^16 wei (0.01 ETH)
     uint256 public constant MAX_GRANTS = 1000;
-    // Example timestamps for reference:
-    // Jan 28 2025 00:00:00 GMT = 1738022400
-    // To convert a date: Use Unix timestamp converter or
-    // new Date("2025-01-28").getTime() / 1000 in JavaScript
 
     // Modifiers
     modifier validScholarship(uint256 scholarshipId) {
@@ -106,7 +108,10 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
             endDate: endDate,
             creator: msg.sender,
             active: true,
-            createdAt: block.timestamp
+            createdAt: block.timestamp,
+            isCancelled: false,
+            cancellationReason: "",
+            cancelledAt: 0
         }));
 
         userScholarships[msg.sender].push(scholarshipId);
@@ -122,6 +127,7 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
       scholarshipActive(scholarshipId) {
         require(bytes(name).length > 0, "Empty name");
         require(bytes(details).length > 0, "Empty details");
+        require(!hasApplied[scholarshipId][msg.sender], "Already applied");
         
         uint256 applicationId = applications.length;
         applications.push(Application({
@@ -134,6 +140,7 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
             appliedAt: block.timestamp
         }));
 
+        hasApplied[scholarshipId][msg.sender] = true;
         userApplications[msg.sender].push(applicationId);
         scholarshipApplications[scholarshipId].push(applicationId);
         emit ApplicationSubmitted(scholarshipId, applicationId, msg.sender);
@@ -160,6 +167,53 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
 
         emit ApplicationStatusChanged(applicationId, ApplicationStatus.Approved);
         emit GrantAwarded(scholarshipId, application.applicant, scholarship.grantAmount);
+    }
+
+    function cancelScholarship(
+        uint256 scholarshipId,
+        string calldata reason
+    ) external whenNotPaused nonReentrant 
+      validScholarship(scholarshipId)
+      onlyScholarshipCreator(scholarshipId) {
+        Scholarship storage scholarship = scholarships[scholarshipId];
+        require(scholarship.active, "Scholarship already inactive");
+        require(!scholarship.isCancelled, "Scholarship already cancelled");
+        require(bytes(reason).length > 0, "Must provide cancellation reason");
+        
+        uint256 refundAmount = scholarship.grantAmount * scholarship.remainingGrants;
+        
+        scholarship.active = false;
+        scholarship.remainingGrants = 0;
+        scholarship.isCancelled = true;
+        scholarship.cancellationReason = reason;
+        scholarship.cancelledAt = block.timestamp;
+
+        (bool success, ) = payable(msg.sender).call{value: refundAmount}("");
+        require(success, "Refund transfer failed");
+
+        emit ScholarshipCancelled(scholarshipId, reason, refundAmount);
+    }
+
+    function withdrawExpiredScholarship(
+        uint256 scholarshipId
+    ) external whenNotPaused nonReentrant 
+      validScholarship(scholarshipId)
+      onlyScholarshipCreator(scholarshipId) {
+        Scholarship storage scholarship = scholarships[scholarshipId];
+        require(!scholarship.isCancelled, "Scholarship was cancelled");
+        require(block.timestamp >= scholarship.endDate, "Scholarship not expired");
+        require(scholarship.remainingGrants > 0, "No grants remaining");
+        require(scholarship.active, "Scholarship already withdrawn or cancelled");
+        
+        uint256 refundAmount = scholarship.grantAmount * scholarship.remainingGrants;
+        
+        scholarship.active = false;
+        scholarship.remainingGrants = 0;
+
+        (bool success, ) = payable(msg.sender).call{value: refundAmount}("");
+        require(success, "Refund transfer failed");
+
+        emit ScholarshipWithdrawn(scholarshipId, refundAmount);
     }
 
     // View functions

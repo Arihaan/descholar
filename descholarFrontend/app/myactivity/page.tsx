@@ -47,7 +47,9 @@ const MyActivity = () => {
     getUserActivity, 
     getApplicationsForScholarship, 
     approveApplication,
-    isInitialized 
+    isInitialized,
+    cancelScholarship,
+    withdrawExpiredScholarship 
   } = useContractInteraction();
   const { address } = useAccount();
   const [notification, setNotification] = useState<{
@@ -59,6 +61,9 @@ const MyActivity = () => {
     type: 'success',
     isVisible: false,
   });
+  const [showCancellationModal, setShowCancellationModal] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [selectedScholarshipForCancel, setSelectedScholarshipForCancel] = useState<CreatedScholarship | null>(null);
 
   useEffect(() => {
     if (isInitialized && address) {
@@ -79,7 +84,10 @@ const MyActivity = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string, isCancelled?: boolean) => {
+    if (isCancelled) {
+      return <FiXCircle className="w-5 h-5 mr-2 text-red-500" />;
+    }
     switch (status) {
       case 'Applied':
         return <FiClock className="w-5 h-5 mr-2 text-yellow-500" />;
@@ -92,7 +100,10 @@ const MyActivity = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string, isCancelled?: boolean) => {
+    if (isCancelled) {
+      return 'text-red-500';
+    }
     switch (status) {
       case 'Applied':
         return 'text-yellow-500';
@@ -156,6 +167,80 @@ const MyActivity = () => {
       live: scholarships.filter(s => s.remainingGrants > 0),
       ended: scholarships.filter(s => s.remainingGrants === 0)
     };
+  };
+
+  const handleCancelScholarship = async () => {
+    if (!selectedScholarshipForCancel || !cancellationReason.trim()) return;
+    
+    try {
+      setReviewLoading(true);
+      await cancelScholarship(selectedScholarshipForCancel.id, cancellationReason);
+      showNotification('Scholarship cancelled successfully!', 'success');
+      await fetchUserActivity(); // Refresh the data
+      setShowCancellationModal(false);
+      setSelectedScholarshipForCancel(null);
+      setCancellationReason("");
+    } catch (error: any) {
+      console.error('Error cancelling scholarship:', error);
+      showNotification(getReadableErrorMessage(error), 'error');
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const handleWithdrawExpired = async (scholarshipId: number) => {
+    try {
+      setLoading(true);
+      const tx = await withdrawExpiredScholarship(scholarshipId);
+      showNotification('Funds withdrawn successfully!', 'success');
+      await fetchUserActivity(); // Refresh data
+    } catch (error: any) {
+      console.error('Error withdrawing funds:', error);
+      showNotification(getReadableErrorMessage(error), 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderScholarshipActions = (scholarship: any) => {
+    const isExpired = new Date() > scholarship.endDate;
+    const hasRemainingGrants = scholarship.remainingGrants > 0;
+
+    return (
+      <div className="mt-4 space-y-2">
+        {!scholarship.isCancelled && !isExpired && (
+          <button
+            onClick={() => {
+              setSelectedScholarship(scholarship);
+              setShowCancellationModal(true);
+            }}
+            className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+          >
+            Cancel Scholarship
+          </button>
+        )}
+        
+        {isExpired && hasRemainingGrants && !scholarship.isCancelled && (
+          <button
+            onClick={() => handleWithdrawExpired(scholarship.id)}
+            className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+          >
+            Withdraw Remaining Funds
+          </button>
+        )}
+
+        {scholarship.isCancelled && (
+          <div className="p-3 bg-red-900/30 border border-red-700/50 rounded-lg">
+            <p className="text-red-300 text-sm">
+              Cancelled: {scholarship.cancellationReason}
+            </p>
+            <p className="text-red-400/60 text-xs mt-1">
+              {new Date(scholarship.cancelledAt).toLocaleDateString()}
+            </p>
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (!address) {
@@ -230,14 +315,24 @@ const MyActivity = () => {
                     <motion.div
                       key={application.id}
                       whileHover={{ scale: 1.01 }}
-                      className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl cursor-pointer"
+                      className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl"
                       onClick={() => setSelectedApplication(application)}
                     >
-                      <div className="flex justify-between items-start mb-3">
-                        <h3 className="text-lg font-medium text-white">{application.name}</h3>
-                        <div className={`flex items-center ${getStatusColor(application.status)}`}>
-                          {getStatusIcon(application.status)}
-                          <span>{application.status}</span>
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-lg font-medium text-white">{application.name}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs bg-gray-800 px-2 py-1 rounded-lg text-gray-400">
+                              Application ID: {application.id}
+                            </span>
+                            <span className="text-xs bg-gray-800 px-2 py-1 rounded-lg text-gray-400">
+                              Scholarship ID: {application.scholarshipId}
+                            </span>
+                          </div>
+                        </div>
+                        <div className={`flex items-center ${getStatusColor(application.status, application.scholarship?.isCancelled)}`}>
+                          {getStatusIcon(application.status, application.scholarship?.isCancelled)}
+                          <span>{application.scholarship?.isCancelled ? 'Cancelled' : application.status}</span>
                         </div>
                       </div>
                       <p className="text-sm text-gray-400 mb-2">
@@ -300,24 +395,44 @@ const MyActivity = () => {
                           className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl"
                         >
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-medium text-white">{scholarship.name}</h3>
+                            <div>
+                              <h3 className="text-lg font-medium text-white">{scholarship.name}</h3>
+                              <span className="text-xs bg-gray-800 px-2 py-1 rounded-lg text-gray-400 mt-2 inline-block">
+                                ID: {scholarship.id}
+                              </span>
+                            </div>
                             <span className="text-sm text-orange-400 font-semibold">
                               {scholarship.grantAmount} EDU
                             </span>
                           </div>
                           <div className="flex justify-between text-sm text-gray-300">
                             <span>{scholarship.remainingGrants} Grants Remaining</span>
-                            <span>Ends: {scholarship.endDate.toLocaleDateString()}</span>
+                            {scholarship.isCancelled ? (
+                              <span className="text-red-400">Cancelled</span>
+                            ) : (
+                              <span>Ends: {scholarship.endDate.toLocaleDateString()}</span>
+                            )}
                           </div>
-                          <button
-                            onClick={() => {
-                              setReviewingScholarship(scholarship);
-                              fetchScholarshipApplications(scholarship.id);
-                            }}
-                            className="w-full mt-4 px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-sm font-semibold rounded-xl"
-                          >
-                            Review Applications
-                          </button>
+                          <div className="flex gap-2 mt-4">
+                            <button
+                              onClick={() => {
+                                setReviewingScholarship(scholarship);
+                                fetchScholarshipApplications(scholarship.id);
+                              }}
+                              className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-sm font-semibold rounded-xl"
+                            >
+                              Review Applications
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedScholarshipForCancel(scholarship);
+                                setShowCancellationModal(true);
+                              }}
+                              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </motion.div>
                       ))}
                     </div>
@@ -337,14 +452,30 @@ const MyActivity = () => {
                           className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl opacity-80"
                         >
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-medium text-white">{scholarship.name}</h3>
+                            <div>
+                              <h3 className="text-lg font-medium text-white">{scholarship.name}</h3>
+                              <span className="text-xs bg-gray-800 px-2 py-1 rounded-lg text-gray-400 mt-2 inline-block">
+                                ID: {scholarship.id}
+                              </span>
+                            </div>
                             <span className="text-sm text-orange-400 font-semibold">
                               {scholarship.grantAmount} EDU
                             </span>
                           </div>
                           <div className="flex justify-between text-sm text-gray-300">
-                            <span>All Grants Awarded</span>
-                            <span>Ended: {scholarship.endDate.toLocaleDateString()}</span>
+                            {scholarship.isCancelled ? (
+                              <>
+                                <span>Cancelled</span>
+                                <span>
+                                  On: {scholarship.cancelledAt.toLocaleDateString()}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <span>All Grants Awarded</span>
+                                <span>Ended: {scholarship.endDate.toLocaleDateString()}</span>
+                              </>
+                            )}
                           </div>
                           <button
                             onClick={() => {
@@ -387,22 +518,54 @@ const MyActivity = () => {
                   <div className="bg-gray-800 p-4 rounded-xl">
                     <h3 className="text-white font-semibold mb-2">Scholarship</h3>
                     <p className="text-gray-300">{selectedApplication.name}</p>
-                    <p className="text-orange-400 text-sm mt-1">Grant Amount: {selectedApplication.grantAmount} EDU</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs bg-gray-700 px-2 py-1 rounded-lg text-gray-300">
+                        Application ID: {selectedApplication.id}
+                      </span>
+                      <span className="text-xs bg-gray-700 px-2 py-1 rounded-lg text-gray-300">
+                        Scholarship ID: {selectedApplication.scholarshipId}
+                      </span>
+                    </div>
+                    <p className="text-orange-400 text-sm mt-2">
+                      Grant Amount: {selectedApplication.grantAmount} EDU
+                    </p>
                   </div>
+
                   <div className="bg-gray-800 p-4 rounded-xl">
                     <h3 className="text-white font-semibold mb-2">Your Application</h3>
                     <p className="text-gray-300">{selectedApplication.details}</p>
                   </div>
+
                   <div className="bg-gray-800 p-4 rounded-xl">
                     <h3 className="text-white font-semibold mb-2">Status</h3>
-                    <div className={`flex items-center ${getStatusColor(selectedApplication.status)}`}>
-                      {getStatusIcon(selectedApplication.status)}
-                      <span>{selectedApplication.status}</span>
+                    <div className={`flex items-center ${getStatusColor(selectedApplication.status, selectedApplication.scholarship?.isCancelled)}`}>
+                      {getStatusIcon(selectedApplication.status, selectedApplication.scholarship?.isCancelled)}
+                      <span>{selectedApplication.scholarship?.isCancelled ? 'Cancelled' : selectedApplication.status}</span>
                     </div>
+                    {selectedApplication.scholarship?.isCancelled && (
+                      <div className="mt-3 p-3 bg-red-900/30 border border-red-700/50 rounded-lg">
+                        <p className="text-red-300 text-sm font-medium">
+                          This scholarship has been cancelled
+                        </p>
+                        <p className="text-red-200/80 text-sm mt-1">
+                          Reason: {selectedApplication.scholarship.cancellationReason}
+                        </p>
+                        <p className="text-red-400/60 text-xs mt-1">
+                          Cancelled on: {selectedApplication.scholarship.cancelledAt.toLocaleDateString(undefined, {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    )}
                   </div>
+
                   <div className="bg-gray-800 p-4 rounded-xl">
                     <h3 className="text-white font-semibold mb-2">Applied On</h3>
-                    <p className="text-gray-300">{selectedApplication.appliedAt.toLocaleDateString()}</p>
+                    <p className="text-gray-300">
+                      {selectedApplication.appliedAt.toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
               </motion.div>
@@ -425,8 +588,28 @@ const MyActivity = () => {
                 className="bg-gray-900 p-8 rounded-2xl max-w-4xl w-full mx-auto border border-gray-700"
                 onClick={(e) => e.stopPropagation()}
               >
-                <h2 className="text-2xl font-bold mb-2 text-white">{reviewingScholarship.name}</h2>
-                <p className="text-gray-400 mb-6">Review and approve applications</p>
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">{reviewingScholarship.name}</h2>
+                    <span className="text-sm bg-gray-800 px-2 py-1 rounded-lg text-gray-400 mt-2 inline-block">
+                      Scholarship ID: {reviewingScholarship.id}
+                    </span>
+                  </div>
+                  <p className="text-gray-400">Review and approve applications</p>
+                </div>
+
+                {/* Add cancellation notice at the top if cancelled */}
+                {reviewingScholarship.isCancelled && (
+                  <div className="mb-6 p-4 bg-red-900/30 border border-red-700/50 rounded-xl">
+                    <p className="text-red-300 font-medium">This scholarship has been cancelled</p>
+                    <p className="text-red-200/80 text-sm mt-1">
+                      Reason: {reviewingScholarship.cancellationReason}
+                    </p>
+                    <p className="text-red-400/60 text-xs mt-1">
+                      Cancelled on: {reviewingScholarship.cancelledAt.toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
 
                 {reviewLoading ? (
                   <div className="text-center text-gray-300">Loading applications...</div>
@@ -442,17 +625,26 @@ const MyActivity = () => {
                         <div className="flex justify-between items-start">
                           <div>
                             <h3 className="text-white font-semibold">{application.name}</h3>
-                            <p className="text-sm text-gray-400">
-                              Applied: {new Date(application.appliedAt).toLocaleDateString()}
-                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs bg-gray-700 px-2 py-1 rounded-lg text-gray-300">
+                                Application ID: {application.id}
+                              </span>
+                              <p className="text-sm text-gray-400">
+                                Applied: {new Date(application.appliedAt).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
-                          <div className={`flex items-center ${getStatusColor(application.status)}`}>
-                            {getStatusIcon(application.status)}
-                            <span>{application.status}</span>
-                          </div>
+                          {/* Only show status for non-cancelled scholarships or if already approved */}
+                          {(!reviewingScholarship.isCancelled || application.status === 'Approved') && (
+                            <div className={`flex items-center ${getStatusColor(application.status)}`}>
+                              {getStatusIcon(application.status)}
+                              <span>{application.status}</span>
+                            </div>
+                          )}
                         </div>
                         <p className="text-gray-300">{application.details}</p>
-                        {application.status === 'Applied' && (
+                        {/* Only show approve button if scholarship is not cancelled and application is pending */}
+                        {application.status === 'Applied' && !reviewingScholarship.isCancelled && (
                           <div className="flex justify-end">
                             <button
                               onClick={() => handleApproveApplication(application.id)}
@@ -471,6 +663,44 @@ const MyActivity = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Add Cancellation Modal */}
+        {showCancellationModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-gray-900 p-8 rounded-2xl max-w-md w-full border border-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">Cancel Scholarship</h3>
+              <p className="text-gray-300 mb-4">
+                Please provide a reason for cancelling this scholarship. Remaining funds will be returned to your wallet.
+              </p>
+              <textarea
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 min-h-[100px]"
+                placeholder="Enter cancellation reason..."
+                required
+              />
+              <div className="flex gap-4 mt-6">
+                <button
+                  onClick={() => {
+                    setShowCancellationModal(false);
+                    setSelectedScholarshipForCancel(null);
+                    setCancellationReason("");
+                  }}
+                  className="flex-1 px-6 py-3 bg-gray-800 text-white rounded-xl hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCancelScholarship}
+                  disabled={!cancellationReason.trim() || reviewLoading}
+                  className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl disabled:opacity-50"
+                >
+                  {reviewLoading ? "Processing..." : "Confirm Cancel"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -1,23 +1,28 @@
 import { ethers, Contract as EthersContract } from 'ethers';
 import { useEffect, useState } from 'react';
 
-const CONTRACT_ADDRESS = '0xca1A04b2Cd06936bcdE2972f040C240bA05D48ad';
+const CONTRACT_ADDRESS = '0x7820AB9a78FEb626b9CA0A06331aF8e200d69bF2';
 const CONTRACT_ABI = [
     // Events
     "event ScholarshipCreated(uint256 indexed scholarshipId, address indexed creator, uint256 totalAmount)",
     "event ApplicationSubmitted(uint256 indexed scholarshipId, uint256 indexed applicationId, address applicant)",
     "event ApplicationStatusChanged(uint256 indexed applicationId, uint8 status)",
     "event GrantAwarded(uint256 indexed scholarshipId, address indexed recipient, uint256 amount)",
+    "event ScholarshipCancelled(uint256 indexed scholarshipId, string reason, uint256 refundAmount)",
+    "event ScholarshipWithdrawn(uint256 indexed scholarshipId, uint256 refundAmount)",
     
     // View Functions
-    "function getScholarships() external view returns (tuple(uint256 id, string name, string details, uint256 grantAmount, uint256 remainingGrants, uint256 totalGrants, uint256 endDate, address creator, bool active, uint256 createdAt)[] memory)",
+    "function getScholarships() external view returns (tuple(uint256 id, string name, string details, uint256 grantAmount, uint256 remainingGrants, uint256 totalGrants, uint256 endDate, address creator, bool active, uint256 createdAt, bool isCancelled, string cancellationReason, uint256 cancelledAt)[] memory)",
     "function getUserApplications(address user) external view returns (tuple(uint256 id, uint256 scholarshipId, address applicant, string name, string details, uint8 status, uint256 appliedAt)[] memory)",
     
     // State Changing Functions
     "function postScholarship(string calldata name, string calldata details, uint256 grantAmount, uint256 numberOfGrants, uint256 endDate) external payable",
     "function applyForScholarship(uint256 scholarshipId, string calldata name, string calldata details) external",
     "function approveApplication(uint256 scholarshipId, uint256 applicationId) external",
-    "function getApplicationsForScholarship(uint256 scholarshipId) external view returns (tuple(uint256 id, uint256 scholarshipId, address applicant, string name, string details, uint8 status, uint256 appliedAt)[] memory)"
+    "function cancelScholarship(uint256 scholarshipId, string calldata reason) external",
+    "function withdrawExpiredScholarship(uint256 scholarshipId) external",
+    "function getApplicationsForScholarship(uint256 scholarshipId) external view returns (tuple(uint256 id, uint256 scholarshipId, address applicant, string name, string details, uint8 status, uint256 appliedAt)[] memory)",
+    "function hasApplied(uint256 scholarshipId, address user) external view returns (bool)"
 ];
 
 // Define a type that includes both read-only and connected contracts
@@ -90,7 +95,10 @@ export const useContractInteraction = () => {
                     endDate: new Date(Number(scholarship[6]) * 1000), // uint256 endDate
                     creator: scholarship[7],             // address creator
                     active: scholarship[8],              // bool active
-                    createdAt: new Date(Number(scholarship[9]) * 1000) // uint256 createdAt
+                    createdAt: new Date(Number(scholarship[9]) * 1000), // uint256 createdAt
+                    isCancelled: scholarship[10],
+                    cancellationReason: scholarship[11],
+                    cancelledAt: scholarship[12] > 0 ? new Date(Number(scholarship[12]) * 1000) : null
                 };
             });
             
@@ -151,11 +159,14 @@ export const useContractInteraction = () => {
                 contract.getScholarships()
             ]);
 
-            // Create a map of scholarship IDs to their names
+            // Create a map of scholarship IDs to their full details
             const scholarshipMap = allScholarships.reduce((map: {[key: string]: any}, s: any) => {
                 map[Number(s[0])] = {
                     name: s[1],
-                    grantAmount: ethers.formatEther(s[3])
+                    grantAmount: ethers.formatEther(s[3]),
+                    isCancelled: s[10],
+                    cancellationReason: s[11],
+                    cancelledAt: s[12] > 0 ? new Date(Number(s[12]) * 1000) : null
                 };
                 return map;
             }, {});
@@ -164,11 +175,12 @@ export const useContractInteraction = () => {
                 applications: applications.map((a: any) => ({
                     id: Number(a.id),
                     scholarshipId: Number(a.scholarshipId),
-                    name: scholarshipMap[Number(a.scholarshipId)]?.name || 'Unknown Scholarship', // Use scholarship name
+                    name: scholarshipMap[Number(a.scholarshipId)]?.name || 'Unknown Scholarship',
                     details: a.details,
                     status: ['Applied', 'Approved', 'Rejected'][Number(a.status)],
                     appliedAt: new Date(Number(a.appliedAt) * 1000),
-                    grantAmount: scholarshipMap[Number(a.scholarshipId)]?.grantAmount || '0' // Optional: include grant amount
+                    grantAmount: scholarshipMap[Number(a.scholarshipId)]?.grantAmount || '0',
+                    scholarship: scholarshipMap[Number(a.scholarshipId)] // Include full scholarship details
                 })),
                 createdScholarships: allScholarships
                     .filter((s: any) => s[7].toLowerCase() === address.toLowerCase())
@@ -177,7 +189,10 @@ export const useContractInteraction = () => {
                         name: s[1],
                         grantAmount: ethers.formatEther(s[3]),
                         remainingGrants: Number(s[4]),
-                        endDate: new Date(Number(s[6]) * 1000)
+                        endDate: new Date(Number(s[6]) * 1000),
+                        isCancelled: s[10],
+                        cancellationReason: s[11],
+                        cancelledAt: s[12] > 0 ? new Date(Number(s[12]) * 1000) : null
                     }))
             };
         } catch (error) {
@@ -264,6 +279,42 @@ export const useContractInteraction = () => {
         }
     };
 
+    const cancelScholarship = async (scholarshipId: number, reason: string) => {
+        if (!contract || !signer) throw new Error('Contract not initialized');
+        
+        try {
+            const tx = await contract.cancelScholarship(scholarshipId, reason);
+            await tx.wait();
+            return tx.hash;
+        } catch (error) {
+            console.error('Error cancelling scholarship:', error);
+            throw error;
+        }
+    };
+
+    const withdrawExpiredScholarship = async (scholarshipId: number) => {
+        if (!contract || !signer) throw new Error('Contract not initialized');
+        
+        try {
+            const tx = await contract.withdrawExpiredScholarship(scholarshipId);
+            await tx.wait();
+            return tx.hash;
+        } catch (error) {
+            console.error('Error withdrawing expired scholarship:', error);
+            throw error;
+        }
+    };
+
+    const checkHasApplied = async (scholarshipId: number, address: string) => {
+        if (!contract) return false;
+        try {
+            return await contract.hasApplied(scholarshipId, address);
+        } catch (error) {
+            console.error('Error checking application status:', error);
+            return false;
+        }
+    };
+
     return {
         getScholarships,
         createScholarship,
@@ -271,6 +322,9 @@ export const useContractInteraction = () => {
         applyForScholarship,
         getApplicationsForScholarship,
         approveApplication,
+        cancelScholarship,
+        withdrawExpiredScholarship,
+        checkHasApplied,
         isInitialized
     };
 }; 
