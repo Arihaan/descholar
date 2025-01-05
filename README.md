@@ -77,7 +77,7 @@ Descholar is built using modern web3 technologies:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-repo/descholar.git
+   git clone https://github.com/Arihaan/descholar.git
    ```
 2. **Navigate to the frontend directory**
    ```bash
