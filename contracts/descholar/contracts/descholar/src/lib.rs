@@ -9,7 +9,6 @@ CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC // *xlm token address t
 cargo install --git https://github.com/stellar/stellar-cli soroban-cli //for updating or downloadingle cli
 
 ?  latest contract id = CASRFLDQJVNP5XXYMZE6WVWOLYEV6AWF2LJOT3V64EJ22PEJKVEVILYP
-* Cli just doesn't work so I use Okashi instead
 
 CDEWNEKSFT5ZU52CYRQKFJOENL4VQV3K7T5DRX5DD25HUMAELLTWP3DL -- Contract Id from okashi
 
@@ -240,14 +239,6 @@ impl DescholarContract {
         if scholarship.student_grant_amount <= 0 || scholarship.available_grants <= 0 {
             panic!("Total grant amount cannot be negative");
         }
-
-        // ! ask later
-        //check if scholarship name already exists
-        // for existing_scholarship in scholarships.iter() {
-        //     if existing_scholarship.name == scholarship.name {
-        //         panic!("Scholarship name already exists");
-        //     }
-        // }
     }
 
     fn approve_students(
