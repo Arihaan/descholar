@@ -58,16 +58,23 @@ const Scholarships = () => {
     }
   }, [isInitialized]);
 
+  const isScholarshipActive = (scholarship: any) => {
+    const now = new Date();
+    return (
+      scholarship.active && 
+      !scholarship.isCancelled && 
+      scholarship.remainingGrants > 0 && 
+      new Date(scholarship.endDate) > now
+    );
+  };
+
   const fetchScholarships = async () => {
     try {
       console.log("Starting to fetch scholarships");
       setLoading(true);
-      const data = await getScholarships();
-      console.log("Fetched scholarships data:", data);
-      const availableScholarships = data.filter(scholarship => 
-        scholarship.remainingGrants > 0 && scholarship.active
-      );
-      setScholarships(availableScholarships);
+      const allScholarships = await getScholarships();
+      const activeScholarships = allScholarships.filter(isScholarshipActive);
+      setScholarships(activeScholarships);
     } catch (err) {
       console.error("Error in fetchScholarships:", err);
       setError("Failed to load scholarships. Please try again later.");
