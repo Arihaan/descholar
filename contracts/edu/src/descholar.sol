@@ -1,21 +1,43 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract Descholar is ReentrancyGuard, Ownable, Pausable {
     // Constructor
-    constructor(address initialOwner) Ownable(initialOwner) { }
+    constructor(address initialOwner) Ownable(initialOwner) {}
 
     // Events
-    event ScholarshipCreated(uint256 indexed scholarshipId, address indexed creator, uint256 totalAmount);
-    event ApplicationSubmitted(uint256 indexed scholarshipId, uint256 indexed applicationId, address applicant);
-    event ApplicationStatusChanged(uint256 indexed applicationId, ApplicationStatus status);
-    event GrantAwarded(uint256 indexed scholarshipId, address indexed recipient, uint256 amount);
-    event ScholarshipCancelled(uint256 indexed scholarshipId, string reason, uint256 refundAmount);
-    event ScholarshipWithdrawn(uint256 indexed scholarshipId, uint256 refundAmount);
+    event ScholarshipCreated(
+        uint256 indexed scholarshipId,
+        address indexed creator,
+        uint256 totalAmount
+    );
+    event ApplicationSubmitted(
+        uint256 indexed scholarshipId,
+        uint256 indexed applicationId,
+        address applicant
+    );
+    event ApplicationStatusChanged(
+        uint256 indexed applicationId,
+        ApplicationStatus status
+    );
+    event GrantAwarded(
+        uint256 indexed scholarshipId,
+        address indexed recipient,
+        uint256 amount
+    );
+    event ScholarshipCancelled(
+        uint256 indexed scholarshipId,
+        string reason,
+        uint256 refundAmount
+    );
+    event ScholarshipWithdrawn(
+        uint256 indexed scholarshipId,
+        uint256 refundAmount
+    );
 
     enum ApplicationStatus {
         Applied,
@@ -52,7 +74,7 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
     // State variables
     Scholarship[] public scholarships;
     Application[] public applications;
-    
+
     // Mappings for efficient queries
     mapping(address => uint256[]) public userApplications;
     mapping(address => uint256[]) public userScholarships;
@@ -60,7 +82,7 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
     mapping(uint256 => mapping(address => bool)) public hasApplied;
 
     // Constants
-    uint256 public constant MIN_GRANT_AMOUNT = 0.01 ether;  // 10^16 wei (0.01 ETH)
+    uint256 public constant MIN_GRANT_AMOUNT = 0.01 ether; // 10^16 wei (0.01 ETH)
     uint256 public constant MAX_GRANTS = 1000;
 
     // Modifiers
@@ -71,12 +93,18 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
 
     modifier scholarshipActive(uint256 scholarshipId) {
         require(scholarships[scholarshipId].active, "Scholarship not active");
-        require(block.timestamp < scholarships[scholarshipId].endDate, "Scholarship expired");
+        require(
+            block.timestamp < scholarships[scholarshipId].endDate,
+            "Scholarship expired"
+        );
         _;
     }
 
     modifier onlyScholarshipCreator(uint256 scholarshipId) {
-        require(msg.sender == scholarships[scholarshipId].creator, "Not scholarship creator");
+        require(
+            msg.sender == scholarships[scholarshipId].creator,
+            "Not scholarship creator"
+        );
         _;
     }
 
@@ -91,28 +119,33 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
         require(bytes(name).length > 0, "Empty name");
         require(bytes(details).length > 0, "Empty details");
         require(grantAmount >= MIN_GRANT_AMOUNT, "Grant amount too low");
-        require(numberOfGrants > 0 && numberOfGrants <= MAX_GRANTS, "Invalid number of grants");
+        require(
+            numberOfGrants > 0 && numberOfGrants <= MAX_GRANTS,
+            "Invalid number of grants"
+        );
         require(endDate > block.timestamp, "Invalid end date");
-        
+
         uint256 totalAmount = grantAmount * numberOfGrants;
         require(msg.value == totalAmount, "Incorrect payment amount");
 
         uint256 scholarshipId = scholarships.length;
-        scholarships.push(Scholarship({
-            id: scholarshipId,
-            name: name,
-            details: details,
-            grantAmount: grantAmount,
-            remainingGrants: numberOfGrants,
-            totalGrants: numberOfGrants,
-            endDate: endDate,
-            creator: msg.sender,
-            active: true,
-            createdAt: block.timestamp,
-            isCancelled: false,
-            cancellationReason: "",
-            cancelledAt: 0
-        }));
+        scholarships.push(
+            Scholarship({
+                id: scholarshipId,
+                name: name,
+                details: details,
+                grantAmount: grantAmount,
+                remainingGrants: numberOfGrants,
+                totalGrants: numberOfGrants,
+                endDate: endDate,
+                creator: msg.sender,
+                active: true,
+                createdAt: block.timestamp,
+                isCancelled: false,
+                cancellationReason: "",
+                cancelledAt: 0
+            })
+        );
 
         userScholarships[msg.sender].push(scholarshipId);
         emit ScholarshipCreated(scholarshipId, msg.sender, totalAmount);
@@ -122,23 +155,29 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
         uint256 scholarshipId,
         string calldata name,
         string calldata details
-    ) external whenNotPaused nonReentrant 
-      validScholarship(scholarshipId) 
-      scholarshipActive(scholarshipId) {
+    )
+        external
+        whenNotPaused
+        nonReentrant
+        validScholarship(scholarshipId)
+        scholarshipActive(scholarshipId)
+    {
         require(bytes(name).length > 0, "Empty name");
         require(bytes(details).length > 0, "Empty details");
         require(!hasApplied[scholarshipId][msg.sender], "Already applied");
-        
+
         uint256 applicationId = applications.length;
-        applications.push(Application({
-            id: applicationId,
-            scholarshipId: scholarshipId,
-            applicant: msg.sender,
-            name: name,
-            details: details,
-            status: ApplicationStatus.Applied,
-            appliedAt: block.timestamp
-        }));
+        applications.push(
+            Application({
+                id: applicationId,
+                scholarshipId: scholarshipId,
+                applicant: msg.sender,
+                name: name,
+                details: details,
+                status: ApplicationStatus.Applied,
+                appliedAt: block.timestamp
+            })
+        );
 
         hasApplied[scholarshipId][msg.sender] = true;
         userApplications[msg.sender].push(applicationId);
@@ -149,39 +188,63 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
     function approveApplication(
         uint256 scholarshipId,
         uint256 applicationId
-    ) external whenNotPaused nonReentrant 
-      validScholarship(scholarshipId)
-      onlyScholarshipCreator(scholarshipId) {
+    )
+        external
+        whenNotPaused
+        nonReentrant
+        validScholarship(scholarshipId)
+        onlyScholarshipCreator(scholarshipId)
+    {
         Application storage application = applications[applicationId];
-        require(application.scholarshipId == scholarshipId, "Application mismatch");
-        require(application.status == ApplicationStatus.Applied, "Invalid application status");
-        
+        require(
+            application.scholarshipId == scholarshipId,
+            "Application mismatch"
+        );
+        require(
+            application.status == ApplicationStatus.Applied,
+            "Invalid application status"
+        );
+
         Scholarship storage scholarship = scholarships[scholarshipId];
         require(scholarship.remainingGrants > 0, "No remaining grants");
 
         application.status = ApplicationStatus.Approved;
         scholarship.remainingGrants--;
 
-        (bool success, ) = payable(application.applicant).call{value: scholarship.grantAmount}("");
+        (bool success, ) = payable(application.applicant).call{
+            value: scholarship.grantAmount
+        }("");
         require(success, "Transfer failed");
 
-        emit ApplicationStatusChanged(applicationId, ApplicationStatus.Approved);
-        emit GrantAwarded(scholarshipId, application.applicant, scholarship.grantAmount);
+        emit ApplicationStatusChanged(
+            applicationId,
+            ApplicationStatus.Approved
+        );
+        emit GrantAwarded(
+            scholarshipId,
+            application.applicant,
+            scholarship.grantAmount
+        );
     }
 
     function cancelScholarship(
         uint256 scholarshipId,
         string calldata reason
-    ) external whenNotPaused nonReentrant 
-      validScholarship(scholarshipId)
-      onlyScholarshipCreator(scholarshipId) {
+    )
+        external
+        whenNotPaused
+        nonReentrant
+        validScholarship(scholarshipId)
+        onlyScholarshipCreator(scholarshipId)
+    {
         Scholarship storage scholarship = scholarships[scholarshipId];
         require(scholarship.active, "Scholarship already inactive");
         require(!scholarship.isCancelled, "Scholarship already cancelled");
         require(bytes(reason).length > 0, "Must provide cancellation reason");
-        
-        uint256 refundAmount = scholarship.grantAmount * scholarship.remainingGrants;
-        
+
+        uint256 refundAmount = scholarship.grantAmount *
+            scholarship.remainingGrants;
+
         scholarship.active = false;
         scholarship.remainingGrants = 0;
         scholarship.isCancelled = true;
@@ -196,17 +259,28 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
 
     function withdrawExpiredScholarship(
         uint256 scholarshipId
-    ) external whenNotPaused nonReentrant 
-      validScholarship(scholarshipId)
-      onlyScholarshipCreator(scholarshipId) {
+    )
+        external
+        whenNotPaused
+        nonReentrant
+        validScholarship(scholarshipId)
+        onlyScholarshipCreator(scholarshipId)
+    {
         Scholarship storage scholarship = scholarships[scholarshipId];
         require(!scholarship.isCancelled, "Scholarship was cancelled");
-        require(block.timestamp >= scholarship.endDate, "Scholarship not expired");
+        require(
+            block.timestamp >= scholarship.endDate,
+            "Scholarship not expired"
+        );
         require(scholarship.remainingGrants > 0, "No grants remaining");
-        require(scholarship.active, "Scholarship already withdrawn or cancelled");
-        
-        uint256 refundAmount = scholarship.grantAmount * scholarship.remainingGrants;
-        
+        require(
+            scholarship.active,
+            "Scholarship already withdrawn or cancelled"
+        );
+
+        uint256 refundAmount = scholarship.grantAmount *
+            scholarship.remainingGrants;
+
         scholarship.active = false;
         scholarship.remainingGrants = 0;
 
@@ -221,22 +295,31 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
         return scholarships;
     }
 
-    function getApplicationsForScholarship(uint256 scholarshipId) 
-        external view validScholarship(scholarshipId) 
-        returns (Application[] memory) {
-        uint256[] memory applicationIds = scholarshipApplications[scholarshipId];
+    function getApplicationsForScholarship(
+        uint256 scholarshipId
+    )
+        external
+        view
+        validScholarship(scholarshipId)
+        returns (Application[] memory)
+    {
+        uint256[] memory applicationIds = scholarshipApplications[
+            scholarshipId
+        ];
         Application[] memory result = new Application[](applicationIds.length);
-        
+
         for (uint256 i = 0; i < applicationIds.length; i++) {
             result[i] = applications[applicationIds[i]];
         }
         return result;
     }
 
-    function getUserApplications(address user) external view returns (Application[] memory) {
+    function getUserApplications(
+        address user
+    ) external view returns (Application[] memory) {
         uint256[] memory applicationIds = userApplications[user];
         Application[] memory result = new Application[](applicationIds.length);
-        
+
         for (uint256 i = 0; i < applicationIds.length; i++) {
             result[i] = applications[applicationIds[i]];
         }
