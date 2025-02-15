@@ -5,9 +5,15 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import "@openzeppelin/contracts/utils/Address.sol";
+
 contract Descholar is ReentrancyGuard, Ownable, Pausable {
     // Constructor
     constructor(address initialOwner) Ownable(initialOwner) {}
+
+    //add custom errors
 
     // Events
     event ScholarshipCreated(
@@ -69,6 +75,7 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
         bool isCancelled;
         string cancellationReason;
         uint256 cancelledAt;
+        address tokenId; //erc20 support
     }
 
     // State variables
@@ -114,7 +121,8 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
         string calldata details,
         uint256 grantAmount,
         uint256 numberOfGrants,
-        uint256 endDate
+        uint256 endDate,
+        address tokenId
     ) external payable whenNotPaused nonReentrant {
         require(bytes(name).length > 0, "Empty name");
         require(bytes(details).length > 0, "Empty details");
@@ -125,8 +133,14 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
         );
         require(endDate > block.timestamp, "Invalid end date");
 
+        require(checkIsContract(tokenId), "Invalid token address"); // check if address is a contract
+        IERC20 token = IERC20(tokenId);
         uint256 totalAmount = grantAmount * numberOfGrants;
-        require(msg.value == totalAmount, "Incorrect payment amount");
+        require(
+            token.transferFrom(msg.sender, address(this), totalAmount),
+            "Transfer failed"
+        ); //erc20 support //TODO: custom errors
+        // require(msg.value == totalAmount, "Incorrect payment amount"); // old version
 
         uint256 scholarshipId = scholarships.length;
         scholarships.push(
@@ -143,7 +157,8 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
                 createdAt: block.timestamp,
                 isCancelled: false,
                 cancellationReason: "",
-                cancelledAt: 0
+                cancelledAt: 0,
+                tokenId: tokenId
             })
         );
 
@@ -211,6 +226,7 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
         application.status = ApplicationStatus.Approved;
         scholarship.remainingGrants--;
 
+        //rewrite here for erc20
         (bool success, ) = payable(application.applicant).call{
             value: scholarship.grantAmount
         }("");
@@ -284,6 +300,7 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
         scholarship.active = false;
         scholarship.remainingGrants = 0;
 
+        //rewrite here for erc20
         (bool success, ) = payable(msg.sender).call{value: refundAmount}("");
         require(success, "Refund transfer failed");
 
@@ -333,5 +350,16 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
 
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    //private functions - helpers
+    function checkIsContract(
+        address target
+    ) private view returns (bool isContract) {
+        if (target.code.length == 0) {
+            isContract = false;
+        } else {
+            isContract = true;
+        }
     }
 }

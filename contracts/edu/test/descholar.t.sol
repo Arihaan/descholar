@@ -5,6 +5,24 @@ import "forge-std/Test.sol";
 import "../src/descholar.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+struct Scholarship {
+    //from descholar.sol
+    uint256 id;
+    string name;
+    string details;
+    uint256 grantAmount;
+    uint256 remainingGrants;
+    uint256 totalGrants;
+    uint256 endDate;
+    address creator;
+    bool active;
+    uint256 createdAt;
+    bool isCancelled;
+    string cancellationReason;
+    uint256 cancelledAt;
+    address tokenId; //erc20 support
+}
+
 contract MockERC20 is ERC20 {
     constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
 
@@ -14,7 +32,7 @@ contract MockERC20 is ERC20 {
 }
 
 contract DescholarTest is Test {
-    descholar public descholarContract;
+    Descholar public descholarContract;
     MockERC20 public mockToken;
     address public admin = address(0x1);
     uint256 public grantAmount = 1000 * 10 ** 18;
@@ -27,7 +45,7 @@ contract DescholarTest is Test {
         // Mint tokens to admin
         mockToken.mint(admin, grantAmount * availableGrants);
         // Deploy descholar contract
-        descholarContract = new descholar();
+        descholarContract = new Descholar(admin);
         // Deal admin some ETH
         vm.deal(admin, grantAmount * availableGrants);
     }
@@ -38,11 +56,17 @@ contract DescholarTest is Test {
             id: 0,
             name: "Test Scholarship",
             details: "A test scholarship.",
-            available_grants: availableGrants,
-            student_grant_amount: int256(grantAmount),
-            end_date: block.timestamp + 30 days,
-            admin: admin,
-            token: address(mockToken)
+            grantAmount: grantAmount,
+            remainingGrants: availableGrants,
+            totalGrants: availableGrants,
+            endDate: block.timestamp + 30 days,
+            creator: admin,
+            active: true,
+            createdAt: block.timestamp,
+            isCancelled: false,
+            cancellationReason: "",
+            cancelledAt: 0,
+            tokenId: address(mockToken)
         });
 
         // Prank as admin
