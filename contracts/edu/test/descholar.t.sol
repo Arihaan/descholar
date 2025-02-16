@@ -4,24 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "../src/descholar.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-struct Scholarship {
-    //from descholar.sol
-    uint256 id;
-    string name;
-    string details;
-    uint256 grantAmount;
-    uint256 remainingGrants;
-    uint256 totalGrants;
-    uint256 endDate;
-    address creator;
-    bool active;
-    uint256 createdAt;
-    bool isCancelled;
-    string cancellationReason;
-    uint256 cancelledAt;
-    address tokenId; //erc20 support
-}
+import {Scholarship, ApplicationStatus} from "../src/descholar.utilities.sol";
 
 contract MockERC20 is ERC20 {
     constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
@@ -81,20 +64,30 @@ contract DescholarTest is Test {
         totalAmount = grantAmount * availableGrants;
 
         // Call post_scholarship with correct Ether
-        descholarContract.post_scholarship{value: totalAmount}(scholarship);
+        descholarContract.postScholarship{value: totalAmount}(
+            scholarship.name,
+            scholarship.details,
+            scholarship.grantAmount,
+            scholarship.totalGrants,
+            scholarship.endDate,
+            scholarship.tokenId
+        );
 
         // Stop prank
         vm.stopPrank();
 
         // Verify scholarship is added
         Scholarship memory storedScholarship = descholarContract
-            .get_schoolarships()[0];
+            .getScholarships()[0];
 
-        assertEq(storedScholarship.name, "Test Scholarship");
-        assertEq(storedScholarship.available_grants, availableGrants);
-        assertEq(storedScholarship.student_grant_amount, int256(grantAmount));
-        assertEq(storedScholarship.admin, admin);
-        assertEq(storedScholarship.token, address(mockToken));
+        assert(
+            keccak256(bytes(storedScholarship.name)) ==
+                keccak256(bytes("Test Scholarship"))
+        );
+        assert(storedScholarship.remainingGrants == availableGrants);
+        assert(storedScholarship.grantAmount == uint256(grantAmount));
+        assert(storedScholarship.creator == admin);
+        assert(storedScholarship.tokenId == address(mockToken));
 
         // Verify tokens are transferred to descholar contract
         uint256 contractBalance = mockToken.balanceOf(
