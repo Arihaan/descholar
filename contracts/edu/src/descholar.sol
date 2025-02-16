@@ -6,8 +6,9 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Scholarship, ApplicationStatus} from "./descholar.utilities.sol";
 
-import "@openzeppelin/contracts/utils/Address.sol";
+// import "@openzeppelin/contracts/utils/Address.sol";
 
 contract Descholar is ReentrancyGuard, Ownable, Pausable {
     // Constructor
@@ -45,12 +46,6 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
         uint256 refundAmount
     );
 
-    enum ApplicationStatus {
-        Applied,
-        Approved,
-        Rejected
-    }
-
     struct Application {
         uint256 id;
         uint256 scholarshipId;
@@ -59,23 +54,6 @@ contract Descholar is ReentrancyGuard, Ownable, Pausable {
         string details;
         ApplicationStatus status;
         uint256 appliedAt;
-    }
-
-    struct Scholarship {
-        uint256 id;
-        string name;
-        string details;
-        uint256 grantAmount;
-        uint256 remainingGrants;
-        uint256 totalGrants;
-        uint256 endDate;
-        address creator;
-        bool active;
-        uint256 createdAt;
-        bool isCancelled;
-        string cancellationReason;
-        uint256 cancelledAt;
-        address tokenId; //erc20 support
     }
 
     // State variables
