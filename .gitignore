@@ -132,3 +132,6 @@ dist
 # build of contracts
 contracts/stellarship/target/
 contracts/descholar/target/
+
+# local temporary contracts 
+temp_contracts/

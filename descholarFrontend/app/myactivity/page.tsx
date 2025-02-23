@@ -6,6 +6,7 @@ import { useContractInteraction } from "../hooks/useContractInteraction";
 import { useAccount } from "wagmi";
 import { getReadableErrorMessage } from '../utils/errorMessages';
 import Notification from '../components/Notification';
+import { ethers } from "ethers";
 
 interface Application {
   id: number;
@@ -24,6 +25,9 @@ interface ScholarshipDetails {
   isCancelled: boolean;
   cancellationReason: string;
   cancelledAt: Date | null;
+  tokenSymbol: string;
+  tokenId: string;
+  tokenUrl: string;
 }
 
 interface CreatedScholarship {
@@ -36,6 +40,9 @@ interface CreatedScholarship {
   isCancelled: boolean;
   cancellationReason: string;
   cancelledAt: Date | null;
+  tokenSymbol: string;
+  tokenId: string;
+  tokenUrl: string;
 }
 
 interface ScholarshipApplication {
@@ -85,11 +92,12 @@ const MyActivity = () => {
   }, [isInitialized, address]);
 
   const fetchUserActivity = async () => {
+    if (!address) return;
     try {
       setLoading(true);
-      const data = await getUserActivity(address!);
+      const data = await getUserActivity(address);
       setApplications(data.applications);
-      setCreatedScholarships(data.createdScholarships);
+      setCreatedScholarships(data.scholarships);
     } catch (error) {
       console.error('Error fetching user activity:', error);
     } finally {
@@ -378,7 +386,7 @@ const MyActivity = () => {
                             </svg>
                             <div>
                               <p className="text-green-200 text-sm">
-                                {application.grantAmount} EDU has been transferred to your wallet
+                                {application.grantAmount} {application.scholarship?.tokenSymbol || 'EDU'} has been transferred to your wallet
                               </p>
                             </div>
                           </div>
@@ -423,9 +431,24 @@ const MyActivity = () => {
                                 ID: {scholarship.id}
                               </span>
                             </div>
-                            <span className="text-sm text-orange-400 font-semibold">
-                              {scholarship.grantAmount} EDU
-                            </span>
+                            <div className="space-y-3">
+                              <p className="text-gray-300 text-sm flex justify-between">
+                                <span>Grant Amount:</span>
+                                <span className="text-orange-400 font-semibold">
+                                  {scholarship.grantAmount} {scholarship.tokenSymbol}
+                                </span>
+                              </p>
+                              {scholarship.tokenId !== ethers.ZeroAddress && (
+                                <a
+                                  href={scholarship.tokenUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-orange-400 hover:text-orange-300 transition-colors block"
+                                >
+                                  Token: {scholarship.tokenId.slice(0, 6)}...{scholarship.tokenId.slice(-4)}
+                                </a>
+                              )}
+                            </div>
                           </div>
                           <div className="flex justify-between text-sm text-gray-300">
                             <span>{scholarship.remainingGrants} Grants Remaining</span>
@@ -480,9 +503,24 @@ const MyActivity = () => {
                                 ID: {scholarship.id}
                               </span>
                             </div>
-                            <span className="text-sm text-orange-400 font-semibold">
-                              {scholarship.grantAmount} EDU
-                            </span>
+                            <div className="space-y-3">
+                              <p className="text-gray-300 text-sm flex justify-between">
+                                <span>Grant Amount:</span>
+                                <span className="text-orange-400 font-semibold">
+                                  {scholarship.grantAmount} {scholarship.tokenSymbol}
+                                </span>
+                              </p>
+                              {scholarship.tokenId !== ethers.ZeroAddress && (
+                                <a
+                                  href={scholarship.tokenUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-orange-400 hover:text-orange-300 transition-colors block"
+                                >
+                                  Token: {scholarship.tokenId.slice(0, 6)}...{scholarship.tokenId.slice(-4)}
+                                </a>
+                              )}
+                            </div>
                           </div>
                           <div className="flex justify-between text-sm text-gray-300">
                             {scholarship.isCancelled ? (
@@ -548,9 +586,23 @@ const MyActivity = () => {
                         Scholarship ID: {selectedApplication.scholarshipId}
                       </span>
                     </div>
-                    <p className="text-orange-400 text-sm mt-2">
-                      Grant Amount: {selectedApplication.grantAmount} EDU
-                    </p>
+                    <div className="bg-gray-800 p-4 rounded-xl">
+                      <h3 className="text-white font-semibold mb-2">Grant Amount</h3>
+                      <p className="text-gray-300">
+                        {selectedApplication.grantAmount} {selectedApplication.scholarship?.tokenSymbol}
+                        {selectedApplication.scholarship?.tokenId !== ethers.ZeroAddress && (
+                          <a
+                            href={selectedApplication.scholarship.tokenUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-orange-400 hover:text-orange-300 transition-colors block mt-1"
+                          >
+                            Token: {selectedApplication.scholarship.tokenId.slice(0, 6)}...
+                            {selectedApplication.scholarship.tokenId.slice(-4)}
+                          </a>
+                        )}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="bg-gray-800 p-4 rounded-xl">

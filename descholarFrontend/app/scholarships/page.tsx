@@ -5,6 +5,7 @@ import { useContractInteraction } from "../hooks/useContractInteraction";
 import { useAccount } from "wagmi";
 import Notification from '../components/Notification';
 import { getReadableErrorMessage } from '../utils/errorMessages';
+import { ethers } from "ethers";
 
 interface Scholarship {
   id: number;
@@ -17,6 +18,10 @@ interface Scholarship {
   creator: string;
   active: boolean;
   createdAt: Date;
+  tokenSymbol: string;
+  tokenId: string;
+  tokenUrl?: string;
+  creatorUrl?: string;
 }
 
 const Scholarships = () => {
@@ -253,28 +258,43 @@ const Scholarships = () => {
                 className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl cursor-pointer"
                 onClick={() => handleScholarshipSelect(scholarship)}
               >
-                {/* Scholarship ID Badge */}
                 <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-xl font-semibold text-white">
-                    {scholarship.name}
-                  </h2>
-                  <span className="px-2 py-1 bg-gray-800 rounded-lg text-xs text-gray-400">
-                    ID: {scholarship.id}
-                  </span>
+                  <h3 className="text-lg font-medium text-white">{scholarship.name}</h3>
+                  <div className="flex flex-col items-end">
+                    <div className="space-y-3">
+                      <p className="text-gray-300 text-sm flex justify-between">
+                        <span>Grant Amount:</span>
+                        <span className="text-orange-400 font-semibold">
+                          {scholarship.grantAmount} {scholarship.tokenSymbol}
+                        </span>
+                      </p>
+                      {scholarship.tokenId !== ethers.ZeroAddress && (
+                        <a 
+                          href={scholarship.tokenUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-orange-400 hover:text-orange-300 transition-colors"
+                        >
+                          Token: {scholarship.tokenId.slice(0, 6)}...{scholarship.tokenId.slice(-4)}
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-3">
-                  <p className="text-gray-300 text-sm flex justify-between">
-                    <span>Grant Amount:</span>
-                    <span className="text-orange-400 font-semibold">
-                      {scholarship.grantAmount} EDU
-                    </span>
-                  </p>
-                  <p className="text-gray-300 text-sm flex justify-between">
-                    <span>Available Grants:</span>
-                    <span>
-                      {scholarship.remainingGrants} / {scholarship.totalGrants}
-                    </span>
-                  </p>
+                <p className="text-gray-300 mb-4">{scholarship.details}</p>
+                <div className="flex justify-between text-sm text-gray-300">
+                  <span>{scholarship.remainingGrants} Grants Remaining</span>
+                  <span>Ends: {scholarship.endDate.toLocaleDateString()}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-300">
+                  <a 
+                    href={scholarship.creatorUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-gray-400 hover:text-gray-300 transition-colors"
+                  >
+                    Created by: {scholarship.creator.slice(0, 6)}...{scholarship.creator.slice(-4)}
+                  </a>
                 </div>
               </motion.div>
             ))}
@@ -333,23 +353,24 @@ const Scholarships = () => {
                 className="bg-gray-900 p-8 rounded-2xl max-w-2xl w-full mx-auto border border-gray-700"
                 onClick={(e) => e.stopPropagation()}
               >
-                <h2 className="text-2xl font-bold mb-4 text-white">
-                  {selectedScholarship.name}
-                </h2>
+                <h2 className="text-2xl font-bold text-white mb-2">{selectedScholarship.name}</h2>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-orange-400 font-semibold">
+                    {selectedScholarship.grantAmount} {selectedScholarship.tokenSymbol}
+                  </span>
+                  {selectedScholarship.tokenId !== ethers.ZeroAddress && (
+                    <span className="text-sm text-gray-400">
+                      (Token: {selectedScholarship.tokenId.slice(0, 6)}...{selectedScholarship.tokenId.slice(-4)})
+                    </span>
+                  )}
+                </div>
                 <div className="space-y-4">
                   <p className="text-gray-300">{selectedScholarship.details}</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-gray-300">
                       <p className="font-semibold">Grant Amount</p>
                       <p className="text-orange-400">
-                        {selectedScholarship.grantAmount} EDU
-                      </p>
-                    </div>
-                    <div className="text-gray-300">
-                      <p className="font-semibold">Available Grants</p>
-                      <p>
-                        {selectedScholarship.remainingGrants} /{" "}
-                        {selectedScholarship.totalGrants}
+                        {selectedScholarship.grantAmount} {selectedScholarship.tokenSymbol}
                       </p>
                     </div>
                     <div className="text-gray-300">

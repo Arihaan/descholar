@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { FiCheck, FiX, FiAlertTriangle } from "react-icons/fi";
 
 interface NotificationProps {
-  message: string;
+  message: string | React.ReactNode;
   type: 'success' | 'error';
   isVisible: boolean;
   onClose: () => void;

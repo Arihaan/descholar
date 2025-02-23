@@ -1,7 +1,7 @@
 import { ethers, Contract as EthersContract } from 'ethers';
 import { useEffect, useState } from 'react';
 
-const CONTRACT_ADDRESS = '0x7820AB9a78FEb626b9CA0A06331aF8e200d69bF2';
+const CONTRACT_ADDRESS = '0x653bf4b959101e008A3251A960C46e8C6c1138B3';
 const CONTRACT_ABI = [
     // Events
     "event ScholarshipCreated(uint256 indexed scholarshipId, address indexed creator, uint256 totalAmount)",
@@ -12,11 +12,11 @@ const CONTRACT_ABI = [
     "event ScholarshipWithdrawn(uint256 indexed scholarshipId, uint256 refundAmount)",
     
     // View Functions
-    "function getScholarships() external view returns (tuple(uint256 id, string name, string details, uint256 grantAmount, uint256 remainingGrants, uint256 totalGrants, uint256 endDate, address creator, bool active, uint256 createdAt, bool isCancelled, string cancellationReason, uint256 cancelledAt)[] memory)",
+    "function getScholarships() external view returns (tuple(uint256 id, string name, string details, uint256 grantAmount, uint256 remainingGrants, uint256 totalGrants, uint256 endDate, address creator, bool active, uint256 createdAt, bool isCancelled, string cancellationReason, uint256 cancelledAt, address tokenId)[] memory)",
     "function getUserApplications(address user) external view returns (tuple(uint256 id, uint256 scholarshipId, address applicant, string name, string details, uint8 status, uint256 appliedAt)[] memory)",
     
     // State Changing Functions
-    "function postScholarship(string calldata name, string calldata details, uint256 grantAmount, uint256 numberOfGrants, uint256 endDate) external payable",
+    "function postScholarship(string calldata name, string calldata details, uint256 grantAmount, uint256 numberOfGrants, uint256 endDate, address tokenId) external payable",
     "function applyForScholarship(uint256 scholarshipId, string calldata name, string calldata details) external",
     "function approveApplication(uint256 scholarshipId, uint256 applicationId) external",
     "function cancelScholarship(uint256 scholarshipId, string calldata reason) external",
@@ -41,24 +41,29 @@ export const useContractInteraction = () => {
                 const provider = new ethers.JsonRpcProvider("https://open-campus-codex-sepolia.drpc.org");
                 
                 // Create read-only contract instance
-                const readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider) as Contract;
+                const readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
                 setContract(readOnlyContract);
-                setIsInitialized(true);
 
                 // If wallet is connected, add signer
-                if (typeof window.ethereum !== 'undefined') {
+                if (typeof window !== 'undefined' && window.ethereum) {
                     const walletProvider = new ethers.BrowserProvider(window.ethereum);
-                    const network = await walletProvider.getNetwork();
-                    
-                    if (network.chainId === BigInt(656476)) {
-                        const signer = await walletProvider.getSigner();
-                        setSigner(signer);
+                    try {
+                        const network = await walletProvider.getNetwork();
                         
-                        // Create contract instance with signer for write operations
-                        const contractWithSigner = readOnlyContract.connect(signer) as Contract;
-                        setContract(contractWithSigner);
+                        if (network.chainId === BigInt(656476)) {
+                            const walletSigner = await walletProvider.getSigner();
+                            setSigner(walletSigner);
+                            
+                            // Create contract instance with signer for write operations
+                            const contractWithSigner = readOnlyContract.connect(walletSigner);
+                            setContract(contractWithSigner);
+                        }
+                    } catch (error) {
+                        console.error('Error getting signer:', error);
+                        // Still set initialized to true if we have read-only access
                     }
                 }
+                setIsInitialized(true);
             } catch (error) {
                 console.error('Error initializing contract:', error);
                 // Still set initialized to true if we have read-only access
@@ -79,28 +84,64 @@ export const useContractInteraction = () => {
             const result = await contract.getScholarships();
             console.log('Raw scholarships data:', result);
 
+            // Create a cache for token decimals
+            const tokenDecimalsCache: { [key: string]: number } = {};
+
             // The result is an array where each element is an array of values
-            // We need to parse it according to the struct fields order
             const scholarships = Array.isArray(result) ? result : [result];
             
-            const formattedScholarships = scholarships.map((scholarship: any) => {
+            const formattedScholarships = await Promise.all(scholarships.map(async (scholarship: any) => {
                 console.log('Processing scholarship:', scholarship);
+                
+                let formattedAmount = scholarship[3]; // Default to raw amount
+                let tokenSymbol = 'EDU';
+
+                if (scholarship[13] !== ethers.ZeroAddress) {
+                    try {
+                        // Get token decimals if not cached
+                        if (!tokenDecimalsCache[scholarship[13]]) {
+                            const tokenContract = new ethers.Contract(
+                                scholarship[13],
+                                ["function decimals() view returns (uint8)", "function symbol() view returns (string)"],
+                                contract.runner
+                            );
+                            const decimals = await tokenContract.decimals();
+                            const symbol = await tokenContract.symbol();
+                            tokenDecimalsCache[scholarship[13]] = decimals;
+                            tokenSymbol = symbol;
+                        }
+                        
+                        // Format amount using correct decimals
+                        formattedAmount = ethers.formatUnits(scholarship[3], tokenDecimalsCache[scholarship[13]]);
+                    } catch (error) {
+                        console.error('Error getting token info:', error);
+                        tokenSymbol = 'ERC20';
+                    }
+                } else {
+                    formattedAmount = ethers.formatEther(scholarship[3]);
+                }
+
                 return {
-                    id: Number(scholarship[0]),          // uint256 id
-                    name: scholarship[1],                // string name
-                    details: scholarship[2],             // string details
-                    grantAmount: ethers.formatEther(scholarship[3]), // uint256 grantAmount
-                    remainingGrants: Number(scholarship[4]), // uint256 remainingGrants
-                    totalGrants: Number(scholarship[5]),     // uint256 totalGrants
-                    endDate: new Date(Number(scholarship[6]) * 1000), // uint256 endDate
-                    creator: scholarship[7],             // address creator
-                    active: scholarship[8],              // bool active
-                    createdAt: new Date(Number(scholarship[9]) * 1000), // uint256 createdAt
+                    id: Number(scholarship[0]),
+                    name: scholarship[1],
+                    details: scholarship[2],
+                    grantAmount: formattedAmount,
+                    remainingGrants: Number(scholarship[4]),
+                    totalGrants: Number(scholarship[5]),
+                    endDate: new Date(Number(scholarship[6]) * 1000),
+                    creator: scholarship[7],
+                    creatorUrl: `https://edu-chain-testnet.blockscout.com/address/${scholarship[7]}`,
+                    active: scholarship[8],
+                    createdAt: new Date(Number(scholarship[9]) * 1000),
                     isCancelled: scholarship[10],
                     cancellationReason: scholarship[11],
-                    cancelledAt: scholarship[12] > 0 ? new Date(Number(scholarship[12]) * 1000) : null
+                    cancelledAt: scholarship[12] > 0 ? new Date(Number(scholarship[12]) * 1000) : null,
+                    tokenId: scholarship[13],
+                    tokenUrl: scholarship[13] !== ethers.ZeroAddress ? 
+                        `https://edu-chain-testnet.blockscout.com/token/${scholarship[13]}` : null,
+                    tokenSymbol: tokenSymbol
                 };
-            });
+            }));
             
             console.log('Formatted scholarships:', formattedScholarships);
             return formattedScholarships;
@@ -115,35 +156,81 @@ export const useContractInteraction = () => {
         details: string,
         grantAmount: string,
         numberOfGrants: number,
-        endDate: Date
+        endDate: Date,
+        tokenId: string = ethers.ZeroAddress
     ) => {
-        if (!contract || !signer) throw new Error('Contract not initialized');
+        if (!contract) {
+            throw new Error('Contract not initialized');
+        }
+        if (!signer) {
+            throw new Error('Please connect your wallet');
+        }
+
+        // Basic validation
+        if (numberOfGrants <= 0) {
+            throw new Error('Number of grants must be greater than 0');
+        }
+        if (parseFloat(grantAmount) <= 0) {
+            throw new Error('Grant amount must be greater than 0');
+        }
         
         try {
-            const grantAmountWei = ethers.parseEther(grantAmount);
-            const totalAmount = grantAmountWei * BigInt(numberOfGrants);
-            // Convert to Unix timestamp in seconds
             const unixEndDate = Math.floor(endDate.getTime() / 1000);
 
-            console.log('Creating scholarship with params:', {
-                name,
-                details,
-                grantAmountWei: grantAmountWei.toString(),
-                numberOfGrants,
-                unixEndDate,
-                totalAmount: totalAmount.toString()
-            });
+            if (tokenId === ethers.ZeroAddress) {
+                // Native token payment
+                const grantAmountWei = ethers.parseEther(grantAmount);
+                const totalAmount = grantAmountWei * BigInt(numberOfGrants);
 
-            const tx = await contract.postScholarship(
-                name,
-                details,
-                grantAmountWei,
-                numberOfGrants,
-                unixEndDate,
-                { value: totalAmount }
-            );
-            await tx.wait();
-            return tx.hash;
+                const tx = await contract.postScholarship(
+                    name,
+                    details,
+                    grantAmountWei,
+                    numberOfGrants,
+                    unixEndDate,
+                    tokenId,
+                    { value: totalAmount }
+                );
+                const receipt = await tx.wait();
+                return {
+                    hash: tx.hash,
+                    url: `https://edu-chain-testnet.blockscout.com/tx/${tx.hash}`
+                };
+            } else {
+                // ERC20 token payment
+                const erc20Contract = new ethers.Contract(
+                    tokenId,
+                    [
+                        "function approve(address spender, uint256 amount) external returns (bool)",
+                        "function decimals() view returns (uint8)",
+                        "function symbol() view returns (string)"
+                    ],
+                    signer
+                );
+                
+                const decimals = await erc20Contract.decimals();
+                const grantAmountInTokenDecimals = ethers.parseUnits(grantAmount, decimals);
+                const totalAmount = grantAmountInTokenDecimals * BigInt(numberOfGrants);
+
+                // Approve contract to spend tokens
+                const approveTx = await erc20Contract.approve(CONTRACT_ADDRESS, totalAmount);
+                await approveTx.wait();
+
+                // Create scholarship
+                const tx = await contract.postScholarship(
+                    name,
+                    details,
+                    grantAmountInTokenDecimals,
+                    numberOfGrants,
+                    unixEndDate,
+                    tokenId
+                );
+                const receipt = await tx.wait();
+                return {
+                    hash: tx.hash,
+                    url: `https://edu-chain-testnet.blockscout.com/tx/${tx.hash}`
+                };
+            }
         } catch (error) {
             console.error('Error creating scholarship:', error);
             throw error;
@@ -151,53 +238,98 @@ export const useContractInteraction = () => {
     };
 
     const getUserActivity = async (address: string) => {
-        if (!contract) return { applications: [], createdScholarships: [] };
-        
+        if (!contract) return { applications: [], scholarships: [] };
         try {
-            const [applications, allScholarships] = await Promise.all([
-                contract.getUserApplications(address),
-                contract.getScholarships()
-            ]);
+            // Create a cache for token decimals and symbols
+            const tokenCache: { [key: string]: { decimals: number; symbol: string } } = {};
 
-            // Create a map of scholarship IDs to their full details
-            const scholarshipMap = allScholarships.reduce((map: {[key: string]: any}, s: any) => {
-                map[Number(s[0])] = {
-                    name: s[1],
-                    grantAmount: ethers.formatEther(s[3]),
-                    isCancelled: s[10],
-                    cancellationReason: s[11],
-                    cancelledAt: s[12] > 0 ? new Date(Number(s[12]) * 1000) : null
-                };
-                return map;
-            }, {});
+            // Get user applications
+            const applications = await contract.getUserApplications(address);
+            
+            // Get all scholarships to match with applications
+            const allScholarships = await contract.getScholarships();
+            
+            // Create a map of scholarships by ID for quick lookup
+            const scholarshipMap = new Map();
+            
+            // Process scholarships with correct token decimals
+            for (const scholarship of allScholarships) {
+                let formattedAmount = scholarship[3];
+                let tokenSymbol = 'EDU';
+                
+                if (scholarship[13] !== ethers.ZeroAddress) {
+                    try {
+                        if (!tokenCache[scholarship[13]]) {
+                            const tokenContract = new ethers.Contract(
+                                scholarship[13],
+                                [
+                                    "function decimals() view returns (uint8)",
+                                    "function symbol() view returns (string)"
+                                ],
+                                contract.runner
+                            );
+                            const decimals = await tokenContract.decimals();
+                            const symbol = await tokenContract.symbol();
+                            tokenCache[scholarship[13]] = { decimals, symbol };
+                        }
+                        formattedAmount = ethers.formatUnits(
+                            scholarship[3],
+                            tokenCache[scholarship[13]].decimals
+                        );
+                        tokenSymbol = tokenCache[scholarship[13]].symbol;
+                    } catch (error) {
+                        console.error('Error getting token info:', error);
+                        tokenSymbol = 'ERC20';
+                    }
+                } else {
+                    formattedAmount = ethers.formatEther(scholarship[3]);
+                }
+
+                scholarshipMap.set(Number(scholarship[0]), {
+                    id: Number(scholarship[0]),
+                    name: scholarship[1],
+                    details: scholarship[2],
+                    grantAmount: formattedAmount,
+                    remainingGrants: Number(scholarship[4]),
+                    totalGrants: Number(scholarship[5]),
+                    endDate: new Date(Number(scholarship[6]) * 1000),
+                    creator: scholarship[7],
+                    creatorUrl: `https://edu-chain-testnet.blockscout.com/address/${scholarship[7]}`,
+                    active: scholarship[8],
+                    createdAt: new Date(Number(scholarship[9]) * 1000),
+                    isCancelled: scholarship[10],
+                    cancellationReason: scholarship[11],
+                    cancelledAt: scholarship[12] > 0 ? new Date(Number(scholarship[12]) * 1000) : null,
+                    tokenId: scholarship[13],
+                    tokenUrl: scholarship[13] !== ethers.ZeroAddress ? 
+                        `https://edu-chain-testnet.blockscout.com/token/${scholarship[13]}` : undefined,
+                    tokenSymbol: tokenSymbol
+                });
+            }
+
+            // Format applications with scholarship data
+            const formattedApplications = applications.map((app: any) => ({
+                id: Number(app[0]),
+                scholarshipId: Number(app[1]),
+                applicant: app[2],
+                name: app[3],
+                details: app[4],
+                status: Number(app[5]),
+                appliedAt: new Date(Number(app[6]) * 1000),
+                scholarship: scholarshipMap.get(Number(app[1]))
+            }));
+
+            // Get user's created scholarships
+            const createdScholarships = Array.from(scholarshipMap.values())
+                .filter((s: any) => s.creator.toLowerCase() === address.toLowerCase());
 
             return {
-                applications: applications.map((a: any) => ({
-                    id: Number(a.id),
-                    scholarshipId: Number(a.scholarshipId),
-                    name: scholarshipMap[Number(a.scholarshipId)]?.name || 'Unknown Scholarship',
-                    details: a.details,
-                    status: ['Applied', 'Approved', 'Rejected'][Number(a.status)],
-                    appliedAt: new Date(Number(a.appliedAt) * 1000),
-                    grantAmount: scholarshipMap[Number(a.scholarshipId)]?.grantAmount || '0',
-                    scholarship: scholarshipMap[Number(a.scholarshipId)] // Include full scholarship details
-                })),
-                createdScholarships: allScholarships
-                    .filter((s: any) => s[7].toLowerCase() === address.toLowerCase())
-                    .map((s: any) => ({
-                        id: Number(s[0]),
-                        name: s[1],
-                        grantAmount: ethers.formatEther(s[3]),
-                        remainingGrants: Number(s[4]),
-                        endDate: new Date(Number(s[6]) * 1000),
-                        isCancelled: s[10],
-                        cancellationReason: s[11],
-                        cancelledAt: s[12] > 0 ? new Date(Number(s[12]) * 1000) : null
-                    }))
+                applications: formattedApplications,
+                scholarships: createdScholarships
             };
         } catch (error) {
             console.error('Error fetching user activity:', error);
-            return { applications: [], createdScholarships: [] };
+            return { applications: [], scholarships: [] };
         }
     };
 

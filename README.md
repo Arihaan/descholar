@@ -102,7 +102,7 @@ Descholar is built using modern web3 technologies:
 
 ## Contract Information
 
-- **Contract Address**: `0x7820AB9a78FEb626b9CA0A06331aF8e200d69bF2`
+- **Contract Address**: `0xE4A47394E4553D93D588E014B8857Be629943DF7`
 - **Network**: EDU Chain Testnet
 
 ---

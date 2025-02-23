@@ -5,6 +5,7 @@ import { useContractInteraction } from "../hooks/useContractInteraction";
 import { useAccount } from "wagmi";
 import Notification from '../components/Notification';
 import { getReadableErrorMessage } from '../utils/errorMessages';
+import { ethers } from "ethers";
 
 const CreateScholarshipPage = () => {
   const [scholarship, setScholarship] = useState({
@@ -29,6 +30,12 @@ const CreateScholarshipPage = () => {
   const { createScholarship, isInitialized } = useContractInteraction();
   const { address } = useAccount();
 
+  // Add state for token selection
+  const [useERC20, setUseERC20] = useState(false);
+  const [tokenAddress, setTokenAddress] = useState('');
+  const [tokenSymbol, setTokenSymbol] = useState('');
+  const [isValidatingToken, setIsValidatingToken] = useState(false);
+
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
@@ -39,12 +46,37 @@ const CreateScholarshipPage = () => {
         name === "numberOfGrants"
           ? value === ""
             ? ""
-            : Math.min(1000, Math.max(0, parseInt(value) || 0))
+            : Math.max(1, parseInt(value) || 0)
           : name === "grantAmount"
           ? value
           : value,
     }));
   }
+
+  // Add token validation function
+  const validateToken = async (address: string) => {
+    if (!address) return;
+    setIsValidatingToken(true);
+    try {
+      const provider = new ethers.JsonRpcProvider("https://open-campus-codex-sepolia.drpc.org");
+      const tokenContract = new ethers.Contract(
+        address,
+        ["function symbol() view returns (string)"],
+        provider
+      );
+      const symbol = await tokenContract.symbol();
+      setTokenSymbol(symbol);
+      showNotification(`Token validated: ${symbol}`, 'success');
+      return true;
+    } catch (error) {
+      console.error('Error validating token:', error);
+      showNotification('Invalid token address', 'error');
+      setTokenSymbol('');
+      return false;
+    } finally {
+      setIsValidatingToken(false);
+    }
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,14 +97,14 @@ const CreateScholarshipPage = () => {
     }
 
     const numGrants = parseInt(scholarship.numberOfGrants);
-    if (!numGrants || numGrants <= 0 || numGrants > 1000) {
-      alert("Number of grants must be between 1 and 1000");
+    if (!numGrants || numGrants <= 0) {
+      alert("Number of grants must be greater than 0");
       return;
     }
 
     const grantAmount = parseFloat(scholarship.grantAmount);
-    if (isNaN(grantAmount) || grantAmount < 0.01) {
-      alert("Grant amount must be at least 0.01 EDU");
+    if (isNaN(grantAmount) || grantAmount <= 0) {
+      alert(`Grant amount must be greater than 0 ${useERC20 ? tokenSymbol || 'tokens' : 'EDU'}`);
       return;
     }
 
@@ -92,41 +124,60 @@ const CreateScholarshipPage = () => {
       return;
     }
 
-    endDate.setHours(23, 59, 59, 999);
+    if (useERC20 && !tokenSymbol) {
+      showNotification('Please validate the token address first', 'error');
+      return;
+    }
 
     setShowConfirmation(true);
   }
 
   async function handleConfirmCreate() {
-    try {
-      setLoading(true);
-      const endDate = new Date(scholarship.endDate);
-      endDate.setHours(23, 59, 59, 999);
+    if (!isInitialized) {
+        showNotification('Please wait for contract initialization', 'error');
+        return;
+    }
 
-      const tx = await createScholarship(
-        scholarship.name,
-        scholarship.details,
-        scholarship.grantAmount,
-        parseInt(scholarship.numberOfGrants),
-        endDate
-      );
-      
-      showNotification(
-        `Scholarship created successfully! Transaction hash: ${tx.slice(0, 10)}...`,
-        'success'
-      );
-      setTimeout(() => {
-        window.location.href = "/myactivity";
-      }, 2000);
+    try {
+        setLoading(true);
+        const endDate = new Date(scholarship.endDate);
+        endDate.setHours(23, 59, 59, 999);
+
+        const result = await createScholarship(
+            scholarship.name,
+            scholarship.details,
+            scholarship.grantAmount,
+            parseInt(scholarship.numberOfGrants),
+            endDate,
+            useERC20 ? tokenAddress : ethers.ZeroAddress
+        );
+        
+        showNotification(
+            <span>
+                Scholarship created successfully!{' '}
+                <a 
+                    href={result.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-orange-300"
+                >
+                    View transaction
+                </a>
+            </span>,
+            'success'
+        );
+        setTimeout(() => {
+            window.location.href = "/myactivity";
+        }, 2000);
     } catch (error: any) {
-      console.error("Error creating scholarship:", error);
-      showNotification(
-        getReadableErrorMessage(error),
-        'error'
-      );
+        console.error("Error creating scholarship:", error);
+        showNotification(
+            getReadableErrorMessage(error),
+            'error'
+        );
     } finally {
-      setLoading(false);
-      setShowConfirmation(false);
+        setLoading(false);
+        setShowConfirmation(false);
     }
   }
 
@@ -147,6 +198,17 @@ const CreateScholarshipPage = () => {
           <w3m-button />
         </div>
       </div>
+    );
+  }
+
+  if (!isInitialized) {
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center relative">
+            <div className="text-white text-center">
+                <h2 className="text-2xl font-bold mb-4">Initializing</h2>
+                <p className="text-gray-400">Please wait while we connect to the contract...</p>
+            </div>
+        </div>
     );
   }
 
@@ -240,7 +302,7 @@ const CreateScholarshipPage = () => {
               >
                 <span>Number of Grants *</span>
                 <span className="text-gray-400 text-xs bg-gray-800 px-2 py-1 rounded-lg">
-                  Max: 1000
+                    Must be greater than 0
                 </span>
               </label>
               <input
@@ -250,7 +312,6 @@ const CreateScholarshipPage = () => {
                 value={scholarship.numberOfGrants}
                 onChange={handleChange}
                 min="1"
-                max="1000"
                 step="1"
                 className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
                 required
@@ -262,9 +323,9 @@ const CreateScholarshipPage = () => {
                 htmlFor="grantAmount"
                 className="block text-white mb-2 text-sm flex items-center justify-between"
               >
-                <span>Grant Amount per Student (EDU) *</span>
+                <span>Grant Amount per Student ({useERC20 ? tokenSymbol || 'tokens' : 'EDU'}) *</span>
                 <span className="text-gray-400 text-xs bg-gray-800 px-2 py-1 rounded-lg">
-                  Min: 0.01
+                    Must be greater than 0
                 </span>
               </label>
               <input
@@ -273,31 +334,84 @@ const CreateScholarshipPage = () => {
                 name="grantAmount"
                 value={scholarship.grantAmount}
                 onChange={handleChange}
-                min="0.01"
-                step="any"
+                min="0"
+                step="0.000000000000000001"
                 className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
                 required
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="endDate"
-                className="block text-white mb-2 text-sm"
-              >
-                End Date *
-              </label>
-              <input
-                type="date"
-                id="endDate"
-                name="endDate"
-                value={scholarship.endDate}
-                onChange={handleChange}
-                min={new Date().toISOString().split("T")[0]}
-                className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  htmlFor="endDate"
+                  className="block text-white mb-2 text-sm"
+                >
+                  End Date *
+                </label>
+                <input
+                  type="date"
+                  id="endDate"
+                  name="endDate"
+                  value={scholarship.endDate}
+                  onChange={handleChange}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
+                  required
+                />
+              </div>
             </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="useERC20"
+                checked={useERC20}
+                onChange={(e) => {
+                  setUseERC20(e.target.checked);
+                  if (!e.target.checked) {
+                    setTokenAddress('');
+                    setTokenSymbol('');
+                  }
+                }}
+                className="rounded border-gray-700 bg-gray-800 text-orange-500 focus:ring-orange-500"
+              />
+              <label htmlFor="useERC20" className="text-white">
+                Use ERC20 Token Instead of EDU
+              </label>
+            </div>
+
+            {useERC20 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-2 mt-4"
+              >
+                <label className="text-white">Token Address</label>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={tokenAddress}
+                    onChange={(e) => setTokenAddress(e.target.value)}
+                    placeholder="Enter ERC20 token address"
+                    className="w-full px-4 py-2 bg-gray-800 rounded-xl border border-gray-700 text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  />
+                  <button
+                    onClick={() => validateToken(tokenAddress)}
+                    disabled={isValidatingToken || !tokenAddress}
+                    className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 rounded-xl text-white transition-colors"
+                  >
+                    {isValidatingToken ? 'Validating...' : 'Validate'}
+                  </button>
+                </div>
+                {tokenSymbol && (
+                  <p className="text-green-400 text-sm">
+                    Token Symbol: {tokenSymbol}
+                  </p>
+                )}
+              </motion.div>
+            )}
 
             <button
               type="submit"
@@ -328,25 +442,25 @@ const CreateScholarshipPage = () => {
                   <div className="bg-gray-800 p-4 rounded-xl">
                     <h3 className="text-white font-semibold mb-2">Total Cost</h3>
                     <p className="text-orange-400 font-semibold">
-                      {parseFloat(scholarship.grantAmount) * parseInt(scholarship.numberOfGrants)} EDU
+                        {parseFloat(scholarship.grantAmount) * parseInt(scholarship.numberOfGrants)} {useERC20 ? tokenSymbol || 'tokens' : 'EDU'}
                     </p>
                     <p className="text-sm text-gray-400 mt-1">
-                      ({scholarship.grantAmount} EDU × {scholarship.numberOfGrants} grants)
+                        ({scholarship.grantAmount} {useERC20 ? tokenSymbol || 'tokens' : 'EDU'} × {scholarship.numberOfGrants} grants)
                     </p>
                   </div>
 
                   <div className="bg-orange-900/30 border border-orange-700/50 p-4 rounded-xl">
                     <div className="flex items-start space-x-2">
-                      <svg className="w-6 h-6 text-orange-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <div>
-                        <p className="text-orange-200 font-medium">Important Notice</p>
-                        <p className="text-orange-200/80 text-sm mt-1">
-                          This will require a transaction to create the scholarship and deposit the total grant amount.
-                          Make sure you have enough EDU tokens in your wallet.
-                        </p>
-                      </div>
+                        <svg className="w-6 h-6 text-orange-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <p className="text-orange-200 font-medium">Important Notice</p>
+                            <p className="text-orange-200/80 text-sm mt-1">
+                                This will require a transaction to create the scholarship and deposit the total grant amount.
+                                Make sure you have enough {useERC20 ? tokenSymbol || 'tokens' : 'EDU'} in your wallet.
+                            </p>
+                        </div>
                     </div>
                   </div>
 
