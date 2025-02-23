@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useContractInteraction } from "../hooks/useContractInteraction";
 import { useAccount } from "wagmi";
@@ -35,6 +35,9 @@ const CreateScholarshipPage = () => {
   const [tokenAddress, setTokenAddress] = useState('');
   const [tokenSymbol, setTokenSymbol] = useState('');
   const [isValidatingToken, setIsValidatingToken] = useState(false);
+
+  // Add state for transaction result
+  const [transactionResult, setTransactionResult] = useState<{ hash: string; url: string } | null>(null);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -152,18 +155,9 @@ const CreateScholarshipPage = () => {
             useERC20 ? tokenAddress : ethers.ZeroAddress
         );
         
+        setTransactionResult(result);
         showNotification(
-            <span>
-                Scholarship created successfully!{' '}
-                <a 
-                    href={result.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-orange-300"
-                >
-                    View transaction
-                </a>
-            </span>,
+            `Scholarship created successfully! Transaction: ${result.hash.slice(0, 10)}...`,
             'success'
         );
         setTimeout(() => {
@@ -188,6 +182,15 @@ const CreateScholarshipPage = () => {
       isVisible: true,
     });
   };
+
+  useEffect(() => {
+    if (notification.isVisible && notification.type === 'success' && transactionResult?.url) {
+        const timer = setTimeout(() => {
+            window.open(transactionResult.url, '_blank');
+        }, 2000);
+        return () => clearTimeout(timer);
+    }
+  }, [notification.isVisible, notification.type, transactionResult]);
 
   if (!address) {
     return (

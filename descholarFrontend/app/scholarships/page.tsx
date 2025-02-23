@@ -6,23 +6,7 @@ import { useAccount } from "wagmi";
 import Notification from '../components/Notification';
 import { getReadableErrorMessage } from '../utils/errorMessages';
 import { ethers } from "ethers";
-
-interface Scholarship {
-  id: number;
-  name: string;
-  details: string;
-  grantAmount: string;
-  remainingGrants: number;
-  totalGrants: number;
-  endDate: Date;
-  creator: string;
-  active: boolean;
-  createdAt: Date;
-  tokenSymbol: string;
-  tokenId: string;
-  tokenUrl?: string;
-  creatorUrl?: string;
-}
+import { Scholarship } from '../types/scholarship';
 
 const Scholarships = () => {
   const [scholarships, setScholarships] = useState<Scholarship[]>([]);

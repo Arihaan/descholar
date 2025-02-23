@@ -1,5 +1,6 @@
 import { ethers, Contract as EthersContract } from 'ethers';
 import { useEffect, useState } from 'react';
+import { Scholarship } from '../types/scholarship';
 
 const CONTRACT_ADDRESS = '0x653bf4b959101e008A3251A960C46e8C6c1138B3';
 const CONTRACT_ABI = [
@@ -26,7 +27,7 @@ const CONTRACT_ABI = [
 ];
 
 // Define a type that includes both read-only and connected contracts
-type Contract = EthersContract;
+type Contract = ethers.Contract;
 
 export const useContractInteraction = () => {
     const [contract, setContract] = useState<Contract | null>(null);
@@ -55,7 +56,11 @@ export const useContractInteraction = () => {
                             setSigner(walletSigner);
                             
                             // Create contract instance with signer for write operations
-                            const contractWithSigner = readOnlyContract.connect(walletSigner);
+                            const contractWithSigner = new ethers.Contract(
+                                CONTRACT_ADDRESS,
+                                CONTRACT_ABI,
+                                walletSigner
+                            );
                             setContract(contractWithSigner);
                         }
                     } catch (error) {
@@ -138,16 +143,16 @@ export const useContractInteraction = () => {
                     cancelledAt: scholarship[12] > 0 ? new Date(Number(scholarship[12]) * 1000) : null,
                     tokenId: scholarship[13],
                     tokenUrl: scholarship[13] !== ethers.ZeroAddress ? 
-                        `https://edu-chain-testnet.blockscout.com/token/${scholarship[13]}` : null,
+                        `https://edu-chain-testnet.blockscout.com/token/${scholarship[13]}` : undefined,
                     tokenSymbol: tokenSymbol
                 };
             }));
             
             console.log('Formatted scholarships:', formattedScholarships);
-            return formattedScholarships;
+            return formattedScholarships as Scholarship[];
         } catch (error) {
             console.error('Error fetching scholarships:', error);
-            return [];
+            return [] as Scholarship[];
         }
     };
 

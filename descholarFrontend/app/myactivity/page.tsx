@@ -590,7 +590,7 @@ const MyActivity = () => {
                       <h3 className="text-white font-semibold mb-2">Grant Amount</h3>
                       <p className="text-gray-300">
                         {selectedApplication.grantAmount} {selectedApplication.scholarship?.tokenSymbol}
-                        {selectedApplication.scholarship?.tokenId !== ethers.ZeroAddress && (
+                        {selectedApplication?.scholarship?.tokenId !== ethers.ZeroAddress && selectedApplication?.scholarship?.tokenUrl && (
                           <a
                             href={selectedApplication.scholarship.tokenUrl}
                             target="_blank"
