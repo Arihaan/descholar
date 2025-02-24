@@ -154,12 +154,13 @@ const CreateScholarshipPage = () => {
             endDate,
             useERC20 ? tokenAddress : ethers.ZeroAddress
         );
-        
-        setTransactionResult(result);
+
+        const txUrl = `https://edu-chain-testnet.blockscout.com/tx/${result.hash}`;
         showNotification(
-            `Scholarship created successfully! Transaction: ${result.hash.slice(0, 10)}...`,
+            `Scholarship created successfully! View transaction: ${txUrl}`,
             'success'
         );
+
         setTimeout(() => {
             window.location.href = "/myactivity";
         }, 2000);
@@ -304,9 +305,6 @@ const CreateScholarshipPage = () => {
                 className="block text-white mb-2 text-sm flex items-center justify-between"
               >
                 <span>Number of Grants *</span>
-                <span className="text-gray-400 text-xs bg-gray-800 px-2 py-1 rounded-lg">
-                    Must be greater than 0
-                </span>
               </label>
               <input
                 type="number"
@@ -327,9 +325,6 @@ const CreateScholarshipPage = () => {
                 className="block text-white mb-2 text-sm flex items-center justify-between"
               >
                 <span>Grant Amount per Student ({useERC20 ? tokenSymbol || 'tokens' : 'EDU'}) *</span>
-                <span className="text-gray-400 text-xs bg-gray-800 px-2 py-1 rounded-lg">
-                    Must be greater than 0
-                </span>
               </label>
               <input
                 type="number"
@@ -337,7 +332,7 @@ const CreateScholarshipPage = () => {
                 name="grantAmount"
                 value={scholarship.grantAmount}
                 onChange={handleChange}
-                min="0"
+                min="0.000000000000000001"
                 step="0.000000000000000001"
                 className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
                 required

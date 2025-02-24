@@ -442,10 +442,15 @@ export const useContractInteraction = () => {
         }
     };
 
-    const checkHasApplied = async (scholarshipId: number, address: string) => {
-        if (!contract) return false;
+    const checkHasApplied = async (scholarshipId: number, address: string): Promise<boolean> => {
+        if (!contract) {
+            console.error('Contract not initialized');
+            return false;
+        }
         try {
-            return await contract.hasApplied(scholarshipId, address);
+            const hasApplied = await contract.hasApplied(scholarshipId, address);
+            console.log('Has applied check:', { scholarshipId, address, hasApplied });
+            return hasApplied;
         } catch (error) {
             console.error('Error checking application status:', error);
             return false;

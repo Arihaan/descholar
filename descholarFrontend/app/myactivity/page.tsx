@@ -7,6 +7,7 @@ import { useAccount } from "wagmi";
 import { getReadableErrorMessage } from '../utils/errorMessages';
 import Notification from '../components/Notification';
 import { ethers } from "ethers";
+import { formatDateTime } from '../utils/dateFormat';
 
 interface Application {
   id: number;
@@ -273,6 +274,40 @@ const MyActivity = () => {
     );
   };
 
+  // Add a function to get the status message and color
+  const getStatusInfo = (status: number) => {
+    switch (status) {
+      case 0:
+        return {
+          message: 'Pending',
+          color: 'text-yellow-400',
+          bgColor: 'bg-yellow-400/10',
+          borderColor: 'border-yellow-400/20'
+        };
+      case 1:
+        return {
+          message: 'Approved - Grant Awarded!',
+          color: 'text-green-400',
+          bgColor: 'bg-green-400/10',
+          borderColor: 'border-green-400/20'
+        };
+      case 2:
+        return {
+          message: 'Rejected',
+          color: 'text-red-400',
+          bgColor: 'bg-red-400/10',
+          borderColor: 'border-red-400/20'
+        };
+      default:
+        return {
+          message: 'Unknown',
+          color: 'text-gray-400',
+          bgColor: 'bg-gray-400/10',
+          borderColor: 'border-gray-400/20'
+        };
+    }
+  };
+
   if (!address) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center relative">
@@ -342,57 +377,38 @@ const MyActivity = () => {
               ) : (
                 <div className="space-y-4">
                   {applications.map((application) => (
-                    <motion.div
-                      key={application.id}
-                      whileHover={{ scale: 1.01 }}
-                      className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl"
+                    <div 
+                      key={application.id} 
+                      className="bg-gray-900 rounded-xl p-6 border border-gray-800 hover:border-gray-700 transition-colors cursor-pointer"
                       onClick={() => setSelectedApplication(application)}
                     >
                       <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-lg font-medium text-white">{application.name}</h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs bg-gray-800 px-2 py-1 rounded-lg text-gray-400">
-                              Application ID: {application.id}
+                        <h3 className="text-xl font-semibold text-white">
+                          {application.scholarship?.name}
+                        </h3>
+                        {(() => {
+                          const statusInfo = getStatusInfo(parseInt(application.status));
+                          return (
+                            <span className={`px-3 py-1 rounded-full text-sm ${statusInfo.color} ${statusInfo.bgColor} border ${statusInfo.borderColor}`}>
+                              {statusInfo.message}
                             </span>
-                            <span className="text-xs bg-gray-800 px-2 py-1 rounded-lg text-gray-400">
-                              Scholarship ID: {application.scholarshipId}
-                            </span>
-                          </div>
-                        </div>
-                        <div className={`flex items-center ${getStatusColor(application.status, application.scholarship?.isCancelled)}`}>
-                          {getStatusIcon(application.status, application.scholarship?.isCancelled)}
-                          <span>{application.scholarship?.isCancelled ? 'Cancelled' : application.status}</span>
-                        </div>
+                          );
+                        })()}
                       </div>
-                      <p className="text-sm text-gray-400 mb-2">
-                        Applied: {application.appliedAt.toLocaleDateString()}
-                      </p>
-                      {application.status === 'Approved' && (
-                        <div className="mt-3 p-3 bg-green-900/30 border border-green-700/50 rounded-lg">
-                          <div className="flex items-center space-x-2">
-                            <svg 
-                              className="w-5 h-5 text-green-500" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24"
-                            >
-                              <path 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round" 
-                                strokeWidth="2" 
-                                d="M13 10V3L4 14h7v7l9-11h-7z"
-                              />
-                            </svg>
-                            <div>
-                              <p className="text-green-200 text-sm">
-                                {application.grantAmount} {application.scholarship?.tokenSymbol || 'EDU'} has been transferred to your wallet
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </motion.div>
+                      
+                      <div className="mt-4 space-y-2 text-gray-300">
+                        <p><span className="text-gray-400">Applied on:</span> {formatDateTime(application.appliedAt)}</p>
+                        <p className="line-clamp-2"><span className="text-gray-400">Your Application:</span> {application.details}</p>
+                      </div>
+
+                      {/* Add a subtle indicator that the card is clickable */}
+                      <div className="mt-4 text-sm text-gray-400 flex items-center">
+                        <span>Click to view details</span>
+                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -574,11 +590,11 @@ const MyActivity = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <h2 className="text-2xl font-bold mb-6 text-white">Application Details</h2>
-                <div className="space-y-4">
-                  <div className="bg-gray-800 p-4 rounded-xl">
-                    <h3 className="text-white font-semibold mb-2">Scholarship</h3>
-                    <p className="text-gray-300">{selectedApplication.name}</p>
-                    <div className="flex items-center gap-2 mt-2">
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+                  {/* Scholarship Info Card */}
+                  <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/50">
+                    <h2 className="text-2xl font-bold text-white mb-2">{selectedApplication.scholarship?.name}</h2>
+                    <div className="flex items-center gap-2">
                       <span className="text-xs bg-gray-700 px-2 py-1 rounded-lg text-gray-300">
                         Application ID: {selectedApplication.id}
                       </span>
@@ -586,60 +602,88 @@ const MyActivity = () => {
                         Scholarship ID: {selectedApplication.scholarshipId}
                       </span>
                     </div>
-                    <div className="bg-gray-800 p-4 rounded-xl">
-                      <h3 className="text-white font-semibold mb-2">Grant Amount</h3>
-                      <p className="text-gray-300">
-                        {selectedApplication.grantAmount} {selectedApplication.scholarship?.tokenSymbol}
-                        {selectedApplication?.scholarship?.tokenId !== ethers.ZeroAddress && selectedApplication?.scholarship?.tokenUrl && (
-                          <a
-                            href={selectedApplication.scholarship.tokenUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-orange-400 hover:text-orange-300 transition-colors block mt-1"
-                          >
-                            Token: {selectedApplication.scholarship.tokenId.slice(0, 6)}...
-                            {selectedApplication.scholarship.tokenId.slice(-4)}
-                          </a>
-                        )}
-                      </p>
+                  </div>
+
+                  {/* Status Card */}
+                  <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-white">Status</h3>
+                      {(() => {
+                        const statusInfo = getStatusInfo(parseInt(selectedApplication.status));
+                        return (
+                          <span className={`px-3 py-1 rounded-full text-sm ${statusInfo.color} ${statusInfo.bgColor} border ${statusInfo.borderColor}`}>
+                            {statusInfo.message}
+                          </span>
+                        );
+                      })()}
                     </div>
-                  </div>
-
-                  <div className="bg-gray-800 p-4 rounded-xl">
-                    <h3 className="text-white font-semibold mb-2">Your Application</h3>
-                    <p className="text-gray-300">{selectedApplication.details}</p>
-                  </div>
-
-                  <div className="bg-gray-800 p-4 rounded-xl">
-                    <h3 className="text-white font-semibold mb-2">Status</h3>
-                    <div className={`flex items-center ${getStatusColor(selectedApplication.status, selectedApplication.scholarship?.isCancelled)}`}>
-                      {getStatusIcon(selectedApplication.status, selectedApplication.scholarship?.isCancelled)}
-                      <span>{selectedApplication.scholarship?.isCancelled ? 'Cancelled' : selectedApplication.status}</span>
-                    </div>
-                    {selectedApplication.scholarship?.isCancelled && (
-                      <div className="mt-3 p-3 bg-red-900/30 border border-red-700/50 rounded-lg">
-                        <p className="text-red-300 text-sm font-medium">
-                          This scholarship has been cancelled
-                        </p>
-                        <p className="text-red-200/80 text-sm mt-1">
-                          Reason: {selectedApplication.scholarship.cancellationReason}
-                        </p>
-                        <p className="text-red-400/60 text-xs mt-1">
-                          Cancelled on: {selectedApplication.scholarship.cancelledAt ? 
-                            selectedApplication.scholarship.cancelledAt.toLocaleDateString() : 
-                            'Unknown date'
-                          }
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="bg-gray-800 p-4 rounded-xl">
-                    <h3 className="text-white font-semibold mb-2">Applied On</h3>
-                    <p className="text-gray-300">
-                      {selectedApplication.appliedAt.toLocaleDateString()}
+                    <p className="text-gray-400 text-sm">
+                      Applied on: {formatDateTime(selectedApplication.appliedAt)}
                     </p>
                   </div>
+
+                  {/* Grant Details Card */}
+                  <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                    <h3 className="text-lg font-semibold text-white mb-4">Grant Details</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Amount:</span>
+                        <span className="text-orange-400 font-semibold">
+                          {selectedApplication.scholarship?.grantAmount} {selectedApplication.scholarship?.tokenSymbol}
+                        </span>
+                      </div>
+                      {selectedApplication?.scholarship?.tokenId !== ethers.ZeroAddress && (
+                        <div className="pt-2 border-t border-gray-700">
+                          <a
+                            href={selectedApplication.scholarship?.tokenUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
+                          >
+                            View Token Contract
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Application Details Card */}
+                  <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                    <h3 className="text-lg font-semibold text-white mb-4">Your Application</h3>
+                    <p className="text-gray-300 whitespace-pre-wrap">{selectedApplication.details}</p>
+                  </div>
+
+                  {/* Cancellation Notice Card (if applicable) */}
+                  {selectedApplication.scholarship?.isCancelled && (
+                    <div className="bg-red-900/30 p-6 rounded-xl border border-red-700/50">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-red-500/20 rounded-full">
+                          <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-red-400 mb-2">Scholarship Cancelled</h3>
+                          <p className="text-red-200/80 mb-2">
+                            {selectedApplication.scholarship.cancellationReason}
+                          </p>
+                          <p className="text-red-300/60 text-sm">
+                            Cancelled on: {selectedApplication.scholarship.cancelledAt?.toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end mt-6">
+                  <button
+                    onClick={() => setSelectedApplication(null)}
+                    className="px-6 py-3 bg-gray-800 text-white rounded-xl hover:bg-gray-700"
+                  >
+                    Close
+                  </button>
                 </div>
               </motion.div>
             </motion.div>
