@@ -116,6 +116,21 @@ const getStatusColor = (status: string, isCancelled?: boolean) => {
   }
 };
 
+const categorizeScholarships = (scholarships: Scholarship[]): { live: Scholarship[]; ended: Scholarship[] } => {
+  const live: Scholarship[] = [];
+  const ended: Scholarship[] = [];
+
+  for (const scholarship of scholarships) {
+    if (scholarship.isCancelled || new Date() > scholarship.endDate) {
+      ended.push(scholarship);
+    } else {
+      live.push(scholarship);
+    }
+  }
+
+  return { live, ended };
+};
+
 const MyActivity = () => {
   const { address } = useAccount();
   const { getUserActivity, getApplicationsForScholarship, approveApplication, cancelScholarship } = useContractInteraction();
@@ -357,148 +372,134 @@ const MyActivity = () => {
             </motion.div>
 
             {/* Created Scholarships Section */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-white mb-6">Created Scholarships</h2>
-              
-              {/* Active Scholarships */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-300 mb-4">Live Scholarships</h3>
+            <div className="space-y-8">
+              {/* Live Scholarships */}
+              <div>
+                <h3 className="text-xl font-medium text-white mb-4 flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  Live Scholarships
+                </h3>
                 <div className="space-y-4">
-                  {createdScholarships
-                    .filter(s => !s.isCancelled && new Date() <= s.endDate)
-                    .map((scholarship) => (
-                      <div
-                        key={scholarship.id}
-                        className="bg-gray-900 rounded-xl p-6 border border-gray-800 hover:border-gray-700 transition-colors cursor-pointer"
-                        onClick={() => handleScholarshipClick(scholarship)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-xl font-semibold text-white mb-2">{scholarship.name}</h3>
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-400/10 text-green-400 border border-green-400/20">
-                                Active
-                              </span>
-                              <span className="text-sm text-gray-400">
-                                Click to view applicants
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Grant Amount Display in Card */}
-                          <div className="bg-gray-800/50 rounded-lg p-4">
-                            <div className="flex items-baseline justify-center">
-                              <span className="text-2xl font-bold text-orange-400">
-                                {calculateTotalGrant(scholarship)}
-                              </span>
-                              <span className="text-orange-400 ml-2">
-                                {scholarship.tokenSymbol}
-                              </span>
-                            </div>
-                            <div className="text-center text-sm text-gray-400 mt-1">
-                              Total Grant Pool
-                            </div>
+                  {categorizeScholarships(createdScholarships).live.map((scholarship) => (
+                    <div
+                      key={scholarship.id}
+                      className="bg-gray-900 rounded-xl p-6 border border-gray-800 hover:border-gray-700 transition-colors cursor-pointer"
+                      onClick={() => handleScholarshipClick(scholarship)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-xl font-semibold text-white mb-2">{scholarship.name}</h3>
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-400/10 text-green-400 border border-green-400/20">
+                              Active
+                            </span>
+                            <span className="text-sm text-gray-400">
+                              Click to view applicants
+                            </span>
                           </div>
                         </div>
 
-                        <div className="flex justify-between items-center text-sm text-gray-400 mt-4">
-                          <span className="flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            {scholarship.remainingGrants} / {scholarship.totalGrants} grants remaining
-                          </span>
-                          <span className="flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            Ends: {formatDateTime(scholarship.endDate)}
-                          </span>
+                        {/* Grant Amount Display in Card */}
+                        <div className="bg-gray-800/50 rounded-lg p-4">
+                          <div className="flex items-baseline justify-center">
+                            <span className="text-2xl font-bold text-orange-400">
+                              {calculateTotalGrant(scholarship)}
+                            </span>
+                            <span className="text-orange-400 ml-2">
+                              {scholarship.tokenSymbol}
+                            </span>
+                          </div>
+                          <div className="text-center text-sm text-gray-400 mt-1">
+                            Total Grant Pool
+                          </div>
                         </div>
                       </div>
-                    ))}
+
+                      <div className="flex justify-between items-center text-sm text-gray-400 mt-4">
+                        <span className="flex items-center">
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {scholarship.remainingGrants} / {scholarship.totalGrants} grants remaining
+                        </span>
+                        <span className="flex items-center">
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          Ends: {formatDateTime(scholarship.endDate)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Past/Cancelled Scholarships */}
+              {/* Ended Scholarships */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-300 mb-4">Past & Cancelled Scholarships</h3>
+                <h3 className="text-xl font-medium text-white mb-4 flex items-center">
+                  <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
+                  Ended Scholarships
+                </h3>
                 <div className="space-y-4">
-                  {createdScholarships
-                    .filter(s => s.isCancelled || new Date() > s.endDate)
-                    .map((scholarship) => (
-                      <motion.div
-                        key={scholarship.id}
-                        whileHover={{ scale: 1.01 }}
-                        className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl opacity-80"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-xl font-semibold text-white mb-2">{scholarship.name}</h3>
-                            <div className="flex items-center gap-2">
-                              {scholarship.isCancelled ? (
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-400/10 text-red-400 border border-red-400/20">
-                                  Cancelled
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-400/10 text-gray-400 border border-gray-400/20">
-                                  Ended
-                                </span>
-                              )}
-                              <span className="text-sm text-gray-400">
-                                Click to view applicants
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Grant Amount Display in Card */}
-                          <div className="bg-gray-800/50 rounded-lg p-4">
-                            <div className="flex items-baseline justify-center">
-                              <span className="text-2xl font-bold text-orange-400">
-                                {calculateTotalGrant(scholarship)}
-                              </span>
-                              <span className="text-orange-400 ml-2">
-                                {scholarship.tokenSymbol}
-                              </span>
-                            </div>
-                            <div className="text-center text-sm text-gray-400 mt-1">
-                              Total Grant Pool
-                            </div>
+                  {categorizeScholarships(createdScholarships).ended.map((scholarship) => (
+                    <motion.div
+                      key={scholarship.id}
+                      whileHover={{ scale: 1.01 }}
+                      className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl opacity-80 cursor-pointer"
+                      onClick={() => {
+                        setReviewingScholarship(scholarship);
+                        fetchScholarshipApplications(scholarship.id);
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="text-lg font-medium text-white">{scholarship.name}</h3>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs bg-gray-800 px-2 py-1 rounded-lg text-gray-400 mt-2">
+                              ID: {scholarship.id}
+                            </span>
+                            <span className="text-sm text-gray-400 mt-2">
+                              Click to view applicants
+                            </span>
                           </div>
                         </div>
-
-                        <div className="flex justify-between items-center text-sm text-gray-400 mt-4">
-                          <span className="flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            {scholarship.remainingGrants} / {scholarship.totalGrants} grants awarded
-                          </span>
-                          {scholarship.isCancelled ? (
-                            <span className="flex items-center text-red-400">
-                              Cancelled on: {formatDateTime(scholarship.cancelledAt!)}
+                        <div className="space-y-3">
+                          <p className="text-gray-300 text-sm flex justify-between">
+                            <span>Total Grant Pool:</span>
+                            <span className="text-orange-400 font-semibold">
+                              {parseFloat(scholarship.grantAmount) * scholarship.totalGrants} {scholarship.tokenSymbol}
                             </span>
-                          ) : (
-                            <span className="flex items-center">
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              Ended: {formatDateTime(scholarship.endDate)}
-                            </span>
+                          </p>
+                          {scholarship.tokenId !== ethers.ZeroAddress && (
+                            <a
+                              href={scholarship.tokenUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-orange-400 hover:text-orange-300 transition-colors block"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Token: {scholarship.tokenId.slice(0, 6)}...{scholarship.tokenId.slice(-4)}
+                            </a>
                           )}
                         </div>
-
-                        <button
-                          onClick={() => {
-                            setReviewingScholarship(scholarship);
-                            fetchScholarshipApplications(scholarship.id);
-                          }}
-                          className="w-full mt-4 px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white text-sm font-semibold rounded-xl"
-                        >
-                          View Applications
-                        </button>
-                      </motion.div>
-                    ))}
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-300">
+                        {scholarship.isCancelled ? (
+                          <>
+                            <span>Cancelled</span>
+                            <span>
+                              On: {scholarship.cancelledAt ? scholarship.cancelledAt.toLocaleDateString() : 'Unknown date'}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span>All Grants Awarded</span>
+                            <span>Ended: {scholarship.endDate.toLocaleDateString()}</span>
+                          </>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
             </div>
