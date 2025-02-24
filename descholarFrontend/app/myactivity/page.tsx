@@ -8,6 +8,7 @@ import { getReadableErrorMessage } from '../utils/errorMessages';
 import Notification from '../components/Notification';
 import { ethers } from "ethers";
 import { formatDateTime } from '../utils/dateFormat';
+import { Scholarship } from '../types/scholarship';
 
 interface Application {
   id: number;
@@ -56,48 +57,113 @@ interface ScholarshipApplication {
   appliedAt: Date;
 }
 
-const MyActivity = () => {
-  const [loading, setLoading] = useState(false);
-  const [reviewLoading, setReviewLoading] = useState(false);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [createdScholarships, setCreatedScholarships] = useState<CreatedScholarship[]>([]);
-  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
-  const [reviewingScholarship, setReviewingScholarship] = useState<CreatedScholarship | null>(null);
-  const [scholarshipApplications, setScholarshipApplications] = useState<ScholarshipApplication[]>([]);
-  const [showCancellationModal, setShowCancellationModal] = useState(false);
-  const [cancellationReason, setCancellationReason] = useState("");
-  const [selectedScholarshipForCancel, setSelectedScholarshipForCancel] = useState<CreatedScholarship | null>(null);
-  const [notification, setNotification] = useState<{
-    message: string;
-    type: 'success' | 'error';
-    isVisible: boolean;
-  }>({
-    message: '',
-    type: 'success',
-    isVisible: false,
-  });
-  const { 
-    getUserActivity, 
-    getApplicationsForScholarship, 
-    approveApplication,
-    isInitialized,
-    cancelScholarship,
-    withdrawExpiredScholarship 
-  } = useContractInteraction();
-  const { address } = useAccount();
+const getStatusInfo = (status: number) => {
+  switch (status) {
+    case 1:
+      return {
+        message: 'Approved - Funds Received!',
+        color: 'text-green-400',
+        bgColor: 'bg-green-400/10',
+        borderColor: 'border-green-400/20'
+      };
+    case 2:
+      return {
+        message: 'Rejected',
+        color: 'text-red-400',
+        bgColor: 'bg-red-400/10',
+        borderColor: 'border-red-400/20'
+      };
+    case 0:
+    default:
+      return {
+        message: 'Pending',
+        color: 'text-yellow-400',
+        bgColor: 'bg-yellow-400/10',
+        borderColor: 'border-yellow-400/20'
+      };
+  }
+};
 
-  useEffect(() => {
-    if (isInitialized && address) {
-      fetchUserActivity();
-    }
-  }, [isInitialized, address]);
+const getStatusIcon = (status: string, isCancelled?: boolean) => {
+  if (isCancelled) {
+    return <FiXCircle className="w-5 h-5 mr-2 text-red-500" />;
+  }
+  switch (status) {
+    case 'Applied':
+      return <FiClock className="w-5 h-5 mr-2 text-yellow-500" />;
+    case 'Approved':
+      return <FiCheckCircle className="w-5 h-5 mr-2 text-green-500" />;
+    case 'Rejected':
+      return <FiXCircle className="w-5 h-5 mr-2 text-red-500" />;
+    default:
+      return null;
+  }
+};
+
+const getStatusColor = (status: string, isCancelled?: boolean) => {
+  if (isCancelled) {
+    return 'text-red-500';
+  }
+  switch (status) {
+    case 'Applied':
+      return 'text-yellow-500';
+    case 'Approved':
+      return 'text-green-500';
+    case 'Rejected':
+      return 'text-red-500';
+    default:
+      return 'text-gray-500';
+  }
+};
+
+const MyActivity = () => {
+  const { address } = useAccount();
+  const { getUserActivity, getApplicationsForScholarship, approveApplication, cancelScholarship } = useContractInteraction();
+  
+  // Add notification state
+  const [notification, setNotification] = useState({
+    message: '',
+    type: 'success' as 'success' | 'error',
+    isVisible: false
+  });
+
+  // Add showNotification helper
+  const showNotification = (message: string, type: 'success' | 'error') => {
+    setNotification({
+      message,
+      type,
+      isVisible: true
+    });
+  };
+
+  // Define all state variables at the top of the component
+  const [userApplications, setUserApplications] = useState<any[]>([]);
+  const [scholarshipApplications, setScholarshipApplications] = useState<any[]>([]);
+  const [createdScholarships, setCreatedScholarships] = useState<Scholarship[]>([]);
+  const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState('');
+  const [showScholarshipModal, setShowScholarshipModal] = useState(false);
+  const [reviewingScholarship, setReviewingScholarship] = useState<Scholarship | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+
+  const calculateTotalGrant = (scholarship: Scholarship) => {
+    const amount = parseFloat(scholarship.grantAmount);
+    const total = amount * scholarship.totalGrants;
+    return total.toLocaleString(undefined, { 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 6 
+    });
+  };
 
   const fetchUserActivity = async () => {
     if (!address) return;
     try {
       setLoading(true);
       const data = await getUserActivity(address);
-      setApplications(data.applications);
+      setUserApplications(data.applications);
       setCreatedScholarships(data.scholarships);
     } catch (error) {
       console.error('Error fetching user activity:', error);
@@ -106,72 +172,34 @@ const MyActivity = () => {
     }
   };
 
-  const getStatusIcon = (status: string, isCancelled?: boolean) => {
-    if (isCancelled) {
-      return <FiXCircle className="w-5 h-5 mr-2 text-red-500" />;
+  useEffect(() => {
+    if (address) {
+      fetchUserActivity();
     }
-    switch (status) {
-      case 'Applied':
-        return <FiClock className="w-5 h-5 mr-2 text-yellow-500" />;
-      case 'Approved':
-        return <FiCheckCircle className="w-5 h-5 mr-2 text-green-500" />;
-      case 'Rejected':
-        return <FiXCircle className="w-5 h-5 mr-2 text-red-500" />;
-      default:
-        return null;
-    }
-  };
+  }, [address]);
 
-  const getStatusColor = (status: string, isCancelled?: boolean) => {
-    if (isCancelled) {
-      return 'text-red-500';
-    }
-    switch (status) {
-      case 'Applied':
-        return 'text-yellow-500';
-      case 'Approved':
-        return 'text-green-500';
-      case 'Rejected':
-        return 'text-red-500';
-      default:
-        return 'text-gray-500';
-    }
-  };
-
-  const fetchScholarshipApplications = async (scholarshipId: number) => {
+  const handleScholarshipClick = async (scholarship: Scholarship) => {
+    setSelectedScholarship(scholarship);
     try {
-      setReviewLoading(true);
-      console.log('Fetching applications for scholarship ID:', scholarshipId);
-      const applications = await getApplicationsForScholarship(scholarshipId);
-      console.log('Received applications:', applications);
-      if (Array.isArray(applications)) {
-        setScholarshipApplications(applications);
-      } else {
-        console.error('Unexpected applications data format:', applications);
-        setScholarshipApplications([]);
-      }
+      const apps = await getApplicationsForScholarship(scholarship.id);
+      console.log('Raw applications:', apps); // Debug log
+      setScholarshipApplications(apps);
+      setShowScholarshipModal(true);
     } catch (error) {
-      console.error('Error fetching scholarship applications:', error);
-      alert('Failed to load applications. Please try again.');
-      setScholarshipApplications([]);
-    } finally {
-      setReviewLoading(false);
+      console.error('Error fetching applications:', error);
+      showNotification('Failed to fetch applications', 'error');
     }
-  };
-
-  const showNotification = (message: string, type: 'success' | 'error') => {
-    setNotification({
-      message,
-      type,
-      isVisible: true,
-    });
   };
 
   const handleApproveApplication = async (applicationId: number) => {
     try {
       setReviewLoading(true);
       await approveApplication(reviewingScholarship!.id, applicationId);
+      
+      // Refresh both the applications list and the overall user activity
       await fetchScholarshipApplications(reviewingScholarship!.id);
+      await fetchUserActivity(); // Add this line to refresh all data
+      
       showNotification('Application approved successfully!', 'success');
     } catch (error: any) {
       console.error('Error approving application:', error);
@@ -184,139 +212,53 @@ const MyActivity = () => {
     }
   };
 
-  const categorizeScholarships = (scholarships: CreatedScholarship[]) => {
-    const now = new Date();
-    return {
-      live: scholarships.filter(s => 
-        !s.isCancelled && 
-        s.remainingGrants > 0 && 
-        new Date(s.endDate) > now
-      ),
-      ended: scholarships.filter(s => 
-        s.isCancelled || 
-        s.remainingGrants === 0 || 
-        new Date(s.endDate) <= now
-      )
-    };
+  const handleCancelClick = (scholarship: Scholarship) => {
+    setSelectedScholarship(scholarship);
+    setShowCancelModal(true);
   };
 
-  const handleCancelScholarship = async () => {
-    if (!selectedScholarshipForCancel || !cancellationReason.trim()) return;
-    
+  const handleConfirmCancel = async () => {
+    if (!selectedScholarship || !cancellationReason.trim()) return;
+    try {
+      const hash = await cancelScholarship(selectedScholarship.id, cancellationReason);
+      showNotification(`Scholarship cancelled successfully! Transaction: ${hash}`, 'success');
+      setShowCancelModal(false);
+      setCancellationReason('');
+      fetchUserActivity();
+    } catch (error) {
+      console.error('Error cancelling scholarship:', error);
+      showNotification('Failed to cancel scholarship', 'error');
+    }
+  };
+
+  const handleApplicationClick = (application: any) => {
+    setSelectedApplication(application);
+  };
+
+  const fetchScholarshipApplications = async (scholarshipId: number) => {
     try {
       setReviewLoading(true);
-      await cancelScholarship(selectedScholarshipForCancel.id, cancellationReason);
-      showNotification('Scholarship cancelled successfully!', 'success');
-      await fetchUserActivity();
-      setShowCancellationModal(false);
-      setSelectedScholarshipForCancel(null);
-      setCancellationReason("");
-    } catch (error: any) {
-      console.error('Error cancelling scholarship:', error);
-      showNotification(getReadableErrorMessage(error), 'error');
+      console.log('Fetching applications for scholarship ID:', scholarshipId);
+      const applications = await getApplicationsForScholarship(scholarshipId);
+      console.log('Received applications:', applications);
+      if (Array.isArray(applications)) {
+        setScholarshipApplications(applications);
+        setShowScholarshipModal(true);
+      } else {
+        console.error('Unexpected applications data format:', applications);
+        setScholarshipApplications([]);
+      }
+    } catch (error) {
+      console.error('Error fetching scholarship applications:', error);
+      showNotification('Failed to load applications', 'error');
+      setScholarshipApplications([]);
     } finally {
       setReviewLoading(false);
     }
   };
 
-  const handleWithdrawExpired = async (scholarshipId: number) => {
-    try {
-      setLoading(true);
-      const tx = await withdrawExpiredScholarship(scholarshipId);
-      showNotification('Funds withdrawn successfully!', 'success');
-      await fetchUserActivity(); // Refresh data
-    } catch (error: any) {
-      console.error('Error withdrawing funds:', error);
-      showNotification(getReadableErrorMessage(error), 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const renderScholarshipActions = (scholarship: any) => {
-    const isExpired = new Date() > scholarship.endDate;
-    const hasRemainingGrants = scholarship.remainingGrants > 0;
-
-    return (
-      <div className="mt-4 space-y-2">
-        {!scholarship.isCancelled && !isExpired && (
-          <button
-            onClick={() => {
-              setSelectedScholarshipForCancel(scholarship);
-              setShowCancellationModal(true);
-            }}
-            className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-          >
-            Cancel Scholarship
-          </button>
-        )}
-        
-        {isExpired && hasRemainingGrants && !scholarship.isCancelled && (
-          <button
-            onClick={() => handleWithdrawExpired(scholarship.id)}
-            className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
-          >
-            Withdraw Remaining Funds
-          </button>
-        )}
-
-        {scholarship.isCancelled && (
-          <div className="p-3 bg-red-900/30 border border-red-700/50 rounded-lg">
-            <p className="text-red-300 text-sm">
-              Cancelled: {scholarship.cancellationReason}
-            </p>
-            <p className="text-red-400/60 text-xs mt-1">
-              {new Date(scholarship.cancelledAt).toLocaleDateString()}
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Add a function to get the status message and color
-  const getStatusInfo = (status: number) => {
-    switch (status) {
-      case 0:
-        return {
-          message: 'Pending',
-          color: 'text-yellow-400',
-          bgColor: 'bg-yellow-400/10',
-          borderColor: 'border-yellow-400/20'
-        };
-      case 1:
-        return {
-          message: 'Approved - Grant Awarded!',
-          color: 'text-green-400',
-          bgColor: 'bg-green-400/10',
-          borderColor: 'border-green-400/20'
-        };
-      case 2:
-        return {
-          message: 'Rejected',
-          color: 'text-red-400',
-          bgColor: 'bg-red-400/10',
-          borderColor: 'border-red-400/20'
-        };
-      default:
-        return {
-          message: 'Unknown',
-          color: 'text-gray-400',
-          bgColor: 'bg-gray-400/10',
-          borderColor: 'border-gray-400/20'
-        };
-    }
-  };
-
-  if (!address) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center relative">
-        <div className="text-white text-center">
-          <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
-          <p className="text-gray-400">Please connect your wallet to view your activity</p>
-        </div>
-      </div>
-    );
+  if (loading) {
+    return <div className="text-center py-8">Loading...</div>;
   }
 
   return (
@@ -370,17 +312,17 @@ const MyActivity = () => {
               className="mb-12"
             >
               <h2 className="text-2xl font-semibold mb-6 text-white">My Applications</h2>
-              {applications.length === 0 ? (
+              {userApplications.length === 0 ? (
                 <div className="text-gray-400 text-center py-8">
                   You haven't applied to any scholarships yet
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {applications.map((application) => (
+                  {userApplications.map((application) => (
                     <div 
                       key={application.id} 
                       className="bg-gray-900 rounded-xl p-6 border border-gray-800 hover:border-gray-700 transition-colors cursor-pointer"
-                      onClick={() => setSelectedApplication(application)}
+                      onClick={() => handleApplicationClick(application)}
                     >
                       <div className="flex justify-between items-start mb-4">
                         <h3 className="text-xl font-semibold text-white">
@@ -415,160 +357,151 @@ const MyActivity = () => {
             </motion.div>
 
             {/* Created Scholarships Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <h2 className="text-2xl font-semibold mb-6 text-white">Created Scholarships</h2>
-              {createdScholarships.length === 0 ? (
-                <div className="text-gray-400 text-center py-8">
-                  You haven't created any scholarships yet
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  {/* Live Scholarships */}
-                  <div>
-                    <h3 className="text-xl font-medium text-white mb-4 flex items-center">
-                      <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                      Live Scholarships
-                    </h3>
-                    <div className="space-y-4">
-                      {categorizeScholarships(createdScholarships).live.map((scholarship) => (
-                        <motion.div
-                          key={scholarship.id}
-                          whileHover={{ scale: 1.01 }}
-                          className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl"
-                        >
-                          <div className="flex items-center justify-between mb-4">
-                            <div>
-                              <h3 className="text-lg font-medium text-white">{scholarship.name}</h3>
-                              <span className="text-xs bg-gray-800 px-2 py-1 rounded-lg text-gray-400 mt-2 inline-block">
-                                ID: {scholarship.id}
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-white mb-6">Created Scholarships</h2>
+              
+              {/* Active Scholarships */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-300 mb-4">Live Scholarships</h3>
+                <div className="space-y-4">
+                  {createdScholarships
+                    .filter(s => !s.isCancelled && new Date() <= s.endDate)
+                    .map((scholarship) => (
+                      <div
+                        key={scholarship.id}
+                        className="bg-gray-900 rounded-xl p-6 border border-gray-800 hover:border-gray-700 transition-colors cursor-pointer"
+                        onClick={() => handleScholarshipClick(scholarship)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="text-xl font-semibold text-white mb-2">{scholarship.name}</h3>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-400/10 text-green-400 border border-green-400/20">
+                                Active
+                              </span>
+                              <span className="text-sm text-gray-400">
+                                Click to view applicants
                               </span>
                             </div>
-                            <div className="space-y-3">
-                              <p className="text-gray-300 text-sm flex justify-between">
-                                <span>Grant Amount:</span>
-                                <span className="text-orange-400 font-semibold">
-                                  {scholarship.grantAmount} {scholarship.tokenSymbol}
-                                </span>
-                              </p>
-                              {scholarship.tokenId !== ethers.ZeroAddress && (
-                                <a
-                                  href={scholarship.tokenUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-orange-400 hover:text-orange-300 transition-colors block"
-                                >
-                                  Token: {scholarship.tokenId.slice(0, 6)}...{scholarship.tokenId.slice(-4)}
-                                </a>
-                              )}
-                            </div>
                           </div>
-                          <div className="flex justify-between text-sm text-gray-300">
-                            <span>{scholarship.remainingGrants} Grants Remaining</span>
-                            {scholarship.isCancelled ? (
-                              <span className="text-red-400">Cancelled</span>
-                            ) : (
-                              <span>Ends: {scholarship.endDate.toLocaleDateString()}</span>
-                            )}
-                          </div>
-                          <div className="flex gap-2 mt-4">
-                            <button
-                              onClick={() => {
-                                setReviewingScholarship(scholarship);
-                                fetchScholarshipApplications(scholarship.id);
-                              }}
-                              className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-sm font-semibold rounded-xl"
-                            >
-                              Review Applications
-                            </button>
-                            <button
-                              onClick={() => {
-                                setSelectedScholarshipForCancel(scholarship);
-                                setShowCancellationModal(true);
-                              }}
-                              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
 
-                  {/* Ended Scholarships */}
-                  <div>
-                    <h3 className="text-xl font-medium text-white mb-4 flex items-center">
-                      <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
-                      Ended Scholarships
-                    </h3>
-                    <div className="space-y-4">
-                      {categorizeScholarships(createdScholarships).ended.map((scholarship) => (
-                        <motion.div
-                          key={scholarship.id}
-                          whileHover={{ scale: 1.01 }}
-                          className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl opacity-80"
-                        >
-                          <div className="flex items-center justify-between mb-4">
-                            <div>
-                              <h3 className="text-lg font-medium text-white">{scholarship.name}</h3>
-                              <span className="text-xs bg-gray-800 px-2 py-1 rounded-lg text-gray-400 mt-2 inline-block">
-                                ID: {scholarship.id}
+                          {/* Grant Amount Display in Card */}
+                          <div className="bg-gray-800/50 rounded-lg p-4">
+                            <div className="flex items-baseline justify-center">
+                              <span className="text-2xl font-bold text-orange-400">
+                                {calculateTotalGrant(scholarship)}
+                              </span>
+                              <span className="text-orange-400 ml-2">
+                                {scholarship.tokenSymbol}
                               </span>
                             </div>
-                            <div className="space-y-3">
-                              <p className="text-gray-300 text-sm flex justify-between">
-                                <span>Grant Amount:</span>
-                                <span className="text-orange-400 font-semibold">
-                                  {scholarship.grantAmount} {scholarship.tokenSymbol}
-                                </span>
-                              </p>
-                              {scholarship.tokenId !== ethers.ZeroAddress && (
-                                <a
-                                  href={scholarship.tokenUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-orange-400 hover:text-orange-300 transition-colors block"
-                                >
-                                  Token: {scholarship.tokenId.slice(0, 6)}...{scholarship.tokenId.slice(-4)}
-                                </a>
-                              )}
+                            <div className="text-center text-sm text-gray-400 mt-1">
+                              Total Grant Pool
                             </div>
                           </div>
-                          <div className="flex justify-between text-sm text-gray-300">
-                            {scholarship.isCancelled ? (
-                              <>
-                                <span>Cancelled</span>
-                                <span>
-                                  On: {scholarship.cancelledAt ? scholarship.cancelledAt.toLocaleDateString() : 'Unknown date'}
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <span>All Grants Awarded</span>
-                                <span>Ended: {scholarship.endDate.toLocaleDateString()}</span>
-                              </>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => {
-                              setReviewingScholarship(scholarship);
-                              fetchScholarshipApplications(scholarship.id);
-                            }}
-                            className="w-full mt-4 px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white text-sm font-semibold rounded-xl"
-                          >
-                            View Applications
-                          </button>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
+                        </div>
+
+                        <div className="flex justify-between items-center text-sm text-gray-400 mt-4">
+                          <span className="flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {scholarship.remainingGrants} / {scholarship.totalGrants} grants remaining
+                          </span>
+                          <span className="flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Ends: {formatDateTime(scholarship.endDate)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                 </div>
-              )}
-            </motion.div>
+              </div>
+
+              {/* Past/Cancelled Scholarships */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-300 mb-4">Past & Cancelled Scholarships</h3>
+                <div className="space-y-4">
+                  {createdScholarships
+                    .filter(s => s.isCancelled || new Date() > s.endDate)
+                    .map((scholarship) => (
+                      <motion.div
+                        key={scholarship.id}
+                        whileHover={{ scale: 1.01 }}
+                        className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl opacity-80"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="text-xl font-semibold text-white mb-2">{scholarship.name}</h3>
+                            <div className="flex items-center gap-2">
+                              {scholarship.isCancelled ? (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-400/10 text-red-400 border border-red-400/20">
+                                  Cancelled
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-400/10 text-gray-400 border border-gray-400/20">
+                                  Ended
+                                </span>
+                              )}
+                              <span className="text-sm text-gray-400">
+                                Click to view applicants
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Grant Amount Display in Card */}
+                          <div className="bg-gray-800/50 rounded-lg p-4">
+                            <div className="flex items-baseline justify-center">
+                              <span className="text-2xl font-bold text-orange-400">
+                                {calculateTotalGrant(scholarship)}
+                              </span>
+                              <span className="text-orange-400 ml-2">
+                                {scholarship.tokenSymbol}
+                              </span>
+                            </div>
+                            <div className="text-center text-sm text-gray-400 mt-1">
+                              Total Grant Pool
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center text-sm text-gray-400 mt-4">
+                          <span className="flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {scholarship.remainingGrants} / {scholarship.totalGrants} grants awarded
+                          </span>
+                          {scholarship.isCancelled ? (
+                            <span className="flex items-center text-red-400">
+                              Cancelled on: {formatDateTime(scholarship.cancelledAt!)}
+                            </span>
+                          ) : (
+                            <span className="flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              Ended: {formatDateTime(scholarship.endDate)}
+                            </span>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setReviewingScholarship(scholarship);
+                            fetchScholarshipApplications(scholarship.id);
+                          }}
+                          className="w-full mt-4 px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white text-sm font-semibold rounded-xl"
+                        >
+                          View Applications
+                        </button>
+                      </motion.div>
+                    ))}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -689,137 +622,243 @@ const MyActivity = () => {
             </motion.div>
           )}
 
-          {/* Review Applications Modal */}
-          {reviewingScholarship && (
+          {/* Add Cancellation Modal */}
+          {showCancelModal && selectedScholarship && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-              onClick={() => setReviewingScholarship(null)}
+              className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
+              onClick={() => setShowCancelModal(false)}
             >
               <motion.div
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.95 }}
-                className="bg-gray-900 p-8 rounded-2xl max-w-4xl w-full mx-auto border border-gray-700"
+                className="bg-gray-900 p-6 rounded-xl max-w-md w-full border border-gray-700"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">{reviewingScholarship.name}</h2>
-                    <span className="text-sm bg-gray-800 px-2 py-1 rounded-lg text-gray-400 mt-2 inline-block">
-                      Scholarship ID: {reviewingScholarship.id}
-                    </span>
-                  </div>
-                  <p className="text-gray-400">Review and approve applications</p>
+                <h3 className="text-xl font-bold text-white mb-4">Cancel Scholarship</h3>
+                <p className="text-gray-300 mb-4">
+                  Are you sure you want to cancel this scholarship? This action cannot be undone.
+                </p>
+                <input
+                  type="text"
+                  placeholder="Enter reason for cancellation"
+                  value={cancellationReason}
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                  className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg border border-gray-700 mb-4"
+                />
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => {
+                      setShowCancelModal(false);
+                      setCancellationReason('');
+                    }}
+                    className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmCancel}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    disabled={!cancellationReason.trim()}
+                  >
+                    Confirm
+                  </button>
                 </div>
-
-                {/* Add cancellation notice at the top if cancelled */}
-                {reviewingScholarship.isCancelled && (
-                  <div className="mb-6 p-4 bg-red-900/30 border border-red-700/50 rounded-xl">
-                    <p className="text-red-300 font-medium">This scholarship has been cancelled</p>
-                    <p className="text-red-200/80 text-sm mt-1">
-                      Reason: {reviewingScholarship.cancellationReason}
-                    </p>
-                    <p className="text-red-400/60 text-xs mt-1">
-                      Cancelled on: {reviewingScholarship.cancelledAt ? 
-                        reviewingScholarship.cancelledAt.toLocaleDateString() : 
-                        'Unknown date'
-                      }
-                    </p>
-                  </div>
-                )}
-
-                {reviewLoading ? (
-                  <div className="text-center text-gray-300">Loading applications...</div>
-                ) : scholarshipApplications.length === 0 ? (
-                  <div className="text-center text-gray-400 py-8">No applications received yet</div>
-                ) : (
-                  <div className="space-y-4">
-                    {scholarshipApplications.map((application) => (
-                      <div
-                        key={application.id}
-                        className="bg-gray-800 p-6 rounded-xl space-y-4"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-white font-semibold">{application.name}</h3>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs bg-gray-700 px-2 py-1 rounded-lg text-gray-300">
-                                Application ID: {application.id}
-                              </span>
-                              <p className="text-sm text-gray-400">
-                                Applied: {new Date(application.appliedAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          {/* Only show status for non-cancelled scholarships or if already approved */}
-                          {(!reviewingScholarship.isCancelled || application.status === 'Approved') && (
-                            <div className={`flex items-center ${getStatusColor(application.status)}`}>
-                              {getStatusIcon(application.status)}
-                              <span>{application.status}</span>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-gray-300">{application.details}</p>
-                        {/* Only show approve button if scholarship is not cancelled and application is pending */}
-                        {application.status === 'Applied' && !reviewingScholarship.isCancelled && (
-                          <div className="flex justify-end">
-                            <button
-                              onClick={() => handleApproveApplication(application.id)}
-                              className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-sm font-semibold rounded-xl"
-                              disabled={reviewLoading}
-                            >
-                              Approve Application
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Add Cancellation Modal */}
-        {showCancellationModal && selectedScholarshipForCancel && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-gray-900 p-8 rounded-2xl max-w-md w-full border border-gray-700">
-              <h3 className="text-xl font-bold text-white mb-4">Cancel Scholarship</h3>
-              <p className="text-gray-300 mb-4">
-                Please provide a reason for cancelling this scholarship. Remaining funds will be returned to your wallet.
-              </p>
-              <textarea
-                value={cancellationReason}
-                onChange={(e) => setCancellationReason(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 min-h-[100px]"
-                placeholder="Enter cancellation reason..."
-                required
-              />
-              <div className="flex gap-4 mt-6">
+        {showScholarshipModal && selectedScholarship && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={() => setShowScholarshipModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="bg-gray-900 p-8 rounded-2xl w-full max-w-4xl mx-auto border border-gray-700"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2">{selectedScholarship.name}</h2>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-400">
+                      Grant per person: {selectedScholarship.grantAmount} {selectedScholarship.tokenSymbol}
+                    </span>
+                    <span className="text-sm text-gray-400">
+                      Total pool: {calculateTotalGrant(selectedScholarship)} {selectedScholarship.tokenSymbol}
+                    </span>
+                  </div>
+                </div>
                 <button
-                  onClick={() => {
-                    setShowCancellationModal(false);
-                    setSelectedScholarshipForCancel(null);
-                    setCancellationReason("");
-                  }}
-                  className="flex-1 px-6 py-3 bg-gray-800 text-white rounded-xl hover:bg-gray-700"
+                  onClick={() => setShowScholarshipModal(false)}
+                  className="text-gray-400 hover:text-gray-300"
                 >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCancelScholarship}
-                  disabled={!cancellationReason.trim() || loading}
-                  className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl disabled:opacity-50"
-                >
-                  {loading ? "Processing..." : "Confirm Cancel"}
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
-            </div>
-          </div>
+
+              {/* Applications List */}
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-white">Applications</h3>
+                  {!selectedScholarship.isCancelled && new Date() <= selectedScholarship.endDate && (
+                    <button
+                      onClick={() => setShowCancelModal(true)}
+                      className="px-3 py-1 bg-red-400/10 text-red-400 rounded-lg border border-red-400/20 hover:bg-red-400/20 transition-colors"
+                    >
+                      Cancel Scholarship
+                    </button>
+                  )}
+                </div>
+
+                {scholarshipApplications.map((application) => (
+                  <div
+                    key={application.id}
+                    className="bg-gray-800 p-6 rounded-xl space-y-4"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-white font-semibold">{application.name}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs bg-gray-700 px-2 py-1 rounded-lg text-gray-300">
+                            Application ID: {application.id}
+                          </span>
+                          <p className="text-sm text-gray-400">
+                            Applied: {new Date(application.appliedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      {/* Only show status for non-cancelled scholarships or if already approved */}
+                      {(!selectedScholarship.isCancelled || application.status === 'Approved') && (
+                        <div className={`flex items-center ${getStatusColor(application.status)}`}>
+                          {getStatusIcon(application.status)}
+                          <span>{application.status}</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-gray-300">{application.details}</p>
+                    {/* Only show approve button if scholarship is not cancelled and application is pending */}
+                    {application.status === 'Applied' && !selectedScholarship.isCancelled && (
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => handleApproveApplication(application.id)}
+                          className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-sm font-semibold rounded-xl"
+                        >
+                          Approve Application
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Review Applications Modal */}
+        {reviewingScholarship && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={() => setReviewingScholarship(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="bg-gray-900 p-8 rounded-2xl max-w-4xl w-full mx-auto border border-gray-700"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">{reviewingScholarship.name}</h2>
+                  <span className="text-sm bg-gray-800 px-2 py-1 rounded-lg text-gray-400 mt-2 inline-block">
+                    Scholarship ID: {reviewingScholarship.id}
+                  </span>
+                </div>
+                <p className="text-gray-400">Review and approve applications</p>
+              </div>
+
+              {/* Add cancellation notice at the top if cancelled */}
+              {reviewingScholarship.isCancelled && (
+                <div className="mb-6 p-4 bg-red-900/30 border border-red-700/50 rounded-xl">
+                  <p className="text-red-300 font-medium">This scholarship has been cancelled</p>
+                  <p className="text-red-200/80 text-sm mt-1">
+                    Reason: {reviewingScholarship.cancellationReason}
+                  </p>
+                  <p className="text-red-400/60 text-xs mt-1">
+                    Cancelled on: {reviewingScholarship.cancelledAt ? 
+                      reviewingScholarship.cancelledAt.toLocaleDateString() : 
+                      'Unknown date'
+                    }
+                  </p>
+                </div>
+              )}
+
+              {reviewLoading ? (
+                <div className="text-center text-gray-300">Loading applications...</div>
+              ) : scholarshipApplications.length === 0 ? (
+                <div className="text-center text-gray-400 py-8">No applications received yet</div>
+              ) : (
+                <div className="space-y-4">
+                  {scholarshipApplications.map((application) => (
+                    <div
+                      key={application.id}
+                      className="bg-gray-800 p-6 rounded-xl space-y-4"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-white font-semibold">{application.name}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs bg-gray-700 px-2 py-1 rounded-lg text-gray-300">
+                              Application ID: {application.id}
+                            </span>
+                            <p className="text-sm text-gray-400">
+                              Applied: {new Date(application.appliedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        {/* Only show status for non-cancelled scholarships or if already approved */}
+                        {(!reviewingScholarship.isCancelled || application.status === 'Approved') && (
+                          <div className={`flex items-center ${getStatusColor(application.status)}`}>
+                            {getStatusIcon(application.status)}
+                            <span>{application.status}</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-gray-300">{application.details}</p>
+                      {/* Only show approve button if scholarship is not cancelled and application is pending */}
+                      {application.status === 'Applied' && !reviewingScholarship.isCancelled && (
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => handleApproveApplication(application.id)}
+                            className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-sm font-semibold rounded-xl"
+                            disabled={reviewLoading}
+                          >
+                            Approve Application
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
         )}
       </main>
     </div>
