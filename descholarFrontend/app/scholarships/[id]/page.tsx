@@ -10,14 +10,12 @@ import Notification from '../../components/Notification';
 import { getReadableErrorMessage } from '../../utils/errorMessages';
 import { FiShare2 } from 'react-icons/fi';
 import { ethers } from 'ethers';
+import { useParams } from 'next/navigation';
 
-interface PageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function ScholarshipPage({ params }: PageProps) {
+export default function ScholarshipPage() {
+  const params = useParams();
+  const id = params.id as string;
+  
   const [scholarship, setScholarship] = useState<Scholarship | null>(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
@@ -41,7 +39,7 @@ export default function ScholarshipPage({ params }: PageProps) {
       try {
         setLoading(true);
         const scholarships = await getScholarships();
-        const found = scholarships.find(s => s.id === parseInt(params.id));
+        const found = scholarships.find(s => s.id === parseInt(id));
         if (found) {
           setScholarship(found);
           if (address) {
@@ -57,7 +55,7 @@ export default function ScholarshipPage({ params }: PageProps) {
     };
 
     fetchScholarship();
-  }, [params.id, address]);
+  }, [id, address]);
 
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({
