@@ -10,8 +10,15 @@ import Notification from '../../components/Notification';
 import { getReadableErrorMessage } from '../../utils/errorMessages';
 import { FiShare2 } from 'react-icons/fi';
 import { ethers } from 'ethers';
+import { Params } from 'next/dist/shared/lib/router/utils/route-matcher';
 
-export default function ScholarshipPage({ params }: { params: { id: string } }) {
+type ScholarshipPageProps = {
+  params: {
+    id: string;
+  };
+};
+
+export default function ScholarshipPage({ params }: ScholarshipPageProps) {
   const [scholarship, setScholarship] = useState<Scholarship | null>(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
