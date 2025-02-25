@@ -132,17 +132,39 @@ const categorizeScholarships = (scholarships: Scholarship[]): { live: Scholarshi
 };
 
 const MyActivity = () => {
-  const { address } = useAccount();
-  const { getUserActivity, getApplicationsForScholarship, approveApplication, cancelScholarship } = useContractInteraction();
-  
-  // Add notification state
-  const [notification, setNotification] = useState({
+  const [loading, setLoading] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [createdScholarships, setCreatedScholarships] = useState<CreatedScholarship[]>([]);
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [reviewingScholarship, setReviewingScholarship] = useState<CreatedScholarship | null>(null);
+  const [scholarshipApplications, setScholarshipApplications] = useState<ScholarshipApplication[]>([]);
+  const [showCancellationModal, setShowCancellationModal] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [selectedScholarshipForCancel, setSelectedScholarshipForCancel] = useState<CreatedScholarship | null>(null);
+  const [showScholarshipModal, setShowScholarshipModal] = useState(false);
+  const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+    isVisible: boolean;
+  }>({
     message: '',
-    type: 'success' as 'success' | 'error',
-    isVisible: false
+    type: 'success',
+    isVisible: false,
   });
 
-  // Add showNotification helper
+  const { 
+    getUserActivity, 
+    getApplicationsForScholarship, 
+    approveApplication,
+    isInitialized,
+    cancelScholarship,
+    withdrawExpiredScholarship 
+  } = useContractInteraction();
+  const { address } = useAccount();
+
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({
       message,
@@ -151,34 +173,12 @@ const MyActivity = () => {
     });
   };
 
-  // Define all state variables at the top of the component
-  const [userApplications, setUserApplications] = useState<any[]>([]);
-  const [scholarshipApplications, setScholarshipApplications] = useState<any[]>([]);
-  const [createdScholarships, setCreatedScholarships] = useState<Scholarship[]>([]);
-  const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
-  const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancellationReason, setCancellationReason] = useState('');
-  const [showScholarshipModal, setShowScholarshipModal] = useState(false);
-  const [reviewingScholarship, setReviewingScholarship] = useState<Scholarship | null>(null);
-  const [reviewLoading, setReviewLoading] = useState(false);
-
-  const calculateTotalGrant = (scholarship: Scholarship) => {
-    const amount = parseFloat(scholarship.grantAmount);
-    const total = amount * scholarship.totalGrants;
-    return total.toLocaleString(undefined, { 
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 6 
-    });
-  };
-
   const fetchUserActivity = async () => {
     if (!address) return;
     try {
       setLoading(true);
       const data = await getUserActivity(address);
-      setUserApplications(data.applications);
+      setApplications(data.applications);
       setCreatedScholarships(data.scholarships);
     } catch (error) {
       console.error('Error fetching user activity:', error);
@@ -188,10 +188,19 @@ const MyActivity = () => {
   };
 
   useEffect(() => {
-    if (address) {
+    if (address && isInitialized) {
       fetchUserActivity();
     }
-  }, [address]);
+  }, [address, isInitialized]);
+
+  const calculateTotalGrant = (scholarship: Scholarship) => {
+    const amount = parseFloat(scholarship.grantAmount);
+    const total = amount * scholarship.totalGrants;
+    return total.toLocaleString(undefined, { 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 6 
+    });
+  };
 
   const handleScholarshipClick = async (scholarship: Scholarship) => {
     setSelectedScholarship(scholarship);
@@ -272,8 +281,42 @@ const MyActivity = () => {
     }
   };
 
-  if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
+  if (!address) {
+    return (
+      <div className="min-h-screen flex flex-col relative">
+        {/* Keep the background */}
+        <div 
+          className="absolute inset-0 z-0 bg-no-repeat w-full"
+          style={{
+            backgroundImage: 'url("/resources/webpagebg.png")',
+            backgroundSize: '100% auto',
+            backgroundColor: '#10081e',
+            backgroundPosition: 'top center',
+            maxWidth: '100vw',
+          }}
+        >
+          <div className="absolute inset-0" style={{
+            background: 'linear-gradient(to bottom, rgba(16, 8, 30, 0) 0%, rgba(16, 8, 30, 0.8) 50%, rgba(16, 8, 30, 1) 100%)',
+            pointerEvents: 'none'
+          }}></div>
+        </div>
+
+        <main className="flex-grow container mx-auto px-4 py-8 relative z-10 mt-32">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-5xl font-bold mb-8 text-center text-white">
+              My Activity
+            </h1>
+            <p className="text-center text-gray-300 mb-12">
+              Please connect your wallet to view your activity
+            </p>
+          </motion.div>
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -327,13 +370,13 @@ const MyActivity = () => {
               className="mb-12"
             >
               <h2 className="text-2xl font-semibold mb-6 text-white">My Applications</h2>
-              {userApplications.length === 0 ? (
+              {applications.length === 0 ? (
                 <div className="text-gray-400 text-center py-8">
                   You haven't applied to any scholarships yet
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {userApplications.map((application) => (
+                  {applications.map((application) => (
                     <div 
                       key={application.id} 
                       className="bg-gray-900 rounded-xl p-6 border border-gray-800 hover:border-gray-700 transition-colors cursor-pointer"
@@ -624,13 +667,13 @@ const MyActivity = () => {
           )}
 
           {/* Add Cancellation Modal */}
-          {showCancelModal && selectedScholarship && (
+          {showCancellationModal && selectedScholarshipForCancel && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
-              onClick={() => setShowCancelModal(false)}
+              onClick={() => setShowCancellationModal(false)}
             >
               <motion.div
                 initial={{ scale: 0.95 }}
@@ -653,7 +696,7 @@ const MyActivity = () => {
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => {
-                      setShowCancelModal(false);
+                      setShowCancellationModal(false);
                       setCancellationReason('');
                     }}
                     className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700"
@@ -716,7 +759,7 @@ const MyActivity = () => {
                   <h3 className="text-lg font-semibold text-white">Applications</h3>
                   {!selectedScholarship.isCancelled && new Date() <= selectedScholarship.endDate && (
                     <button
-                      onClick={() => setShowCancelModal(true)}
+                      onClick={() => setShowCancellationModal(true)}
                       className="px-3 py-1 bg-red-400/10 text-red-400 rounded-lg border border-red-400/20 hover:bg-red-400/20 transition-colors"
                     >
                       Cancel Scholarship
