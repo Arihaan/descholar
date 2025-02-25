@@ -8,6 +8,7 @@ import { getReadableErrorMessage } from '../utils/errorMessages';
 import { ethers } from "ethers";
 import { Scholarship } from '../types/scholarship';
 import { formatDateTime } from '../utils/dateFormat';
+import { FiShare2, FiX } from 'react-icons/fi';
 
 const Scholarships = () => {
   const [scholarships, setScholarships] = useState<Scholarship[]>([]);
@@ -163,7 +164,7 @@ const Scholarships = () => {
       />
       {/* Background with overlay */}
       <div
-        className="absolute inset-0 z-0 bg-no-repeat w-full"
+        className="fixed inset-0 z-0 bg-no-repeat w-full"
         style={{
           backgroundImage: 'url("/resources/webpagebg.png")',
           backgroundSize: "100% auto",
@@ -249,7 +250,7 @@ const Scholarships = () => {
                   {/* Title */}
                   <h3 className="text-xl font-semibold text-white mb-4">{scholarship.name}</h3>
                   
-                  {/* Grant Amount - Made more prominent */}
+                  {/* Grant Amount */}
                   <div className="bg-gray-800/50 rounded-lg p-4 mb-4">
                     <div className="flex items-baseline justify-center">
                       <span className="text-2xl font-bold text-orange-400">
@@ -267,34 +268,14 @@ const Scholarships = () => {
                   {/* Footer Info */}
                   <div className="flex justify-between items-center text-sm text-gray-400 mt-auto">
                     <span className="flex items-center">
-                      <svg 
-                        className="w-4 h-4 mr-1" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth="2" 
-                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       {scholarship.remainingGrants} / {scholarship.totalGrants}
                     </span>
                     <span className="flex items-center">
-                      <svg 
-                        className="w-4 h-4 mr-1" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth="2" 
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       {formatDateTime(scholarship.endDate)}
                     </span>
@@ -358,25 +339,29 @@ const Scholarships = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}
-                <div className="mb-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h2 className="text-2xl font-bold text-white mb-2">{selectedScholarship.name}</h2>
-                      <span className="text-xs bg-gray-800 px-2 py-1 rounded-lg text-gray-400">
-                        ID: {selectedScholarship.id}
-                      </span>
-                    </div>
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">{selectedScholarship.name}</h2>
+                    <span className="text-sm bg-gray-800 px-2 py-1 rounded-lg text-gray-400 mt-2 inline-block">
+                      Scholarship ID: {selectedScholarship.id}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleApplyClick(selectedScholarship)}
-                      className={`px-6 py-3 rounded-xl transition-colors ${
-                        hasAppliedToScholarship[selectedScholarship.id]
-                          ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white'
-                      }`}
-                      disabled={hasAppliedToScholarship[selectedScholarship.id]}
-                      title={hasAppliedToScholarship[selectedScholarship.id] ? "You've already applied to this scholarship" : ""}
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/scholarships/${selectedScholarship.id}`);
+                        showNotification('Link copied to clipboard!', 'success');
+                      }}
+                      className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-800/50"
+                      title="Share scholarship"
                     >
-                      {hasAppliedToScholarship[selectedScholarship.id] ? 'Already Applied' : 'Apply Now'}
+                      <FiShare2 className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setSelectedScholarship(null)}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      <FiX className="w-6 h-6" />
                     </button>
                   </div>
                 </div>
@@ -450,6 +435,27 @@ const Scholarships = () => {
                     <h3 className="text-md font-semibold text-white mb-3">Description</h3>
                     <p className="text-gray-300 whitespace-pre-wrap">{selectedScholarship.details}</p>
                   </div>
+                </div>
+
+                {/* Inside the Scholarship Details Modal */}
+                <div className="flex justify-end mt-6">
+                  {!hasAppliedToScholarship[selectedScholarship.id] && (
+                    <button
+                      onClick={() => {
+                        if (!address) {
+                          setShowConnectPrompt(true);
+                        } else {
+                          setIsApplying(true);
+                        }
+                      }}
+                      className="px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-sm font-semibold rounded-xl"
+                    >
+                      Apply for Grant
+                    </button>
+                  )}
+                  {hasAppliedToScholarship[selectedScholarship.id] && (
+                    <span className="text-green-500">Already Applied</span>
+                  )}
                 </div>
               </motion.div>
             </motion.div>
@@ -574,30 +580,31 @@ const Scholarships = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <h2 className="text-2xl font-bold mb-6 text-white">
-                  Confirm Application
+                  Review Your Application
                 </h2>
-                <div className="space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
-                  <div className="bg-gray-800 p-4 rounded-xl">
-                    <h3 className="text-white font-semibold mb-2">
-                      Scholarship
-                    </h3>
+                <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+                  <div className="bg-gray-800/50 p-4 rounded-xl">
+                    <h3 className="text-white font-medium mb-2">Scholarship</h3>
                     <p className="text-gray-300">{selectedScholarship?.name}</p>
+                    <p className="text-gray-400 text-sm mt-1">
+                      Grant Amount: {selectedScholarship?.grantAmount} {selectedScholarship?.tokenSymbol}
+                    </p>
                   </div>
-                  <div className="bg-gray-800 p-4 rounded-xl">
-                    <h3 className="text-white font-semibold mb-2">Your Name</h3>
+                  
+                  <div className="bg-gray-800/50 p-4 rounded-xl">
+                    <h3 className="text-white font-medium mb-2">Your Name</h3>
                     <p className="text-gray-300">{applicationForm.name}</p>
                   </div>
-                  <div className="bg-gray-800 p-4 rounded-xl">
-                    <h3 className="text-white font-semibold mb-2">
-                      Your Application
-                    </h3>
+                  
+                  <div className="bg-gray-800/50 p-4 rounded-xl">
+                    <h3 className="text-white font-medium mb-2">Your Application</h3>
                     <p className="text-gray-300 whitespace-pre-wrap">{applicationForm.details}</p>
                   </div>
 
                   <div className="bg-orange-900/30 border border-orange-700/50 p-4 rounded-xl">
                     <div className="flex items-start space-x-2">
                       <svg
-                        className="w-6 h-6 text-orange-500 mt-0.5"
+                        className="w-6 h-6 text-orange-500 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -649,7 +656,7 @@ const Scholarships = () => {
                     onClick={() => setShowConfirmation(false)}
                     className="flex-1 px-6 py-3 bg-gray-800 text-white rounded-xl hover:bg-gray-700"
                   >
-                    Back
+                    Edit Application
                   </button>
                   <button
                     onClick={handleSubmit}

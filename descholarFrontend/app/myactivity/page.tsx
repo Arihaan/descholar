@@ -1,6 +1,6 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiClock, FiCheckCircle, FiXCircle } from "react-icons/fi";
+import { FiClock, FiCheckCircle, FiXCircle, FiShare2 } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { useContractInteraction } from "../hooks/useContractInteraction";
 import { useAccount } from "wagmi";
@@ -197,17 +197,36 @@ const MyActivity = () => {
     });
   };
 
-  const handleScholarshipClick = async (scholarship: Scholarship) => {
+  const handleScholarshipClick = (scholarship: CreatedScholarship) => {
+    // Close any other open modals first
+    setSelectedApplication(null);
+    setReviewingScholarship(null);
+    setShowCancellationModal(false);
+    
+    // Then open the selected scholarship
     setSelectedScholarship(scholarship);
-    try {
-      const apps = await getApplicationsForScholarship(scholarship.id);
-      console.log('Raw applications:', apps); // Debug log
-      setScholarshipApplications(apps);
-      setShowScholarshipModal(true);
-    } catch (error) {
-      console.error('Error fetching applications:', error);
-      showNotification('Failed to fetch applications', 'error');
-    }
+    fetchScholarshipApplications(scholarship.id);
+  };
+
+  const handleReviewScholarship = (scholarship: CreatedScholarship) => {
+    // Close any other open modals first
+    setSelectedApplication(null);
+    setSelectedScholarship(null);
+    setShowCancellationModal(false);
+    
+    // Then open the reviewing scholarship
+    setReviewingScholarship(scholarship);
+    fetchScholarshipApplications(scholarship.id);
+  };
+
+  const handleApplicationSelect = (application: Application) => {
+    // Close any other open modals first
+    setSelectedScholarship(null);
+    setReviewingScholarship(null);
+    setShowCancellationModal(false);
+    
+    // Then open the selected application
+    setSelectedApplication(application);
   };
 
   const handleApproveApplication = async (scholarshipId: number, applicationId: number) => {
@@ -250,10 +269,6 @@ const MyActivity = () => {
     }
   };
 
-  const handleApplicationClick = (application: any) => {
-    setSelectedApplication(application);
-  };
-
   const fetchScholarshipApplications = async (scholarshipId: number) => {
     try {
       setReviewLoading(true);
@@ -274,6 +289,13 @@ const MyActivity = () => {
     } finally {
       setReviewLoading(false);
     }
+  };
+
+  const handleShareScholarship = (scholarshipId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/scholarships/${scholarshipId}`;
+    navigator.clipboard.writeText(url);
+    showNotification('Link copied to clipboard!', 'success');
   };
 
   if (!address) {
@@ -375,7 +397,7 @@ const MyActivity = () => {
                     <div 
                       key={application.id} 
                       className="bg-gray-900 rounded-xl p-6 border border-gray-800 hover:border-gray-700 transition-colors cursor-pointer"
-                      onClick={() => handleApplicationClick(application)}
+                      onClick={() => handleApplicationSelect(application)}
                     >
                       <div className="flex justify-between items-start mb-4">
                         <h3 className="text-xl font-semibold text-white">
@@ -419,28 +441,35 @@ const MyActivity = () => {
                 </h3>
                 <div className="space-y-4">
                   {categorizeScholarships(createdScholarships).live.map((scholarship) => (
-                    <div
+                    <motion.div
                       key={scholarship.id}
                       className="bg-gray-900 rounded-xl p-6 border border-gray-800 hover:border-gray-700 transition-colors cursor-pointer"
                       onClick={() => handleScholarshipClick(scholarship)}
                     >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-xl font-semibold text-white mb-2">{scholarship.name}</h3>
-                          <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-400/10 text-green-400 border border-green-400/20">
-                              Active
-                            </span>
-                            <span className="text-sm text-gray-400">
-                              Click to view applicants
-                            </span>
-                          </div>
-                        </div>
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-xl font-semibold text-white">{scholarship.name}</h3>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShareScholarship(scholarship.id, e);
+                          }}
+                          className="p-2 text-gray-400 hover:text-white transition-colors"
+                          title="Share scholarship"
+                        >
+                          <FiShare2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                      
+                      <div className="mt-4 space-y-2 text-gray-300">
+                        <p><span className="text-gray-400">Active</span></p>
+                        <p className="line-clamp-2"><span className="text-gray-400">Click to view applicants</span></p>
+                      </div>
 
-                        {/* Grant Amount Display in Card */}
+                      {/* Grant Amount and Applicants Display in Card */}
+                      <div className="grid grid-cols-2 gap-4 mt-4">
                         <div className="bg-gray-800/50 rounded-lg p-4">
                           <div className="flex items-baseline justify-center">
-                            <span className="text-2xl font-bold text-orange-400">
+                            <span className="text-xl font-bold text-orange-400">
                               {calculateTotalGrant(scholarship)}
                             </span>
                             <span className="text-orange-400 ml-2">
@@ -451,23 +480,17 @@ const MyActivity = () => {
                             Total Grant Pool
                           </div>
                         </div>
+                        
+                        <div className="bg-gray-800/50 rounded-lg p-4">
+                          <div className="text-center text-xl font-bold text-white">
+                            {scholarship.totalGrants - scholarship.remainingGrants}
+                          </div>
+                          <div className="text-center text-sm text-gray-400 mt-1">
+                            Total Applicants
+                          </div>
+                        </div>
                       </div>
-
-                      <div className="flex justify-between items-center text-sm text-gray-400 mt-4">
-                        <span className="flex items-center">
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          {scholarship.remainingGrants} / {scholarship.totalGrants} grants remaining
-                        </span>
-                        <span className="flex items-center">
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          Ends: {formatDateTime(scholarship.endDate)}
-                        </span>
-                      </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
@@ -485,8 +508,7 @@ const MyActivity = () => {
                       whileHover={{ scale: 1.01 }}
                       className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl opacity-80 cursor-pointer"
                       onClick={() => {
-                        setReviewingScholarship(scholarship);
-                        fetchScholarshipApplications(scholarship.id);
+                        handleReviewScholarship(scholarship);
                       }}
                     >
                       <div className="flex items-center justify-between mb-4">
@@ -551,7 +573,7 @@ const MyActivity = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+              className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto"
               onClick={() => setSelectedApplication(null)}
             >
               <motion.div
@@ -565,8 +587,13 @@ const MyActivity = () => {
                 <div className="space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
                   {/* Scholarship Info Card */}
                   <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/50">
-                    <h2 className="text-2xl font-bold text-white mb-2">{selectedApplication.scholarship?.name}</h2>
-                    <div className="flex items-center gap-2">
+                    <a 
+                      href={`/scholarships/${selectedApplication.scholarshipId}`}
+                      className="text-2xl font-bold text-white hover:text-orange-300 transition-colors"
+                    >
+                      {selectedApplication.scholarship?.name}
+                    </a>
+                    <div className="flex items-center gap-2 mt-2">
                       <span className="text-xs bg-gray-700 px-2 py-1 rounded-lg text-gray-300">
                         Application ID: {selectedApplication.id}
                       </span>
@@ -651,7 +678,11 @@ const MyActivity = () => {
                 {/* Action Buttons */}
                 <div className="flex justify-end mt-6">
                   <button
-                    onClick={() => setSelectedApplication(null)}
+                    onClick={() => {
+                      setSelectedScholarship(null);
+                      setShowScholarshipModal(false);
+                      setScholarshipApplications([]);
+                    }}
                     className="px-6 py-3 bg-gray-800 text-white rounded-xl hover:bg-gray-700"
                   >
                     Close
@@ -716,8 +747,12 @@ const MyActivity = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            onClick={() => setShowScholarshipModal(false)}
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto"
+            onClick={() => {
+              setSelectedScholarship(null);
+              setShowScholarshipModal(false);
+              setScholarshipApplications([]);
+            }}
           >
             <motion.div
               initial={{ scale: 0.95 }}
@@ -728,24 +763,40 @@ const MyActivity = () => {
             >
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-2">{selectedScholarship.name}</h2>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-gray-400">
-                      Grant per person: {selectedScholarship.grantAmount} {selectedScholarship.tokenSymbol}
-                    </span>
-                    <span className="text-sm text-gray-400">
-                      Total pool: {calculateTotalGrant(selectedScholarship)} {selectedScholarship.tokenSymbol}
-                    </span>
-                  </div>
+                  <a 
+                    href={`/scholarships/${selectedScholarship.id}`}
+                    className="text-2xl font-bold text-white hover:text-orange-300 transition-colors"
+                  >
+                    {selectedScholarship.name}
+                  </a>
+                  <span className="text-sm bg-gray-800 px-2 py-1 rounded-lg text-gray-400 mt-2 inline-block">
+                    Scholarship ID: {selectedScholarship.id}
+                  </span>
                 </div>
-                <button
-                  onClick={() => setShowScholarshipModal(false)}
-                  className="text-gray-400 hover:text-gray-300"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleShareScholarship(selectedScholarship.id, e);
+                    }}
+                    className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-800/50"
+                    title="Share scholarship"
+                  >
+                    <FiShare2 className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedScholarship(null);
+                      setShowScholarshipModal(false);
+                      setScholarshipApplications([]);
+                    }}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               {/* Applications List */}
@@ -812,7 +863,7 @@ const MyActivity = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto"
             onClick={() => setReviewingScholarship(null)}
           >
             <motion.div
@@ -824,12 +875,40 @@ const MyActivity = () => {
             >
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">{reviewingScholarship.name}</h2>
+                  <a 
+                    href={`/scholarships/${reviewingScholarship.id}`}
+                    className="text-2xl font-bold text-white hover:text-orange-300 transition-colors"
+                  >
+                    {reviewingScholarship.name}
+                  </a>
                   <span className="text-sm bg-gray-800 px-2 py-1 rounded-lg text-gray-400 mt-2 inline-block">
                     Scholarship ID: {reviewingScholarship.id}
                   </span>
                 </div>
-                <p className="text-gray-400">Review and approve applications</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleShareScholarship(reviewingScholarship.id, e);
+                    }}
+                    className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-800/50"
+                    title="Share scholarship"
+                  >
+                    <FiShare2 className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedScholarship(null);
+                      setShowScholarshipModal(false);
+                      setScholarshipApplications([]);
+                    }}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               {/* Add cancellation notice at the top if cancelled */}
