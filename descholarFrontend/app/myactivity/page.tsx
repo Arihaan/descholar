@@ -206,14 +206,14 @@ const MyActivity = () => {
     }
   };
 
-  const handleApproveApplication = async (applicationId: number) => {
+  const handleApproveApplication = async (scholarshipId: number, applicationId: number) => {
     try {
       setReviewLoading(true);
-      await approveApplication(reviewingScholarship!.id, applicationId);
+      await approveApplication(scholarshipId, applicationId);
       
       // Refresh both the applications list and the overall user activity
-      await fetchScholarshipApplications(reviewingScholarship!.id);
-      await fetchUserActivity(); // Add this line to refresh all data
+      await fetchScholarshipApplications(scholarshipId);
+      await fetchUserActivity();
       
       showNotification('Application approved successfully!', 'success');
     } catch (error: any) {
@@ -754,7 +754,7 @@ const MyActivity = () => {
                     {application.status === 'Applied' && !selectedScholarship.isCancelled && (
                       <div className="flex justify-end">
                         <button
-                          onClick={() => handleApproveApplication(application.id)}
+                          onClick={() => handleApproveApplication(selectedScholarship.id, application.id)}
                           className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-sm font-semibold rounded-xl"
                         >
                           Approve Application
@@ -846,7 +846,7 @@ const MyActivity = () => {
                       {application.status === 'Applied' && !reviewingScholarship.isCancelled && (
                         <div className="flex justify-end">
                           <button
-                            onClick={() => handleApproveApplication(application.id)}
+                            onClick={() => handleApproveApplication(reviewingScholarship.id, application.id)}
                             className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-sm font-semibold rounded-xl"
                             disabled={reviewLoading}
                           >
