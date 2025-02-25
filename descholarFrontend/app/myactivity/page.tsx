@@ -32,19 +32,13 @@ interface ScholarshipDetails {
   tokenUrl: string;
 }
 
-interface CreatedScholarship {
-  id: number;
-  name: string;
-  grantAmount: string;
+interface CreatedScholarship extends Scholarship {
   remainingGrants: number;
-  endDate: Date;
   active: boolean;
+  endDate: Date;
   isCancelled: boolean;
   cancellationReason: string;
   cancelledAt: Date | null;
-  tokenSymbol: string;
-  tokenId: string;
-  tokenUrl: string;
 }
 
 interface ScholarshipApplication {
@@ -116,19 +110,20 @@ const getStatusColor = (status: string, isCancelled?: boolean) => {
   }
 };
 
-const categorizeScholarships = (scholarships: Scholarship[]): { live: Scholarship[]; ended: Scholarship[] } => {
-  const live: Scholarship[] = [];
-  const ended: Scholarship[] = [];
-
-  for (const scholarship of scholarships) {
-    if (scholarship.isCancelled || new Date() > scholarship.endDate) {
-      ended.push(scholarship);
-    } else {
-      live.push(scholarship);
-    }
-  }
-
-  return { live, ended };
+const categorizeScholarships = (scholarships: CreatedScholarship[]) => {
+  const now = new Date();
+  return {
+    live: scholarships.filter(s => 
+      !s.isCancelled && 
+      s.remainingGrants > 0 && 
+      new Date(s.endDate) > now
+    ),
+    ended: scholarships.filter(s => 
+      s.isCancelled || 
+      s.remainingGrants === 0 || 
+      new Date(s.endDate) <= now
+    )
+  };
 };
 
 const MyActivity = () => {
