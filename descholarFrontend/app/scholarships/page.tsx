@@ -135,7 +135,8 @@ const Scholarships = () => {
     const searchLower = searchTerm.toLowerCase();
     return (
       scholarship.name.toLowerCase().includes(searchLower) ||
-      scholarship.id.toString().includes(searchLower)
+      scholarship.id.toString().includes(searchLower) ||
+      scholarship.creatorName.toLowerCase().includes(searchLower)
     );
   });
 
@@ -201,7 +202,7 @@ const Scholarships = () => {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search by scholarship name or ID..."
+                placeholder="Search by scholarship name, creator or ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-5 py-3 bg-gray-900 bg-opacity-40 backdrop-blur-sm text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors pl-12"
@@ -248,7 +249,13 @@ const Scholarships = () => {
               >
                 <div className="flex flex-col">
                   {/* Title */}
-                  <h3 className="text-xl font-semibold text-white mb-4">{scholarship.name}</h3>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-semibold text-white">{scholarship.name}</h3>
+                    {/* Share button */}
+                  </div>
+                  <p className="text-gray-400 text-md mb-4">
+                    Created by: {scholarship.creatorName}
+                  </p>
                   
                   {/* Grant Amount */}
                   <div className="bg-gray-800/50 rounded-lg p-4 mb-4">
@@ -394,7 +401,7 @@ const Scholarships = () => {
                               rel="noopener noreferrer"
                               className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
                             >
-                              View Token Contract
+                              View ERC20 Token Contract
                             </a>
                           </div>
                         )}
@@ -423,9 +430,9 @@ const Scholarships = () => {
                         href={selectedScholarship.creatorUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-orange-400 hover:text-orange-300 transition-colors text-sm break-all"
+                        className="text-orange-400 hover:text-orange-300 transition-colors text-md break-all"
                       >
-                        {selectedScholarship.creator}
+                        {selectedScholarship.creatorName}
                       </a>
                     </div>
                   </div>

@@ -205,14 +205,16 @@ export default function ScholarshipPage() {
                 <div className="bg-gray-800/30 rounded-lg p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400">Creator:</span>
-                    <a
-                      href={scholarship.creatorUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-orange-400 hover:text-orange-300 transition-colors text-sm"
-                    >
-                      {scholarship.creator.slice(0, 6)}...{scholarship.creator.slice(-4)}
-                    </a>
+                    <div className="flex flex-col items-end">
+                      <a
+                        href={scholarship.creatorUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-orange-400 hover:text-orange-300 transition-colors text-md"
+                      >
+                        {scholarship.creatorName}
+                      </a>
+                    </div>
                   </div>
                   {scholarship.tokenId !== "0x0000000000000000000000000000000000000000" && (
                     <div className="flex items-center justify-between">
@@ -229,14 +231,26 @@ export default function ScholarshipPage() {
                   )}
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400">End Date:</span>
-                    <span className="text-gray-300 text-sm">
+                    <span className="text-gray-300 text-md">
                       {formatDateTime(scholarship.endDate)}
                     </span>
                   </div>
                 </div>
 
-                <div className="prose prose-invert max-w-none">
+                {/* Description section with heading */}
+                <div className="bg-gray-800/30 rounded-lg p-4">
+                  <h3 className="text-lg font-medium text-white mb-3">Description</h3>
                   <p className="text-gray-300 whitespace-pre-wrap">{scholarship.details}</p>
+                </div>
+
+                {/* Separator */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                    <div className="w-full border-t border-gray-700"></div>
+                  </div>
+                  <div className="relative flex justify-center">
+                    <span className="bg-gray-900 px-3 text-sm text-gray-500">Application</span>
+                  </div>
                 </div>
 
                 {/* Status messages */}

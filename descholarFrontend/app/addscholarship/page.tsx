@@ -10,6 +10,7 @@ import { ethers } from "ethers";
 const CreateScholarshipPage = () => {
   const [scholarship, setScholarship] = useState({
     name: "",
+    creatorName: "",
     details: "",
     numberOfGrants: "",
     grantAmount: "",
@@ -18,7 +19,7 @@ const CreateScholarshipPage = () => {
   const [loading, setLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [notification, setNotification] = useState<{
-    message: string;
+    message: React.ReactNode;
     type: 'success' | 'error';
     isVisible: boolean;
   }>({
@@ -148,6 +149,7 @@ const CreateScholarshipPage = () => {
 
         const result = await createScholarship(
             scholarship.name,
+            scholarship.creatorName,
             scholarship.details,
             scholarship.grantAmount,
             parseInt(scholarship.numberOfGrants),
@@ -155,10 +157,19 @@ const CreateScholarshipPage = () => {
             useERC20 ? tokenAddress : ethers.ZeroAddress
         );
 
-        const txUrl = `https://edu-chain-testnet.blockscout.com/tx/${result.hash}`;
         showNotification(
-            `Scholarship created successfully! View transaction: ${txUrl}`,
-            'success'
+          <span>
+            Scholarship created successfully! View transaction: {" "}
+            <a 
+              href={`https://edu-chain-testnet.blockscout.com/tx/${result.hash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 underline"
+            >
+              {result.hash.slice(0, 8)}...{result.hash.slice(-6)}
+            </a>
+          </span>,
+          'success'
         );
 
         setTimeout(() => {
@@ -176,7 +187,7 @@ const CreateScholarshipPage = () => {
     }
   }
 
-  const showNotification = (message: string, type: 'success' | 'error') => {
+  const showNotification = (message: React.ReactNode, type: 'success' | 'error') => {
     setNotification({
       message,
       type,
@@ -283,6 +294,24 @@ const CreateScholarshipPage = () => {
 
             <div>
               <label
+                htmlFor="creatorName"
+                className="block text-white mb-2 text-sm"
+              >
+                Creator Name / Organization *
+              </label>
+              <input
+                type="text"
+                id="creatorName"
+                name="creatorName"
+                value={scholarship.creatorName}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label
                 htmlFor="details"
                 className="block text-white mb-2 text-sm"
               >
@@ -319,46 +348,6 @@ const CreateScholarshipPage = () => {
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="grantAmount"
-                className="block text-white mb-2 text-sm flex items-center justify-between"
-              >
-                <span>Grant Amount per Student ({useERC20 ? tokenSymbol || 'tokens' : 'EDU'}) *</span>
-              </label>
-              <input
-                type="number"
-                id="grantAmount"
-                name="grantAmount"
-                value={scholarship.grantAmount}
-                onChange={handleChange}
-                min="0.000000000000000001"
-                step="0.000000000000000001"
-                className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="endDate"
-                  className="block text-white mb-2 text-sm"
-                >
-                  End Date *
-                </label>
-                <input
-                  type="date"
-                  id="endDate"
-                  name="endDate"
-                  value={scholarship.endDate}
-                  onChange={handleChange}
-                  min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
-                  required
-                />
-              </div>
-            </div>
 
             <div className="flex items-center space-x-2">
               <input
@@ -410,6 +399,49 @@ const CreateScholarshipPage = () => {
                 )}
               </motion.div>
             )}
+
+            <div>
+              <label
+                htmlFor="grantAmount"
+                className="block text-white mb-2 text-sm flex items-center justify-between"
+              >
+                <span>Grant Amount per Student ({useERC20 ? tokenSymbol || 'tokens' : 'EDU'}) *</span>
+              </label>
+              <input
+                type="number"
+                id="grantAmount"
+                name="grantAmount"
+                value={scholarship.grantAmount}
+                onChange={handleChange}
+                min="0.01"
+                step="0.01"
+                className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  htmlFor="endDate"
+                  className="block text-white mb-2 text-sm"
+                >
+                  End Date *
+                </label>
+                <input
+                  type="date"
+                  id="endDate"
+                  name="endDate"
+                  value={scholarship.endDate}
+                  onChange={handleChange}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
+                  required
+                />
+              </div>
+            </div>
+
+            
 
             <button
               type="submit"

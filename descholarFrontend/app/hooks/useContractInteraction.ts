@@ -2,7 +2,7 @@ import { ethers, Contract as EthersContract } from 'ethers';
 import { useEffect, useState } from 'react';
 import { Scholarship } from '../types/scholarship';
 
-const CONTRACT_ADDRESS = '0x653bf4b959101e008A3251A960C46e8C6c1138B3';
+const CONTRACT_ADDRESS = '0xD8232f1491a2ad230FA821dfc5A376073A3A5E1a';
 const CONTRACT_ABI = [
     // Events
     "event ScholarshipCreated(uint256 indexed scholarshipId, address indexed creator, uint256 totalAmount)",
@@ -13,11 +13,11 @@ const CONTRACT_ABI = [
     "event ScholarshipWithdrawn(uint256 indexed scholarshipId, uint256 refundAmount)",
     
     // View Functions
-    "function getScholarships() external view returns (tuple(uint256 id, string name, string details, uint256 grantAmount, uint256 remainingGrants, uint256 totalGrants, uint256 endDate, address creator, bool active, uint256 createdAt, bool isCancelled, string cancellationReason, uint256 cancelledAt, address tokenId)[] memory)",
+    "function getScholarships() external view returns (tuple(uint256 id, string name, string creatorName, string details, uint256 grantAmount, uint256 remainingGrants, uint256 totalGrants, uint256 endDate, address creator, bool active, uint256 createdAt, bool isCancelled, string cancellationReason, uint256 cancelledAt, address tokenId)[] memory)",
     "function getUserApplications(address user) external view returns (tuple(uint256 id, uint256 scholarshipId, address applicant, string name, string details, uint8 status, uint256 appliedAt)[] memory)",
     
     // State Changing Functions
-    "function postScholarship(string calldata name, string calldata details, uint256 grantAmount, uint256 numberOfGrants, uint256 endDate, address tokenId) external payable",
+    "function postScholarship(string calldata name, string calldata creatorName, string calldata details, uint256 grantAmount, uint256 numberOfGrants, uint256 endDate, address tokenId) external payable",
     "function applyForScholarship(uint256 scholarshipId, string calldata name, string calldata details) external",
     "function approveApplication(uint256 scholarshipId, uint256 applicationId) external",
     "function cancelScholarship(uint256 scholarshipId, string calldata reason) external",
@@ -98,52 +98,53 @@ export const useContractInteraction = () => {
             const formattedScholarships = await Promise.all(scholarships.map(async (scholarship: any) => {
                 console.log('Processing scholarship:', scholarship);
                 
-                let formattedAmount = scholarship[3]; // Default to raw amount
+                let formattedAmount = scholarship[4]; // Updated index for grantAmount
                 let tokenSymbol = 'EDU';
 
-                if (scholarship[13] !== ethers.ZeroAddress) {
+                if (scholarship[14] !== ethers.ZeroAddress) {
                     try {
                         // Get token decimals if not cached
-                        if (!tokenDecimalsCache[scholarship[13]]) {
+                        if (!tokenDecimalsCache[scholarship[14]]) {
                             const tokenContract = new ethers.Contract(
-                                scholarship[13],
+                                scholarship[14],
                                 ["function decimals() view returns (uint8)", "function symbol() view returns (string)"],
                                 contract.runner
                             );
                             const decimals = await tokenContract.decimals();
                             const symbol = await tokenContract.symbol();
-                            tokenDecimalsCache[scholarship[13]] = decimals;
+                            tokenDecimalsCache[scholarship[14]] = decimals;
                             tokenSymbol = symbol;
                         }
                         
                         // Format amount using correct decimals
-                        formattedAmount = ethers.formatUnits(scholarship[3], tokenDecimalsCache[scholarship[13]]);
+                        formattedAmount = ethers.formatUnits(scholarship[4], tokenDecimalsCache[scholarship[14]]); // Updated index
                     } catch (error) {
                         console.error('Error getting token info:', error);
                         tokenSymbol = 'ERC20';
                     }
                 } else {
-                    formattedAmount = ethers.formatEther(scholarship[3]);
+                    formattedAmount = ethers.formatEther(scholarship[4]); // Updated index
                 }
 
                 return {
                     id: Number(scholarship[0]),
                     name: scholarship[1],
-                    details: scholarship[2],
+                    creatorName: scholarship[2],
+                    details: scholarship[3],
                     grantAmount: formattedAmount,
-                    remainingGrants: Number(scholarship[4]),
-                    totalGrants: Number(scholarship[5]),
-                    endDate: new Date(Number(scholarship[6]) * 1000),
-                    creator: scholarship[7],
-                    creatorUrl: `https://edu-chain-testnet.blockscout.com/address/${scholarship[7]}`,
-                    active: scholarship[8],
-                    createdAt: new Date(Number(scholarship[9]) * 1000),
-                    isCancelled: scholarship[10],
-                    cancellationReason: scholarship[11],
-                    cancelledAt: scholarship[12] > 0 ? new Date(Number(scholarship[12]) * 1000) : null,
-                    tokenId: scholarship[13],
-                    tokenUrl: scholarship[13] !== ethers.ZeroAddress ? 
-                        `https://edu-chain-testnet.blockscout.com/token/${scholarship[13]}` : undefined,
+                    remainingGrants: Number(scholarship[5]),
+                    totalGrants: Number(scholarship[6]),
+                    endDate: new Date(Number(scholarship[7]) * 1000),
+                    creator: scholarship[8],
+                    creatorUrl: `https://edu-chain-testnet.blockscout.com/address/${scholarship[8]}`,
+                    active: scholarship[9],
+                    createdAt: new Date(Number(scholarship[10]) * 1000),
+                    isCancelled: scholarship[11],
+                    cancellationReason: scholarship[12],
+                    cancelledAt: scholarship[13] > 0 ? new Date(Number(scholarship[13]) * 1000) : null,
+                    tokenId: scholarship[14],
+                    tokenUrl: scholarship[14] !== ethers.ZeroAddress ? 
+                        `https://edu-chain-testnet.blockscout.com/token/${scholarship[14]}` : undefined,
                     tokenSymbol: tokenSymbol
                 };
             }));
@@ -158,6 +159,7 @@ export const useContractInteraction = () => {
 
     const createScholarship = async (
         name: string,
+        creatorName: string,
         details: string,
         grantAmount: string,
         numberOfGrants: number,
@@ -189,6 +191,7 @@ export const useContractInteraction = () => {
 
                 const tx = await contract.postScholarship(
                     name,
+                    creatorName,
                     details,
                     grantAmountWei,
                     numberOfGrants,
@@ -224,6 +227,7 @@ export const useContractInteraction = () => {
                 // Create scholarship
                 const tx = await contract.postScholarship(
                     name,
+                    creatorName,
                     details,
                     grantAmountInTokenDecimals,
                     numberOfGrants,
@@ -259,14 +263,14 @@ export const useContractInteraction = () => {
             
             // Process scholarships with correct token decimals
             for (const scholarship of allScholarships) {
-                let formattedAmount = scholarship[3];
+                let formattedAmount = scholarship[4]; // Updated index for grantAmount
                 let tokenSymbol = 'EDU';
                 
-                if (scholarship[13] !== ethers.ZeroAddress) {
+                if (scholarship[14] !== ethers.ZeroAddress) {
                     try {
-                        if (!tokenCache[scholarship[13]]) {
+                        if (!tokenCache[scholarship[14]]) {
                             const tokenContract = new ethers.Contract(
-                                scholarship[13],
+                                scholarship[14],
                                 [
                                     "function decimals() view returns (uint8)",
                                     "function symbol() view returns (string)"
@@ -275,39 +279,40 @@ export const useContractInteraction = () => {
                             );
                             const decimals = await tokenContract.decimals();
                             const symbol = await tokenContract.symbol();
-                            tokenCache[scholarship[13]] = { decimals, symbol };
+                            tokenCache[scholarship[14]] = { decimals, symbol };
                         }
                         formattedAmount = ethers.formatUnits(
-                            scholarship[3],
-                            tokenCache[scholarship[13]].decimals
+                            scholarship[4], // Updated index
+                            tokenCache[scholarship[14]].decimals
                         );
-                        tokenSymbol = tokenCache[scholarship[13]].symbol;
+                        tokenSymbol = tokenCache[scholarship[14]].symbol;
                     } catch (error) {
                         console.error('Error getting token info:', error);
                         tokenSymbol = 'ERC20';
                     }
                 } else {
-                    formattedAmount = ethers.formatEther(scholarship[3]);
+                    formattedAmount = ethers.formatEther(scholarship[4]); // Updated index
                 }
 
                 scholarshipMap.set(Number(scholarship[0]), {
                     id: Number(scholarship[0]),
                     name: scholarship[1],
-                    details: scholarship[2],
+                    creatorName: scholarship[2],
+                    details: scholarship[3],
                     grantAmount: formattedAmount,
-                    remainingGrants: Number(scholarship[4]),
-                    totalGrants: Number(scholarship[5]),
-                    endDate: new Date(Number(scholarship[6]) * 1000),
-                    creator: scholarship[7],
-                    creatorUrl: `https://edu-chain-testnet.blockscout.com/address/${scholarship[7]}`,
-                    active: scholarship[8],
-                    createdAt: new Date(Number(scholarship[9]) * 1000),
-                    isCancelled: scholarship[10],
-                    cancellationReason: scholarship[11],
-                    cancelledAt: scholarship[12] > 0 ? new Date(Number(scholarship[12]) * 1000) : null,
-                    tokenId: scholarship[13],
-                    tokenUrl: scholarship[13] !== ethers.ZeroAddress ? 
-                        `https://edu-chain-testnet.blockscout.com/token/${scholarship[13]}` : undefined,
+                    remainingGrants: Number(scholarship[5]),
+                    totalGrants: Number(scholarship[6]),
+                    endDate: new Date(Number(scholarship[7]) * 1000),
+                    creator: scholarship[8],
+                    creatorUrl: `https://edu-chain-testnet.blockscout.com/address/${scholarship[8]}`,
+                    active: scholarship[9],
+                    createdAt: new Date(Number(scholarship[10]) * 1000),
+                    isCancelled: scholarship[11],
+                    cancellationReason: scholarship[12],
+                    cancelledAt: scholarship[13] > 0 ? new Date(Number(scholarship[13]) * 1000) : null,
+                    tokenId: scholarship[14],
+                    tokenUrl: scholarship[14] !== ethers.ZeroAddress ? 
+                        `https://edu-chain-testnet.blockscout.com/token/${scholarship[14]}` : undefined,
                     tokenSymbol: tokenSymbol
                 });
             }

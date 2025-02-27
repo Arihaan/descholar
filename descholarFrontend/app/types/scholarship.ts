@@ -1,6 +1,7 @@
 export interface Scholarship {
     id: number;
     name: string;
+    creatorName: string;
     details: string;
     grantAmount: string;
     remainingGrants: number;

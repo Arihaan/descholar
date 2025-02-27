@@ -447,7 +447,10 @@ const MyActivity = () => {
                       onClick={() => handleScholarshipClick(scholarship)}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-xl font-semibold text-white">{scholarship.name}</h3>
+                        <div>
+                          <h3 className="text-xl font-semibold text-white">{scholarship.name}</h3>
+                          <p className="text-sm text-gray-400">Creator: {scholarship.creatorName}</p>
+                        </div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
