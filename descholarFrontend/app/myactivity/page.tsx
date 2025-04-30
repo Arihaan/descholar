@@ -134,12 +134,14 @@ const MyActivity = () => {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [reviewingScholarship, setReviewingScholarship] = useState<CreatedScholarship | null>(null);
   const [scholarshipApplications, setScholarshipApplications] = useState<ScholarshipApplication[]>([]);
+  const [applicationCounts, setApplicationCounts] = useState<Record<number, number>>({});
   const [showCancellationModal, setShowCancellationModal] = useState(false);
   const [cancellationReason, setCancellationReason] = useState("");
   const [selectedScholarshipForCancel, setSelectedScholarshipForCancel] = useState<CreatedScholarship | null>(null);
   const [showScholarshipModal, setShowScholarshipModal] = useState(false);
   const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showEndedScholarships, setShowEndedScholarships] = useState(true);
   const [notification, setNotification] = useState<{
     message: string;
     type: 'success' | 'error';
@@ -182,11 +184,48 @@ const MyActivity = () => {
     }
   };
 
+  const fetchScholarshipApplications = async (scholarshipId: number, shouldShowModal: boolean = false) => {
+    try {
+      setReviewLoading(true);
+      console.log('Fetching applications for scholarship ID:', scholarshipId);
+      const applications = await getApplicationsForScholarship(scholarshipId);
+      console.log('Received applications:', applications);
+      if (Array.isArray(applications)) {
+        setScholarshipApplications(applications);
+        setApplicationCounts(prev => ({
+          ...prev,
+          [scholarshipId]: applications.length
+        }));
+        if (shouldShowModal) {
+          setShowScholarshipModal(true);
+        }
+      } else {
+        console.error('Unexpected applications data format:', applications);
+        setScholarshipApplications([]);
+      }
+    } catch (error) {
+      console.error('Error fetching scholarship applications:', error);
+      showNotification('Failed to load applications', 'error');
+      setScholarshipApplications([]);
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (address && isInitialized) {
       fetchUserActivity();
     }
   }, [address, isInitialized]);
+
+  // Separate effect for fetching application counts
+  useEffect(() => {
+    if (createdScholarships.length > 0) {
+      createdScholarships.forEach(scholarship => {
+        fetchScholarshipApplications(scholarship.id, false);
+      });
+    }
+  }, [createdScholarships]);
 
   const calculateTotalGrant = (scholarship: Scholarship) => {
     const amount = parseFloat(scholarship.grantAmount);
@@ -205,7 +244,7 @@ const MyActivity = () => {
     
     // Then open the selected scholarship
     setSelectedScholarship(scholarship);
-    fetchScholarshipApplications(scholarship.id);
+    fetchScholarshipApplications(scholarship.id, true);
   };
 
   const handleReviewScholarship = (scholarship: CreatedScholarship) => {
@@ -216,7 +255,7 @@ const MyActivity = () => {
     
     // Then open the reviewing scholarship
     setReviewingScholarship(scholarship);
-    fetchScholarshipApplications(scholarship.id);
+    fetchScholarshipApplications(scholarship.id, true);
   };
 
   const handleApplicationSelect = (application: Application) => {
@@ -250,44 +289,23 @@ const MyActivity = () => {
     }
   };
 
-  const handleCancelClick = (scholarship: Scholarship) => {
-    setSelectedScholarship(scholarship);
-    setShowCancelModal(true);
+  const handleCancelClick = (scholarship: CreatedScholarship) => {
+    setSelectedScholarshipForCancel(scholarship);
+    setShowCancellationModal(true);
   };
 
   const handleConfirmCancel = async () => {
-    if (!selectedScholarship || !cancellationReason.trim()) return;
+    if (!selectedScholarshipForCancel || !cancellationReason.trim()) return;
     try {
-      const hash = await cancelScholarship(selectedScholarship.id, cancellationReason);
-      showNotification(`Scholarship cancelled successfully! Transaction: ${hash}`, 'success');
-      setShowCancelModal(false);
+      await cancelScholarship(selectedScholarshipForCancel.id, cancellationReason);
+      showNotification('Scholarship cancelled successfully!', 'success');
+      setShowCancellationModal(false);
       setCancellationReason('');
-      fetchUserActivity();
+      setSelectedScholarshipForCancel(null);
+      fetchUserActivity(); // Refresh the list after cancellation
     } catch (error) {
       console.error('Error cancelling scholarship:', error);
       showNotification('Failed to cancel scholarship', 'error');
-    }
-  };
-
-  const fetchScholarshipApplications = async (scholarshipId: number) => {
-    try {
-      setReviewLoading(true);
-      console.log('Fetching applications for scholarship ID:', scholarshipId);
-      const applications = await getApplicationsForScholarship(scholarshipId);
-      console.log('Received applications:', applications);
-      if (Array.isArray(applications)) {
-        setScholarshipApplications(applications);
-        setShowScholarshipModal(true);
-      } else {
-        console.error('Unexpected applications data format:', applications);
-        setScholarshipApplications([]);
-      }
-    } catch (error) {
-      console.error('Error fetching scholarship applications:', error);
-      showNotification('Failed to load applications', 'error');
-      setScholarshipApplications([]);
-    } finally {
-      setReviewLoading(false);
     }
   };
 
@@ -296,6 +314,18 @@ const MyActivity = () => {
     const url = `${window.location.origin}/scholarships/${scholarshipId}`;
     navigator.clipboard.writeText(url);
     showNotification('Link copied to clipboard!', 'success');
+  };
+
+  // Add handler for withdrawing expired scholarships
+  const handleWithdrawExpired = async (scholarshipId: number) => {
+    try {
+      await withdrawExpiredScholarship(scholarshipId);
+      showNotification('Successfully withdrawn remaining funds!', 'success');
+      fetchUserActivity(); // Refresh the list after withdrawal
+    } catch (error) {
+      console.error('Error withdrawing expired scholarship:', error);
+      showNotification('Failed to withdraw funds', 'error');
+    }
   };
 
   if (!address) {
@@ -486,7 +516,7 @@ const MyActivity = () => {
                         
                         <div className="bg-gray-800/50 rounded-lg p-4">
                           <div className="text-center text-xl font-bold text-white">
-                            {scholarship.totalGrants - scholarship.remainingGrants}
+                            {applicationCounts[scholarship.id] || 0}
                           </div>
                           <div className="text-center text-sm text-gray-400 mt-1">
                             Total Applicants
@@ -500,70 +530,93 @@ const MyActivity = () => {
 
               {/* Ended Scholarships */}
               <div>
-                <h3 className="text-xl font-medium text-white mb-4 flex items-center">
-                  <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
-                  Ended Scholarships
-                </h3>
-                <div className="space-y-4">
-                  {categorizeScholarships(createdScholarships).ended.map((scholarship) => (
+                <button 
+                  onClick={() => setShowEndedScholarships(!showEndedScholarships)}
+                  className="w-full flex items-center justify-between text-xl font-medium text-white mb-4 group"
+                >
+                  <div className="flex items-center">
+                    <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
+                    Ended Scholarships
+                  </div>
+                  <svg 
+                    className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showEndedScholarships ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <AnimatePresence>
+                  {showEndedScholarships && (
                     <motion.div
-                      key={scholarship.id}
-                      whileHover={{ scale: 1.01 }}
-                      className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl opacity-80 cursor-pointer"
-                      onClick={() => {
-                        handleReviewScholarship(scholarship);
-                      }}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-4 overflow-hidden"
                     >
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h3 className="text-lg font-medium text-white">{scholarship.name}</h3>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs bg-gray-800 px-2 py-1 rounded-lg text-gray-400 mt-2">
-                              ID: {scholarship.id}
-                            </span>
-                            <span className="text-sm text-gray-400 mt-2">
-                              Click to view applicants
-                            </span>
+                      {categorizeScholarships(createdScholarships).ended.map((scholarship) => (
+                        <motion.div
+                          key={scholarship.id}
+                          whileHover={{ scale: 1.01 }}
+                          className="bg-gray-900 bg-opacity-40 backdrop-blur-sm p-6 rounded-2xl border border-gray-700 shadow-xl opacity-80 cursor-pointer"
+                          onClick={() => {
+                            handleReviewScholarship(scholarship);
+                          }}
+                        >
+                          <div className="flex items-center justify-between mb-4">
+                            <div>
+                              <h3 className="text-lg font-medium text-white">{scholarship.name}</h3>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs bg-gray-800 px-2 py-1 rounded-lg text-gray-400 mt-2">
+                                  ID: {scholarship.id}
+                                </span>
+                                <span className="text-sm text-gray-400 mt-2">
+                                  Click to view applicants
+                                </span>
+                              </div>
+                            </div>
+                            <div className="space-y-3">
+                              <p className="text-gray-300 text-sm flex justify-between">
+                                <span>Total Grant Pool:</span>
+                                <span className="text-orange-400 font-semibold">
+                                  {parseFloat(scholarship.grantAmount) * scholarship.totalGrants} {scholarship.tokenSymbol}
+                                </span>
+                              </p>
+                              {scholarship.tokenId !== ethers.ZeroAddress && (
+                                <a
+                                  href={scholarship.tokenUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-orange-400 hover:text-orange-300 transition-colors block"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  Token: {scholarship.tokenId.slice(0, 6)}...{scholarship.tokenId.slice(-4)}
+                                </a>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <div className="space-y-3">
-                          <p className="text-gray-300 text-sm flex justify-between">
-                            <span>Total Grant Pool:</span>
-                            <span className="text-orange-400 font-semibold">
-                              {parseFloat(scholarship.grantAmount) * scholarship.totalGrants} {scholarship.tokenSymbol}
-                            </span>
-                          </p>
-                          {scholarship.tokenId !== ethers.ZeroAddress && (
-                            <a
-                              href={scholarship.tokenUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-orange-400 hover:text-orange-300 transition-colors block"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              Token: {scholarship.tokenId.slice(0, 6)}...{scholarship.tokenId.slice(-4)}
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex justify-between text-sm text-gray-300">
-                        {scholarship.isCancelled ? (
-                          <>
-                            <span>Cancelled</span>
-                            <span>
-                              On: {scholarship.cancelledAt ? scholarship.cancelledAt.toLocaleDateString() : 'Unknown date'}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span>All Grants Awarded</span>
-                            <span>Ended: {scholarship.endDate.toLocaleDateString()}</span>
-                          </>
-                        )}
-                      </div>
+                          <div className="flex justify-between text-sm text-gray-300">
+                            {scholarship.isCancelled ? (
+                              <>
+                                <span>Cancelled</span>
+                                <span>
+                                  On: {scholarship.cancelledAt ? scholarship.cancelledAt.toLocaleDateString() : 'Unknown date'}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <span>{scholarship.remainingGrants === 0 ? 'All Grants Awarded' : 'End Date Reached'}</span>
+                                <span>Ended: {scholarship.endDate.toLocaleDateString()}</span>
+                              </>
+                            )}
+                          </div>
+                        </motion.div>
+                      ))}
                     </motion.div>
-                  ))}
-                </div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </div>
@@ -715,27 +768,37 @@ const MyActivity = () => {
                 <p className="text-gray-300 mb-4">
                   Are you sure you want to cancel this scholarship? This action cannot be undone.
                 </p>
-                <input
-                  type="text"
-                  placeholder="Enter reason for cancellation"
-                  value={cancellationReason}
-                  onChange={(e) => setCancellationReason(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg border border-gray-700 mb-4"
-                />
+                <div className="space-y-2 mb-4">
+                  <input
+                    type="text"
+                    placeholder="Enter reason for cancellation"
+                    value={cancellationReason}
+                    onChange={(e) => setCancellationReason(e.target.value)}
+                    className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-orange-500 focus:outline-none transition-colors"
+                  />
+                  {cancellationReason.trim() === '' && (
+                    <p className="text-red-400 text-sm">Please provide a reason for cancellation</p>
+                  )}
+                </div>
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => {
                       setShowCancellationModal(false);
                       setCancellationReason('');
+                      setSelectedScholarshipForCancel(null);
                     }}
-                    className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700"
+                    className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleConfirmCancel}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
                     disabled={!cancellationReason.trim()}
+                    className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                      cancellationReason.trim() 
+                        ? 'bg-red-500 hover:bg-red-600 cursor-pointer' 
+                        : 'bg-red-500/50 cursor-not-allowed'
+                    }`}
                   >
                     Confirm
                   </button>
@@ -808,7 +871,10 @@ const MyActivity = () => {
                   <h3 className="text-lg font-semibold text-white">Applications</h3>
                   {!selectedScholarship.isCancelled && new Date() <= selectedScholarship.endDate && (
                     <button
-                      onClick={() => setShowCancellationModal(true)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCancelClick(selectedScholarship as CreatedScholarship);
+                      }}
                       className="px-3 py-1 bg-red-400/10 text-red-400 rounded-lg border border-red-400/20 hover:bg-red-400/20 transition-colors"
                     >
                       Cancel Scholarship
@@ -819,12 +885,19 @@ const MyActivity = () => {
                 {scholarshipApplications.map((application) => (
                   <div
                     key={application.id}
-                    className="bg-gray-800 p-6 rounded-xl space-y-4"
+                    className="bg-gray-800 p-4 rounded-xl space-y-4"
                   >
                     <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-white font-semibold">{application.name}</h3>
-                        <div className="flex items-center gap-2 mt-1">
+                      <div className="space-y-1.5">
+                        <a
+                          href={`https://edu-chain-testnet.blockscout.com/address/${application.applicant}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-orange-400 text-lg font-semibold hover:text-orange-300 transition-colors inline-block"
+                        >
+                          {application.name}
+                        </a>
+                        <div className="flex items-center gap-2">
                           <span className="text-xs bg-gray-700 px-2 py-1 rounded-lg text-gray-300">
                             Application ID: {application.id}
                           </span>
@@ -914,6 +987,41 @@ const MyActivity = () => {
                 </div>
               </div>
 
+              {/* Add expiration notice at the top if ended but not cancelled */}
+              {!reviewingScholarship.isCancelled && new Date() > reviewingScholarship.endDate && (
+                <div className="mb-6 p-4 bg-gray-800/50 border border-gray-700/50 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-gray-700/50 rounded-full">
+                      <FiClock className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <div className="flex-grow">
+                      <h3 className="text-lg font-semibold text-gray-300 mb-2">Scholarship Ended</h3>
+                      <p className="text-gray-400 mb-2">
+                        {reviewingScholarship.remainingGrants === 0 
+                          ? "This scholarship has ended as all grants have been awarded."
+                          : "This scholarship has ended as it reached its end date."}
+                      </p>
+                      <p className="text-gray-500 text-sm">
+                        Ended on: {reviewingScholarship.endDate.toLocaleDateString()}
+                      </p>
+                      {reviewingScholarship.remainingGrants > 0 && (
+                        <div className="mt-4">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleWithdrawExpired(reviewingScholarship.id);
+                            }}
+                            className="px-4 py-2 bg-orange-500/20 text-orange-400 rounded-lg border border-orange-500/30 hover:bg-orange-500/30 transition-colors"
+                          >
+                            Withdraw Remaining Funds ({reviewingScholarship.remainingGrants} grants)
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Add cancellation notice at the top if cancelled */}
               {reviewingScholarship.isCancelled && (
                 <div className="mb-6 p-4 bg-red-900/30 border border-red-700/50 rounded-xl">
@@ -939,12 +1047,19 @@ const MyActivity = () => {
                   {scholarshipApplications.map((application) => (
                     <div
                       key={application.id}
-                      className="bg-gray-800 p-6 rounded-xl space-y-4"
+                      className="bg-gray-800 p-4 rounded-xl space-y-4"
                     >
                       <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-white font-semibold">{application.name}</h3>
-                          <div className="flex items-center gap-2 mt-1">
+                        <div className="space-y-1.5">
+                          <a
+                            href={`https://testnet.opencampus.blockscout.com/address/${application.applicant}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-orange-400 text-lg font-semibold hover:text-orange-300 transition-colors inline-block"
+                          >
+                            {application.name}
+                          </a>
+                          <div className="flex items-center gap-2">
                             <span className="text-xs bg-gray-700 px-2 py-1 rounded-lg text-gray-300">
                               Application ID: {application.id}
                             </span>

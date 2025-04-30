@@ -7,7 +7,7 @@ import { ClientLayout } from "./ClientLayout";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "descholar",
+  title: "descholar | Decentralized Scholarships on EDU Chain",
   description: "Decentralized Education Funding",
 };
 
