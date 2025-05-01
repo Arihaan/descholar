@@ -379,8 +379,7 @@ export default function Home() {
               <ul className="space-y-4 mb-8">
                 {[
                   "Easy application for international scholarships",
-                  "Receive funds directly in local currency",
-                  "No complex wallet setup required",
+                  "No complex setup required",
                   "Track your applications in real-time",
                   "Secure and transparent process",
                   "Access global opportunities",
@@ -416,7 +415,6 @@ export default function Home() {
               <ul className="space-y-4 mb-8">
                 {[
                   "Make a direct impact on students' lives",
-                  "Full transparency through student ID verification",
                   "Efficient fund distribution",
                   "Track your impact in real-time",
                   "Low transaction costs",
