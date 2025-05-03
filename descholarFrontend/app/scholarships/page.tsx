@@ -628,17 +628,17 @@ const Scholarships = () => {
                           Transaction Notice
                         </p>
                         <p className="text-orange-200/80 text-sm mt-1">
-                          You'll need some testnet EDU tokens to sign this
+                          You'll need some EDU tokens to sign this
                           transaction. This is only for gas fees and won't
                           affect your application.
                         </p>
                         <a
-                          href="https://drpc.org/faucet/open-campus-codex"
+                          href="https://yuzu.educhain.xyz/edu-faucet"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center mt-2 text-sm text-orange-400 hover:text-orange-300 transition-colors"
                         >
-                          Get testnet EDU tokens from the dRPC faucet
+                          Get EDU tokens for gas
                           <svg
                             className="w-4 h-4 ml-1"
                             fill="none"
