@@ -8,7 +8,7 @@ import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 
 // EDU Chain configuration
 const eduChain = {
-  id: 656476,
+  id: 41923,
   name: 'EDU Chain',
   network: 'educhain',
   nativeCurrency: {
@@ -17,8 +17,8 @@ const eduChain = {
     symbol: 'EDU',
   },
   rpcUrls: {
-    default: { http: ['https://rpc.open-campus-codex.gelato.digital'] },
-    public: { http: ['https://rpc.open-campus-codex.gelato.digital'] },
+    default: { http: ['https://rpc.edu-chain.raas.gelato.cloud	'] },
+    public: { http: ['https://rpc.edu-chain.raas.gelato.cloud	'] },
   },
 } as const;
 

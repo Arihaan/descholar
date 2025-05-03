@@ -734,10 +734,9 @@ const MyActivity = () => {
                 {/* Action Buttons */}
                 <div className="flex justify-end mt-6">
                   <button
-                    onClick={() => {
-                      setSelectedScholarship(null);
-                      setShowScholarshipModal(false);
-                      setScholarshipApplications([]);
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedApplication(null);
                     }}
                     className="px-6 py-3 bg-gray-800 text-white rounded-xl hover:bg-gray-700"
                   >
@@ -882,52 +881,58 @@ const MyActivity = () => {
                   )}
                 </div>
 
-                {scholarshipApplications.map((application) => (
-                  <div
-                    key={application.id}
-                    className="bg-gray-800 p-4 rounded-xl space-y-4"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1.5">
-                        <a
-                          href={`https://edu-chain-testnet.blockscout.com/address/${application.applicant}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-orange-400 text-lg font-semibold hover:text-orange-300 transition-colors inline-block"
-                        >
-                          {application.name}
-                        </a>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs bg-gray-700 px-2 py-1 rounded-lg text-gray-300">
-                            Application ID: {application.id}
-                          </span>
-                          <p className="text-sm text-gray-400">
-                            Applied: {new Date(application.appliedAt).toLocaleDateString()}
-                          </p>
+                {reviewLoading ? (
+                  <div className="text-center text-gray-300">Loading applications...</div>
+                ) : scholarshipApplications.length === 0 ? (
+                  <div className="text-center text-gray-400 py-8">No applications received yet</div>
+                ) : (
+                  scholarshipApplications.map((application) => (
+                    <div
+                      key={application.id}
+                      className="bg-gray-800 p-4 rounded-xl space-y-4"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1.5">
+                          <a
+                            href={`https://educhain.blockscout.com/address/${application.applicant}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-orange-400 text-lg font-semibold hover:text-orange-300 transition-colors inline-block"
+                          >
+                            {application.name}
+                          </a>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs bg-gray-700 px-2 py-1 rounded-lg text-gray-300">
+                              Application ID: {application.id}
+                            </span>
+                            <p className="text-sm text-gray-400">
+                              Applied: {new Date(application.appliedAt).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
+                        {/* Only show status for non-cancelled scholarships or if already approved */}
+                        {(!selectedScholarship.isCancelled || application.status === 'Approved') && (
+                          <div className={`flex items-center ${getStatusColor(application.status)}`}>
+                            {getStatusIcon(application.status)}
+                            <span>{application.status}</span>
+                          </div>
+                        )}
                       </div>
-                      {/* Only show status for non-cancelled scholarships or if already approved */}
-                      {(!selectedScholarship.isCancelled || application.status === 'Approved') && (
-                        <div className={`flex items-center ${getStatusColor(application.status)}`}>
-                          {getStatusIcon(application.status)}
-                          <span>{application.status}</span>
+                      <p className="text-gray-300">{application.details}</p>
+                      {/* Only show approve button if scholarship is not cancelled and application is pending */}
+                      {application.status === 'Applied' && !selectedScholarship.isCancelled && (
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => handleApproveApplication(selectedScholarship.id, application.id)}
+                            className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-sm font-semibold rounded-xl"
+                          >
+                            Approve Application
+                          </button>
                         </div>
                       )}
                     </div>
-                    <p className="text-gray-300">{application.details}</p>
-                    {/* Only show approve button if scholarship is not cancelled and application is pending */}
-                    {application.status === 'Applied' && !selectedScholarship.isCancelled && (
-                      <div className="flex justify-end">
-                        <button
-                          onClick={() => handleApproveApplication(selectedScholarship.id, application.id)}
-                          className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white text-sm font-semibold rounded-xl"
-                        >
-                          Approve Application
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </motion.div>
           </motion.div>
@@ -1052,7 +1057,7 @@ const MyActivity = () => {
                       <div className="flex justify-between items-start">
                         <div className="space-y-1.5">
                           <a
-                            href={`https://testnet.opencampus.blockscout.com/address/${application.applicant}`}
+                            href={`https://educhain.blockscout.com/address/${application.applicant}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-orange-400 text-lg font-semibold hover:text-orange-300 transition-colors inline-block"

@@ -2,7 +2,7 @@ import { ethers, Contract as EthersContract } from 'ethers';
 import { useEffect, useState } from 'react';
 import { Scholarship } from '../types/scholarship';
 
-const CONTRACT_ADDRESS = '0xD8232f1491a2ad230FA821dfc5A376073A3A5E1a';
+const CONTRACT_ADDRESS = '0x29956B6FEacd0220b4eEfBde46393427Bb9d9968';
 const CONTRACT_ABI = [
     // Events
     "event ScholarshipCreated(uint256 indexed scholarshipId, address indexed creator, uint256 totalAmount)",
@@ -39,7 +39,7 @@ export const useContractInteraction = () => {
             try {
                 console.log('Initializing contract...');
                 // Create a read-only provider without requiring wallet connection
-                const provider = new ethers.JsonRpcProvider("https://open-campus-codex-sepolia.drpc.org");
+                const provider = new ethers.JsonRpcProvider("https://rpc.edu-chain.raas.gelato.cloud");
                 
                 // Create read-only contract instance
                 const readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
@@ -51,7 +51,7 @@ export const useContractInteraction = () => {
                     try {
                         const network = await walletProvider.getNetwork();
                         
-                        if (network.chainId === BigInt(656476)) {
+                        if (network.chainId === BigInt(41923)) {
                             const walletSigner = await walletProvider.getSigner();
                             setSigner(walletSigner);
                             
@@ -136,7 +136,7 @@ export const useContractInteraction = () => {
                     totalGrants: Number(scholarship[6]),
                     endDate: new Date(Number(scholarship[7]) * 1000),
                     creator: scholarship[8],
-                    creatorUrl: `https://edu-chain-testnet.blockscout.com/address/${scholarship[8]}`,
+                    creatorUrl: `https://educhain.blockscout.com/address/${scholarship[8]}`,
                     active: scholarship[9],
                     createdAt: new Date(Number(scholarship[10]) * 1000),
                     isCancelled: scholarship[11],
@@ -144,7 +144,7 @@ export const useContractInteraction = () => {
                     cancelledAt: scholarship[13] > 0 ? new Date(Number(scholarship[13]) * 1000) : null,
                     tokenId: scholarship[14],
                     tokenUrl: scholarship[14] !== ethers.ZeroAddress ? 
-                        `https://edu-chain-testnet.blockscout.com/token/${scholarship[14]}` : undefined,
+                        `https://educhain.blockscout.com/token/${scholarship[14]}` : undefined,
                     tokenSymbol: tokenSymbol
                 };
             }));
@@ -202,7 +202,7 @@ export const useContractInteraction = () => {
                 const receipt = await tx.wait();
                 return {
                     hash: tx.hash,
-                    url: `https://edu-chain-testnet.blockscout.com/tx/${tx.hash}`
+                    url: `https://educhain.blockscout.com/tx/${tx.hash}`
                 };
             } else {
                 // ERC20 token payment
@@ -237,7 +237,7 @@ export const useContractInteraction = () => {
                 const receipt = await tx.wait();
                 return {
                     hash: tx.hash,
-                    url: `https://edu-chain-testnet.blockscout.com/tx/${tx.hash}`
+                    url: `https://educhain.blockscout.com/tx/${tx.hash}`
                 };
             }
         } catch (error) {
@@ -304,7 +304,7 @@ export const useContractInteraction = () => {
                     totalGrants: Number(scholarship[6]),
                     endDate: new Date(Number(scholarship[7]) * 1000),
                     creator: scholarship[8],
-                    creatorUrl: `https://edu-chain-testnet.blockscout.com/address/${scholarship[8]}`,
+                    creatorUrl: `https://educhain.blockscout.com/address/${scholarship[8]}`,
                     active: scholarship[9],
                     createdAt: new Date(Number(scholarship[10]) * 1000),
                     isCancelled: scholarship[11],
@@ -312,7 +312,7 @@ export const useContractInteraction = () => {
                     cancelledAt: scholarship[13] > 0 ? new Date(Number(scholarship[13]) * 1000) : null,
                     tokenId: scholarship[14],
                     tokenUrl: scholarship[14] !== ethers.ZeroAddress ? 
-                        `https://edu-chain-testnet.blockscout.com/token/${scholarship[14]}` : undefined,
+                        `https://educhain.blockscout.com/token/${scholarship[14]}` : undefined,
                     tokenSymbol: tokenSymbol
                 });
             }

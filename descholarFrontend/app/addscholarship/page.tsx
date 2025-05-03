@@ -62,7 +62,7 @@ const CreateScholarshipPage = () => {
     if (!address) return;
     setIsValidatingToken(true);
     try {
-      const provider = new ethers.JsonRpcProvider("https://open-campus-codex-sepolia.drpc.org");
+      const provider = new ethers.JsonRpcProvider("https://rpc.edu-chain.raas.gelato.cloud");
       const tokenContract = new ethers.Contract(
         address,
         ["function symbol() view returns (string)"],
@@ -161,7 +161,7 @@ const CreateScholarshipPage = () => {
           <span>
             Scholarship created successfully! View transaction: {" "}
             <a 
-              href={`https://edu-chain-testnet.blockscout.com/tx/${result.hash}`}
+              href={`https://educhain.blockscout.com/tx/${result.hash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-400 hover:text-blue-300 underline"
