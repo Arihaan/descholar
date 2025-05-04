@@ -45,7 +45,7 @@ export default function Home() {
             {/* Description below heading */}
             <div className="max-w-3xl mx-auto mt-12">
               <p className="text-lg md:text-xl text-gray-200 leading-relaxed mb-10">
-                Empowering education globally with secure, decentralized scholarships and student loans (coming soon)
+                Empowering education globally with secure, decentralized scholarships.
                 <span className="block mt-4">
                   <a 
                     href="#mission" 
